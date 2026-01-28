@@ -5,153 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIENA 395 - Monitor Pro</title>
     <style>
-        :root {
-            --bg: #0b0e14;
-            --card: #161b22;
-            --accent: #00e676;
-            --text: #c9d1d9;
-            --danger: #ff4444;
-        }
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .header {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .status-container {
-            display: flex;
-            align-items: center;
-            font-size: 0.8rem;
-        }
-        .dot {
-            width: 10px;
-            height: 10px;
-            background-color: var(--danger);
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        .online {
-            background-color: var(--accent);
-            box-shadow: 0 0 10px var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            width: 100%;
-            max-width: 600px;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid #30363d;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-        }
+        :root { --bg: #0b0e14; --card: #161b22; --accent: #00e676; --text: #c9d1d9; --danger: #ff4444; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .dot { width: 12px; height: 12px; background-color: var(--danger); border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .online { background-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 600px; }
+        .card { background: var(--card); border: 1px solid #30363d; border-radius: 15px; padding: 20px; text-align: center; }
         .full { grid-column: span 2; }
-        .label { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 10px; display: block; }
+        .label { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 10px; }
         .value { font-size: 2.5rem; font-weight: bold; color: #fff; }
         .unit { font-size: 1rem; color: #8b949e; margin-left: 5px; }
-        .sub-values { margin-top: 15px; padding-top: 15px; border-top: 1px solid #30363d; display: flex; justify-content: space-around; }
-        .hint { margin-top: 20px; font-size: 0.7rem; color: #484f58; max-width: 400px; text-align: center; }
+        #debug-info { margin-top: 20px; font-size: 0.7rem; color: #6e7681; background: #000; padding: 10px; border-radius: 5px; width: 100%; max-width: 600px; overflow: hidden; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2 style="margin:0;">SIENA 395 <span style="color:var(--accent); font-size:0.8rem;">v2.1</span></h2>
-        <div class="status-container">
-            <div id="dot" class="dot"></div>
-            <span id="status">BUSCANDO...</span>
-        </div>
+        <h2 style="margin:0;">SIENA 395 <span style="color:var(--accent); font-size:0.8rem;">v2.5</span></h2>
+        <div><div id="dot" class="dot"></div> <span id="status">INICIANDO...</span></div>
     </div>
 
     <div class="grid">
         <div class="card full">
             <span class="label">Batería Ultimatron 100Ah</span>
             <div id="soc" class="value">--<span class="unit">%</span></div>
-            <div class="sub-values">
-                <div><span class="label">Voltaje</span><span id="volt">--</span><span class="unit">V</span></div>
-                <div><span class="label">Corriente</span><span id="amp" style="color:var(--danger)">--</span><span class="unit">A</span></div>
+            <div style="margin-top:15px; display:flex; justify-content:space-around; border-top:1px solid #30363d; padding-top:15px;">
+                <div><span class="label">Voltaje</span><span id="volt">--</span>V</div>
+                <div><span class="label">Amperios</span><span id="amp">--</span>A</div>
             </div>
         </div>
-
-        <div class="card">
-            <span class="label">Carga Solar</span>
-            <div id="solar" class="value">--<span class="unit">W</span></div>
-        </div>
-
-        <div class="card">
-            <span class="label">Temperatura</span>
-            <div id="temp" class="value">--<span class="unit">°C</span></div>
-        </div>
+        <div class="card"><span class="label">Placa Solar</span><div id="solar" class="value">--<span class="unit">W</span></div></div>
+        <div class="card"><span class="label">Temperatura</span><div id="temp" class="value">--<span class="unit">°C</span></div></div>
     </div>
 
-    <div class="hint">
-        Conectado a: <b id="ip-display">192.168.0.29</b><br>
-        Recuerda habilitar "Contenido no seguro" en el candado del navegador.
-    </div>
+    <div id="debug-info">Esperando datos de la IP 192.168.0.29...</div>
 
     <script>
-        const CONFIG = {
-            ip: "192.168.0.29", // IP de tu ESP32 según el log
-            interval: 3000      // Actualizar cada 3 segundos
-        };
+        const IP_ESP = "192.168.0.29"; // Tu IP confirmada
 
-        async function fetchData() {
-            const statusText = document.getElementById('status');
-            const dot = document.getElementById('dot');
-
+        async function update() {
+            const debug = document.getElementById('debug-info');
             try {
-                // Fetch con timeout para evitar esperas eternas
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                // Petición con modo CORS explícito
+                const res = await fetch(`http://${IP_ESP}/json`, { mode: 'cors' });
+                if (!res.ok) throw new Error("Servidor responde error");
                 
-                const response = await fetch(`http://${CONFIG.ip}/json`, { signal: controller.signal });
-                const data = await response.json();
-                clearTimeout(timeoutId);
-
-                // Función para encontrar sensores por nombre parcial (ignorando mayúsculas)
-                const findSensor = (query) => {
-                    const s = data.sensors.find(s => s.id.toLowerCase().includes(query.toLowerCase()));
+                const data = await res.json();
+                
+                // Buscador de sensores mejorado
+                const find = (id) => {
+                    const s = data.sensors.find(s => s.id.toLowerCase().includes(id));
                     return s ? parseFloat(s.value).toFixed(1) : "--";
                 };
 
-                // Actualizar Interfaz
-                document.getElementById('soc').innerHTML = `${findSensor('soc')}<span class="unit">%</span>`;
-                document.getElementById('volt').innerText = findSensor('voltage');
-                document.getElementById('amp').innerText = findSensor('current');
-                document.getElementById('solar').innerHTML = `${findSensor('pv_power')}<span class="unit">W</span>`;
-                document.getElementById('temp').innerHTML = `${findSensor('temperature')}<span class="unit">°C</span>`;
+                document.getElementById('soc').innerHTML = `${find('soc')}<span class="unit">%</span>`;
+                document.getElementById('volt').innerText = find('voltage');
+                document.getElementById('amp').innerText = find('current');
+                document.getElementById('solar').innerHTML = `${find('pv_power')}<span class="unit">W</span>`;
+                document.getElementById('temp').innerHTML = `${find('temperature')}<span class="unit">°C</span>`;
 
-                // Estado Online
-                dot.classList.add('online');
-                statusText.innerText = "ONLINE";
-                statusText.style.color = "var(--accent)";
+                document.getElementById('dot').classList.add('online');
+                document.getElementById('status').innerText = "ONLINE";
+                debug.innerText = "Conexión exitosa. Datos recibidos.";
+                debug.style.color = "#00e676";
 
-            } catch (error) {
-                dot.classList.remove('online');
-                statusText.innerText = "ERROR DE CONEXIÓN";
-                statusText.style.color = "var(--danger)";
-                console.error("Error capturando datos:", error);
+            } catch (err) {
+                document.getElementById('dot').classList.remove('online');
+                document.getElementById('status').innerText = "ERROR";
+                debug.innerText = "ERROR: " + err.message + " | Verifica: 1. Misma red WiFi 2. Permiso Contenido No Seguro 3. CORS en ESP32";
+                debug.style.color = "#ff4444";
             }
         }
 
-        // Iniciar bucle
-        setInterval(fetchData, CONFIG.interval);
-        fetchData(); // Primera carga
+        setInterval(update, 3000);
+        update();
     </script>
 </body>
 </html>
