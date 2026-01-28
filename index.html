@@ -3,111 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIENA 395 - Dashboard PRO</title>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <title>SIENA 395 - Monitor Pro</title>
     <style>
-        :root { --bg: #0d1117; --card: #161b22; --accent: #00e676; --solar: #ffc107; --danger: #ff4444; }
-        body { background: var(--bg); color: #c9d1d9; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 15px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #30363d; margin-bottom: 20px; }
-        .status-dot { width: 12px; height: 12px; background: var(--danger); border-radius: 50%; display: inline-block; margin-right: 8px; }
-        .status-online { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid #30363d; text-align: center; }
-        .full-width { grid-column: 1 / -1; }
-        
-        .label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; display: block; margin-bottom: 10px; }
-        .value { font-size: 2.2rem; font-weight: bold; color: #fff; }
-        .unit { font-size: 1rem; color: #8b949e; margin-left: 4px; }
-        .sub-value { font-size: 1.1rem; margin-top: 5px; color: var(--accent); }
-        
-        #flow-chart { height: 250px; width: 100%; margin-top: 20px; }
+        :root {
+            --bg: #0b0e14;
+            --card: #161b22;
+            --accent: #00e676;
+            --text: #c9d1d9;
+            --danger: #ff4444;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .status-container {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--danger);
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .online {
+            background-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid #30363d;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        .full { grid-column: span 2; }
+        .label { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 10px; display: block; }
+        .value { font-size: 2.5rem; font-weight: bold; color: #fff; }
+        .unit { font-size: 1rem; color: #8b949e; margin-left: 5px; }
+        .sub-values { margin-top: 15px; padding-top: 15px; border-top: 1px solid #30363d; display: flex; justify-content: space-around; }
+        .hint { margin-top: 20px; font-size: 0.7rem; color: #484f58; max-width: 400px; text-align: center; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <span>🚐 SIENA 395 MONITOR</span>
-        <span><span id="dot" class="status-dot"></span> <small id="status-text">DESCONECTADO</small></span>
+        <h2 style="margin:0;">SIENA 395 <span style="color:var(--accent); font-size:0.8rem;">v2.1</span></h2>
+        <div class="status-container">
+            <div id="dot" class="dot"></div>
+            <span id="status">BUSCANDO...</span>
+        </div>
     </div>
 
     <div class="grid">
-        <div class="card full-width">
+        <div class="card full">
             <span class="label">Batería Ultimatron 100Ah</span>
-            <div class="value" id="soc">--<span class="unit">%</span></div>
-            <div class="sub-value"><span id="volt">--</span>V  |  <span id="amp" style="color:#ff7b72">--</span>A</div>
+            <div id="soc" class="value">--<span class="unit">%</span></div>
+            <div class="sub-values">
+                <div><span class="label">Voltaje</span><span id="volt">--</span><span class="unit">V</span></div>
+                <div><span class="label">Corriente</span><span id="amp" style="color:var(--danger)">--</span><span class="unit">A</span></div>
+            </div>
         </div>
 
         <div class="card">
             <span class="label">Carga Solar</span>
-            <div class="value" style="color:var(--solar)" id="solar">--<span class="unit">W</span></div>
+            <div id="solar" class="value">--<span class="unit">W</span></div>
         </div>
 
         <div class="card">
             <span class="label">Temperatura</span>
-            <div class="value" style="color:#58a6ff" id="temp">--<span class="unit">°C</span></div>
+            <div id="temp" class="value">--<span class="unit">°C</span></div>
         </div>
     </div>
 
-    <div id="flow-chart" class="card"></div>
+    <div class="hint">
+        Conectado a: <b id="ip-display">192.168.0.29</b><br>
+        Recuerda habilitar "Contenido no seguro" en el candado del navegador.
+    </div>
 
     <script>
-        // CONFIGURACIÓN: Asegúrate de que esta IP es la que ves en el log de ESPHome
-        const ESP_IP = "192.168.0.29"; 
+        const CONFIG = {
+            ip: "192.168.0.29", // IP de tu ESP32 según el log
+            interval: 3000      // Actualizar cada 3 segundos
+        };
 
-        async function updateData() {
+        async function fetchData() {
+            const statusText = document.getElementById('status');
+            const dot = document.getElementById('dot');
+
             try {
-                // Forzamos la petición al endpoint JSON del ESP32
-                const response = await fetch(`http://${ESP_IP}/json`);
-                if (!response.ok) throw new Error("Offline");
-                const data = await response.json();
+                // Fetch con timeout para evitar esperas eternas
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
                 
-                // Buscamos los valores en el array de sensores
-                // Ajustamos la búsqueda para que sea más flexible con los nombres
-                const getVal = (text) => {
-                    const s = data.sensors.find(s => s.id.toLowerCase().includes(text.toLowerCase()));
+                const response = await fetch(`http://${CONFIG.ip}/json`, { signal: controller.signal });
+                const data = await response.json();
+                clearTimeout(timeoutId);
+
+                // Función para encontrar sensores por nombre parcial (ignorando mayúsculas)
+                const findSensor = (query) => {
+                    const s = data.sensors.find(s => s.id.toLowerCase().includes(query.toLowerCase()));
                     return s ? parseFloat(s.value).toFixed(1) : "--";
                 };
 
-                document.getElementById('soc').innerHTML = `${getVal('soc')}<span class="unit">%</span>`;
-                document.getElementById('volt').innerText = getVal('voltage');
-                document.getElementById('amp').innerText = getVal('current');
-                document.getElementById('solar').innerHTML = `${getVal('pv_power')}<span class="unit">W</span>`;
-                document.getElementById('temp').innerHTML = `${getVal('temperature')}<span class="unit">°C</span>`;
+                // Actualizar Interfaz
+                document.getElementById('soc').innerHTML = `${findSensor('soc')}<span class="unit">%</span>`;
+                document.getElementById('volt').innerText = findSensor('voltage');
+                document.getElementById('amp').innerText = findSensor('current');
+                document.getElementById('solar').innerHTML = `${findSensor('pv_power')}<span class="unit">W</span>`;
+                document.getElementById('temp').innerHTML = `${findSensor('temperature')}<span class="unit">°C</span>`;
 
-                document.getElementById('dot').classList.add('status-online');
-                document.getElementById('status-text').innerText = "CONECTADO (" + ESP_IP + ")";
+                // Estado Online
+                dot.classList.add('online');
+                statusText.innerText = "ONLINE";
+                statusText.style.color = "var(--accent)";
+
             } catch (error) {
-                document.getElementById('dot').classList.remove('status-online');
-                document.getElementById('status-text').innerText = "BUSCANDO ESP32...";
-                console.log("Error de conexión:", error);
+                dot.classList.remove('online');
+                statusText.innerText = "ERROR DE CONEXIÓN";
+                statusText.style.color = "var(--danger)";
+                console.error("Error capturando datos:", error);
             }
         }
 
-        // Gráfico de flujo visual (opcional/decorativo por ahora)
-        const chartDom = document.getElementById('flow-chart');
-        const myChart = echarts.init(chartDom, 'dark');
-        myChart.setOption({
-            backgroundColor: 'transparent',
-            series: [{
-                type: 'gauge',
-                startAngle: 180,
-                endAngle: 0,
-                min: 10,
-                max: 15,
-                progress: { show: true, itemStyle: { color: '#00e676' } },
-                pointer: { show: false },
-                axisLine: { lineStyle: { width: 10, color: [[1, '#1f2937']] } },
-                axisTick: { show: false },
-                splitLine: { show: false },
-                axisLabel: { show: false },
-                detail: { show: false },
-                data: [{ value: 13.2 }]
-            }]
-        });
-
-        // Ejecutar cada 3 segundos
-        setInterval(updateData, 3000);
-        updateData();
+        // Iniciar bucle
+        setInterval(fetchData, CONFIG.interval);
+        fetchData(); // Primera carga
     </script>
 </body>
 </html>
