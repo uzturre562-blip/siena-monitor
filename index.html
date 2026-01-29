@@ -1,215 +1,78 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>🚐 Monitor Victron - Siena395</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚐 Mi Dashboard Victron</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: Arial, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        body { font-family: Arial; padding: 20px; }
+        .dashboard-link {
+            display: block;
+            background: #4CAF50;
             color: white;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 800px; margin: 0 auto; }
-        .header { 
-            text-align: center; 
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-        .sensor-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .sensor-card {
-            background: rgba(255,255,255,0.15);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: transform 0.3s;
-        }
-        .sensor-card:hover { transform: translateY(-5px); }
-        .sensor-value {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 10px 0;
-            color: #4CAF50;
-        }
-        .sensor-label {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
-        .status { 
-            text-align: center; 
-            margin: 20px 0;
             padding: 15px;
-            border-radius: 10px;
-            background: rgba(0,0,0,0.2);
+            margin: 10px 0;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
         }
-        .loading { color: #FFC107; }
-        .connected { color: #4CAF50; background: rgba(76,175,80,0.1); }
-        .error { color: #F44336; background: rgba(244,67,54,0.1); }
-        .last-update { 
-            text-align: center; 
-            margin-top: 20px;
-            font-size: 12px;
-            opacity: 0.7;
-        }
-        .logo { 
-            font-size: 24px; 
-            font-weight: bold;
-            margin-bottom: 10px;
+        .info-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">🚐 Siena395 - Monitor Victron</div>
-            <p>Monitor en tiempo real de 5 dispositivos Victron</p>
-            <div id="status" class="status loading">🔄 Conectando al ESP32...</div>
-        </div>
-
-        <div class="sensor-grid">
-            <!-- BATERÍA PRINCIPAL -->
-            <div class="sensor-card">
-                <div class="sensor-label">Batería Principal</div>
-                <div class="sensor-value" id="batt-voltage">--.-- V</div>
-                <div class="sensor-label">Voltaje</div>
-            </div>
-            <div class="sensor-card">
-                <div class="sensor-label">Batería Principal</div>
-                <div class="sensor-value" id="batt-current">--.- A</div>
-                <div class="sensor-label">Corriente</div>
-            </div>
-            <div class="sensor-card">
-                <div class="sensor-label">Batería Principal</div>
-                <div class="sensor-value" id="batt-soc">--%</div>
-                <div class="sensor-label">Estado de Carga (SOC)</div>
-            </div>
-
-            <!-- PANEL SOLAR -->
-            <div class="sensor-card">
-                <div class="sensor-label">Panel Solar</div>
-                <div class="sensor-value" id="solar-power">--- W</div>
-                <div class="sensor-label">Potencia Actual</div>
-            </div>
-
-            <!-- SEÑAL WIFI -->
-            <div class="sensor-card">
-                <div class="sensor-label">Sistema</div>
-                <div class="sensor-value" id="wifi-signal">-- dBm</div>
-                <div class="sensor-label">Señal WiFi</div>
-            </div>
-
-            <!-- IP DEL ESP32 -->
-            <div class="sensor-card">
-                <div class="sensor-label">Conexión</div>
-                <div class="sensor-value" id="esp-ip">192.168.0.29</div>
-                <div class="sensor-label">IP del ESP32</div>
-            </div>
-        </div>
-
-        <div class="last-update">
-            Última actualización: <span id="last-update">--:--:--</span> |
-            <a href="http://192.168.0.29" target="_blank" style="color: #90CAF9;">Abrir dashboard ESPHome</a>
-        </div>
+    <h1>🚐 Monitor Victron - Siena395</h1>
+    
+    <div class="info-box">
+        <h3>📡 Estado del sistema:</h3>
+        <p>ESP32 IP: <strong>192.168.0.29</strong> (cambia en la autocaravana)</p>
+        <p>Dispositivos configurados: <strong>5 equipos Victron</strong></p>
     </div>
-
+    
+    <h2>🔗 Acceso rápido a dashboards:</h2>
+    
+    <!-- ENLACE 1: Dashboard ESPHome -->
+    <a href="http://192.168.0.29" target="_blank" class="dashboard-link">
+        📊 Dashboard ESPHome (automático)
+    </a>
+    
+    <!-- ENLACE 2: Futuro dashboard interactivo -->
+    <a href="#" onclick="loadData()" class="dashboard-link" style="background: #2196F3;">
+        ⚡ Ver datos en tiempo real (próximamente)
+    </a>
+    
+    <div id="data-container" style="display:none; margin-top:20px;">
+        <h3>📈 Datos en vivo:</h3>
+        <p>Batería Voltaje: <span id="voltage">--.-- V</span></p>
+        <p>Batería SOC: <span id="soc">--%</span></p>
+        <p>Solar Potencia: <span id="solar">--- W</span></p>
+    </div>
+    
     <script>
-        // CONFIGURACIÓN - CAMBIA ESTO EN LA AUTOCARAVANA
-        const ESP_IP = '192.168.0.29';  // IP del ESP32 en tu red
-        const UPDATE_INTERVAL = 5000;   // Actualizar cada 5 segundos
-        
-        // Sensores disponibles (añade más según necesites)
-        const sensors = {
-            'batt-voltage': '/sensor/bateria_voltaje',
-            'batt-current': '/sensor/bateria_corriente', 
-            'batt-soc': '/sensor/bateria_soc',
-            'solar-power': '/sensor/solar_potencia',
-            'wifi-signal': '/sensor/senal_wifi'
-        };
-
-        let lastUpdate = new Date();
-        
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('last-update').textContent = 
-                now.toLocaleTimeString('es-ES');
-        }
-        
-        async function fetchSensorData() {
-            try {
-                // Intenta obtener un sensor para verificar conexión
-                const testUrl = `http://${ESP_IP}/sensor/senal_wifi`;
-                const response = await fetch(testUrl);
-                
-                if (!response.ok) throw new Error('Error en respuesta');
-                
-                // Cambiar estado a conectado
-                document.getElementById('status').className = 'status connected';
-                document.getElementById('status').textContent = '✅ Conectado al ESP32';
-                
-                // Obtener todos los sensores
-                for (const [elementId, endpoint] of Object.entries(sensors)) {
-                    try {
-                        const sensorResponse = await fetch(`http://${ESP_IP}${endpoint}`);
-                        if (sensorResponse.ok) {
-                            const data = await sensorResponse.json();
-                            document.getElementById(elementId).textContent = 
-                                formatValue(data.value, elementId);
-                        }
-                    } catch (sensorError) {
-                        console.log(`Sensor ${elementId} no disponible`);
-                    }
-                }
-                
-                lastUpdate = new Date();
-                updateTime();
-                
-            } catch (error) {
-                document.getElementById('status').className = 'status error';
-                document.getElementById('status').textContent = '❌ Error de conexión. Verifica:';
-                console.error('Error:', error);
-            }
-        }
-        
-        function formatValue(value, sensorId) {
-            if (value === undefined || value === null) return '--';
+        // Función para cargar datos (esto se desarrollará después)
+        function loadData() {
+            document.getElementById('data-container').style.display = 'block';
+            document.getElementById('voltage').textContent = 'Cargando...';
+            document.getElementById('soc').textContent = 'Cargando...';
+            document.getElementById('solar').textContent = 'Cargando...';
             
-            switch(sensorId) {
-                case 'batt-voltage':
-                    return `${value.toFixed(2)} V`;
-                case 'batt-current':
-                    return `${value.toFixed(1)} A`;
-                case 'batt-soc':
-                    return `${Math.round(value)}%`;
-                case 'solar-power':
-                    return `${Math.round(value)} W`;
-                case 'wifi-signal':
-                    return `${Math.round(value)} dBm`;
-                default:
-                    return value;
-            }
+            // Esto se completará cuando estés en la autocaravana
+            alert('La función de datos en vivo se activará cuando estés en la autocaravana');
         }
         
-        // Iniciar
-        updateTime();
-        fetchSensorData();  // Primera carga
-        setInterval(fetchSensorData, UPDATE_INTERVAL);  // Actualizaciones periódicas
-        
-        // Actualizar IP dinámica (si cambia)
-        document.getElementById('esp-ip').textContent = ESP_IP;
+        // Detectar si estamos en móvil
+        if (/Mobi|Android/i.test(navigator.userAgent)) {
+            document.write('<p style="color: blue;">📱 Modo móvil detectado - Ideal para autocaravana</p>');
+        }
     </script>
+    
+    <div style="margin-top: 30px; font-size: 12px; color: #666;">
+        <p>🔧 Dashboard creado por uzturre562-blip</p>
+        <p>📅 Última actualización: 29/01/2026</p>
+        <p>🔗 ESPHome configurado con 5 dispositivos Victron</p>
+    </div>
 </body>
 </html>
