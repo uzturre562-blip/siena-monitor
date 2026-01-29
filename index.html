@@ -1,78 +1,549 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>🚐 Mi Dashboard Victron</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚐 Monitor Victron PRO</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        .dashboard-link {
-            display: block;
-            background: #4CAF50;
-            color: white;
-            padding: 15px;
-            margin: 10px 0;
-            text-decoration: none;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 18px;
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
-        .info-box {
-            background: #f0f0f0;
+        body { 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+        .dashboard-card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: bold;
+        }
+        .sensor-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+        }
+        .quick-stats {
+            background: white;
+            border-radius: 10px;
             padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
     </style>
 </head>
 <body>
-    <h1>🚐 Monitor Victron - Siena395</h1>
-    
-    <div class="info-box">
-        <h3>📡 Estado del sistema:</h3>
-        <p>ESP32 IP: <strong>192.168.0.29</strong> (cambia en la autocaravana)</p>
-        <p>Dispositivos configurados: <strong>5 equipos Victron</strong></p>
+    <div class="container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1><i class="fas fa-caravan"></i> Siena395 - Monitor Victron PRO</h1>
+                        <p class="text-muted">Sistema de monitorización profesional para autocaravana</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-success me-2"><i class="fas fa-wifi"></i> Online</span>
+                        <span class="badge bg-primary">5 Dispositivos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="quick-stats text-center">
+                    <div class="text-muted mb-2"><i class="fas fa-battery-full fa-2x"></i></div>
+                    <div class="h4" id="quick-soc">--%</div>
+                    <small>Estado Batería</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="quick-stats text-center">
+                    <div class="text-muted mb-2"><i class="fas fa-sun fa-2x"></i></div>
+                    <div class="h4" id="quick-solar">-- W</div>
+                    <small>Producción Solar</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="quick-stats text-center">
+                    <div class="text-muted mb-2"><i class="fas fa-bolt fa-2x"></i></div>
+                    <div class="h4" id="quick-power">-- W</div>
+                    <small>Consumo Inversor</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="quick-stats text-center">
+                    <div class="text-muted mb-2"><i class="fas fa-signal fa-2x"></i></div>
+                    <div class="h4" id="quick-wifi">-- dBm</div>
+                    <small>Señal WiFi</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row">
+            <!-- Left Column - Data -->
+            <div class="col-md-8">
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button">Dashboard</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button">Gráficas</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="devices-tab" data-bs-toggle="tab" data-bs-target="#devices" type="button">Dispositivos</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="dashboardTabsContent">
+                    <!-- Tab 1: Dashboard -->
+                    <div class="tab-pane fade show active" id="home" role="tabpanel">
+                        <div class="row">
+                            <!-- Batería -->
+                            <div class="col-md-6">
+                                <div class="card dashboard-card">
+                                    <div class="card-header">
+                                        <i class="fas fa-battery-three-quarters me-2"></i> Batería Principal
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <div class="sensor-value" id="voltage-display">--.-- V</div>
+                                        <div class="row mt-3">
+                                            <div class="col-6">
+                                                <small class="text-muted">Corriente</small>
+                                                <div class="h5" id="current-display">--.- A</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">SOC</small>
+                                                <div class="h5" id="soc-display">--%</div>
+                                            </div>
+                                        </div>
+                                        <div class="progress mt-3" style="height: 20px;">
+                                            <div id="soc-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Solar -->
+                            <div class="col-md-6">
+                                <div class="card dashboard-card">
+                                    <div class="card-header bg-warning">
+                                        <i class="fas fa-solar-panel me-2"></i> Panel Solar
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <div class="sensor-value text-warning" id="solar-display">--- W</div>
+                                        <div class="row mt-3">
+                                            <div class="col-6">
+                                                <small class="text-muted">Voltaje</small>
+                                                <div class="h5" id="solar-voltage">--.- V</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Corriente</small>
+                                                <div class="h5" id="solar-current">--.- A</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Inversor -->
+                            <div class="col-md-6 mt-3">
+                                <div class="card dashboard-card">
+                                    <div class="card-header bg-success">
+                                        <i class="fas fa-bolt me-2"></i> Inversor
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <div class="sensor-value text-success" id="inverter-display">--- W</div>
+                                        <small class="text-muted">Potencia AC</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- DC-DC -->
+                            <div class="col-md-6 mt-3">
+                                <div class="card dashboard-card">
+                                    <div class="card-header bg-info">
+                                        <i class="fas fa-exchange-alt me-2"></i> DC-DC Converter
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <div class="sensor-value text-info" id="dcdc-display">--.- A</div>
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <small>Entrada</small>
+                                                <div class="h6" id="dcdc-in">--.- V</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small>Salida</small>
+                                                <div class="h6" id="dcdc-out">--.- V</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Gráficas -->
+                    <div class="tab-pane fade" id="charts" role="tabpanel">
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                <i class="fas fa-chart-line me-2"></i> Gráficas en Tiempo Real
+                            </div>
+                            <div class="card-body">
+                                <canvas id="voltageChart" height="100"></canvas>
+                                <div class="mt-4">
+                                    <p class="text-muted"><i class="fas fa-info-circle me-2"></i>Las gráficas se activarán cuando el ESP32 esté enviando datos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Dispositivos -->
+                    <div class="tab-pane fade" id="devices" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-microchip me-2"></i> ESP32</h5>
+                                        <p><strong>IP:</strong> <span id="esp-ip">192.168.0.29</span></p>
+                                        <p><strong>Estado:</strong> <span class="badge bg-success">Online</span></p>
+                                        <a href="http://192.168.0.29" target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i> Dashboard ESPHome
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-list me-2"></i> Dispositivos Conectados</h5>
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span>SmartShunt</span>
+                                                <span class="badge bg-success">Conectado</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span>MPPT Solar</span>
+                                                <span class="badge bg-success">Conectado</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span>Phoenix Inverter</span>
+                                                <span class="badge bg-success">Conectado</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span>Orion DC-DC</span>
+                                                <span class="badge bg-success">Conectado</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span>Battery Sense</span>
+                                                <span class="badge bg-success">Conectado</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Actions -->
+            <div class="col-md-4">
+                <!-- Quick Actions -->
+                <div class="card dashboard-card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <i class="fas fa-bolt me-2"></i> Acciones Rápidas
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary w-100 mb-2" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-2"></i> Actualizar Datos
+                        </button>
+                        <a href="http://192.168.0.29/logs" target="_blank" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-terminal me-2"></i> Ver Logs
+                        </a>
+                        <a href="http://192.168.0.29/config" target="_blank" class="btn btn-secondary w-100 mb-2">
+                            <i class="fas fa-cog me-2"></i> Configuración
+                        </a>
+                        <a href="http://192.168.0.29/update" target="_blank" class="btn btn-warning w-100">
+                            <i class="fas fa-cloud-upload-alt me-2"></i> OTA Update
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="card dashboard-card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i> Estado del Sistema
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted">Última actualización</small>
+                            <div id="last-update">--:--:--</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Señal WiFi</small>
+                            <div class="progress" style="height: 10px;">
+                                <div id="wifi-bar" class="progress-bar bg-success" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <small class="text-muted">Conectividad</small>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span><i class="fas fa-wifi text-success"></i> WiFi</span>
+                                <span><i class="fas fa-bluetooth text-primary"></i> BLE</span>
+                                <span><i class="fas fa-server text-info"></i> API</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row mt-4">
+            <div class="col-12 text-center text-muted">
+                <p>
+                    <i class="fas fa-code"></i> Desarrollado para Siena395 | 
+                    <i class="fas fa-shield-alt"></i> Sistema seguro | 
+                    <i class="fas fa-mobile-alt"></i> Responsive design
+                </p>
+                <p class="small">
+                    <a href="https://github.com/uzturre562-blip/siena-monitor" class="text-muted" target="_blank">
+                        <i class="fab fa-github"></i> Ver en GitHub
+                    </a> | 
+                    <a href="https://esphome.io/" class="text-muted" target="_blank">
+                        <i class="fas fa-cube"></i> Powered by ESPHome
+                    </a>
+                </p>
+            </div>
+        </div>
     </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <h2>🔗 Acceso rápido a dashboards:</h2>
-    
-    <!-- ENLACE 1: Dashboard ESPHome -->
-    <a href="http://192.168.0.29" target="_blank" class="dashboard-link">
-        📊 Dashboard ESPHome (automático)
-    </a>
-    
-    <!-- ENLACE 2: Futuro dashboard interactivo -->
-    <a href="#" onclick="loadData()" class="dashboard-link" style="background: #2196F3;">
-        ⚡ Ver datos en tiempo real (próximamente)
-    </a>
-    
-    <div id="data-container" style="display:none; margin-top:20px;">
-        <h3>📈 Datos en vivo:</h3>
-        <p>Batería Voltaje: <span id="voltage">--.-- V</span></p>
-        <p>Batería SOC: <span id="soc">--%</span></p>
-        <p>Solar Potencia: <span id="solar">--- W</span></p>
-    </div>
-    
+    <!-- Dashboard Script -->
     <script>
-        // Función para cargar datos (esto se desarrollará después)
-        function loadData() {
-            document.getElementById('data-container').style.display = 'block';
-            document.getElementById('voltage').textContent = 'Cargando...';
-            document.getElementById('soc').textContent = 'Cargando...';
-            document.getElementById('solar').textContent = 'Cargando...';
-            
-            // Esto se completará cuando estés en la autocaravana
-            alert('La función de datos en vivo se activará cuando estés en la autocaravana');
+        // Configuración
+        const ESP_IP = '192.168.0.29';
+        const UPDATE_INTERVAL = 10000; // 10 segundos
+        
+        // Sensores disponibles en el ESP32
+        const sensors = {
+            'bateria_voltaje': '/sensor/bateria_voltaje',
+            'bateria_corriente': '/sensor/bateria_corriente',
+            'bateria_soc': '/sensor/bateria_soc',
+            'solar_potencia': '/sensor/solar_potencia',
+            'solar_voltaje': '/sensor/solar_voltaje',
+            'solar_corriente': '/sensor/solar_corriente',
+            'inversor_potencia': '/sensor/inversor_potencia',
+            'dcdc_corriente': '/sensor/dcdc_corriente',
+            'dcdc_voltaje_entrada': '/sensor/dcdc_voltaje_entrada',
+            'dcdc_voltaje_salida': '/sensor/dcdc_voltaje_salida',
+            'senal_wifi': '/sensor/senal_wifi'
+        };
+        
+        // Estado inicial
+        let lastUpdate = new Date();
+        let chart = null;
+        
+        // Actualizar hora
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('last-update').textContent = 
+                now.toLocaleTimeString('es-ES');
         }
         
-        // Detectar si estamos en móvil
-        if (/Mobi|Android/i.test(navigator.userAgent)) {
-            document.write('<p style="color: blue;">📱 Modo móvil detectado - Ideal para autocaravana</p>');
+        // Obtener datos del ESP32
+        async function fetchData() {
+            try {
+                // Intentar conexión
+                const testUrl = `http://${ESP_IP}/sensor/senal_wifi`;
+                const response = await fetch(testUrl, { timeout: 3000 });
+                
+                if (!response.ok) throw new Error('Error en respuesta');
+                
+                console.log('✅ Conectado al ESP32');
+                
+                // Obtener todos los sensores
+                for (const [sensorId, endpoint] of Object.entries(sensors)) {
+                    try {
+                        const sensorResponse = await fetch(`http://${ESP_IP}${endpoint}`);
+                        if (sensorResponse.ok) {
+                            const data = await sensorResponse.json();
+                            updateDisplay(sensorId, data.value);
+                        }
+                    } catch (sensorError) {
+                        console.log(`⚠️ Sensor ${sensorId} no disponible`);
+                    }
+                }
+                
+                lastUpdate = new Date();
+                updateTime();
+                
+            } catch (error) {
+                console.error('❌ Error de conexión:', error);
+                document.getElementById('quick-soc').textContent = '--%';
+                document.getElementById('quick-solar').textContent = '-- W';
+                document.getElementById('quick-wifi').textContent = '-- dBm';
+            }
         }
+        
+        // Actualizar display
+        function updateDisplay(sensorId, value) {
+            if (value === undefined || value === null) return;
+            
+            switch(sensorId) {
+                case 'bateria_voltaje':
+                    document.getElementById('voltage-display').textContent = value.toFixed(2) + ' V';
+                    document.getElementById('quick-soc').textContent = document.getElementById('soc-display').textContent;
+                    break;
+                case 'bateria_corriente':
+                    document.getElementById('current-display').textContent = value.toFixed(1) + ' A';
+                    break;
+                case 'bateria_soc':
+                    document.getElementById('soc-display').textContent = Math.round(value) + '%';
+                    document.getElementById('quick-soc').textContent = Math.round(value) + '%';
+                    document.getElementById('soc-progress').style.width = value + '%';
+                    document.getElementById('soc-progress').textContent = Math.round(value) + '%';
+                    // Cambiar color según SOC
+                    if (value > 50) document.getElementById('soc-progress').className = 'progress-bar bg-success';
+                    else if (value > 20) document.getElementById('soc-progress').className = 'progress-bar bg-warning';
+                    else document.getElementById('soc-progress').className = 'progress-bar bg-danger';
+                    break;
+                case 'solar_potencia':
+                    document.getElementById('solar-display').textContent = Math.round(value) + ' W';
+                    document.getElementById('quick-solar').textContent = Math.round(value) + ' W';
+                    break;
+                case 'solar_voltaje':
+                    document.getElementById('solar-voltage').textContent = value.toFixed(1) + ' V';
+                    break;
+                case 'solar_corriente':
+                    document.getElementById('solar-current').textContent = value.toFixed(1) + ' A';
+                    break;
+                case 'inversor_potencia':
+                    document.getElementById('inverter-display').textContent = Math.round(value) + ' W';
+                    document.getElementById('quick-power').textContent = Math.round(value) + ' W';
+                    break;
+                case 'dcdc_corriente':
+                    document.getElementById('dcdc-display').textContent = value.toFixed(1) + ' A';
+                    break;
+                case 'dcdc_voltaje_entrada':
+                    document.getElementById('dcdc-in').textContent = value.toFixed(1) + ' V';
+                    break;
+                case 'dcdc_voltaje_salida':
+                    document.getElementById('dcdc-out').textContent = value.toFixed(1) + ' V';
+                    break;
+                case 'senal_wifi':
+                    const wifiValue = Math.round(value);
+                    document.getElementById('quick-wifi').textContent = wifiValue + ' dBm';
+                    // Barra de señal WiFi
+                    let wifiPercent = 0;
+                    if (wifiValue >= -50) wifiPercent = 100;
+                    else if (wifiValue >= -60) wifiPercent = 80;
+                    else if (wifiValue >= -70) wifiPercent = 60;
+                    else if (wifiValue >= -80) wifiPercent = 40;
+                    else wifiPercent = 20;
+                    
+                    document.getElementById('wifi-bar').style.width = wifiPercent + '%';
+                    if (wifiPercent > 60) document.getElementById('wifi-bar').className = 'progress-bar bg-success';
+                    else if (wifiPercent > 30) document.getElementById('wifi-bar').className = 'progress-bar bg-warning';
+                    else document.getElementById('wifi-bar').className = 'progress-bar bg-danger';
+                    break;
+            }
+        }
+        
+        // Función para refrescar manualmente
+        function refreshData() {
+            document.getElementById('voltage-display').textContent = 'Actualizando...';
+            fetchData();
+        }
+        
+        // Inicializar gráfica
+        function initChart() {
+            const ctx = document.getElementById('voltageChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Voltaje Batería (V)',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true },
+                        title: {
+                            display: true,
+                            text: 'Tendencia de Voltaje'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Voltios (V)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            initChart();
+            fetchData(); // Primera carga
+            
+            // Actualizar periódicamente
+            setInterval(fetchData, UPDATE_INTERVAL);
+            
+            // Mostrar IP del ESP32
+            document.getElementById('esp-ip').textContent = ESP_IP;
+            
+            // Para pruebas en casa, mostrar mensaje
+            if (window.location.hostname.includes('github.io')) {
+                console.log('🌐 Dashboard cargado desde GitHub Pages');
+                console.log('📡 Conectando a ESP32 en:', ESP_IP);
+            }
+        });
     </script>
-    
-    <div style="margin-top: 30px; font-size: 12px; color: #666;">
-        <p>🔧 Dashboard creado por uzturre562-blip</p>
-        <p>📅 Última actualización: 29/01/2026</p>
-        <p>🔗 ESPHome configurado con 5 dispositivos Victron</p>
-    </div>
 </body>
 </html>
