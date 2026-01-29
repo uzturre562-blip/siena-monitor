@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏕️ Monitor Victron PRO - Siena395</title>
+    <title>🚐 Monitor Victron PRO - Siena395</title>
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -17,6 +17,7 @@
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
+            --caravan: #f97316;
             --bg-color: #f5f7fa;
             --card-bg: #ffffff;
             --text-color: #333333;
@@ -28,6 +29,7 @@
             --card-bg: #16213e;
             --text-color: #e0e0e0;
             --border-color: #2d3748;
+            --caravan: #fdba74;
         }
         
         body { 
@@ -86,6 +88,12 @@
             color: #4ecdc4;
             font-weight: bold;
         }
+        .caravan-icon {
+            color: var(--caravan);
+            font-size: 1.5em;
+            margin-right: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
         .status {
             padding: 10px 15px;
             border-radius: 8px;
@@ -108,9 +116,11 @@
             color: #FFC107;
             border: 1px solid #FFC107;
         }
-        .autocaravana-icon {
-            font-size: 1.5em;
-            margin-right: 10px;
+        .device-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 2px;
         }
     </style>
 </head>
@@ -128,8 +138,8 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h1><span class="autocaravana-icon">🏕️</span> Siena395 - Monitor Victron PRO</h1>
-                        <p class="text-muted">Sistema de monitorización profesional para autocaravana</p>
+                        <h1><i class="fas fa-caravan caravan-icon"></i> Siena395 - Monitor Victron PRO</h1>
+                        <p class="text-muted"><i class="fas fa-road me-1"></i> Sistema de monitorización profesional para autocaravana</p>
                     </div>
                     <div class="text-end">
                         <span class="badge bg-success me-2"><i class="fas fa-wifi"></i> Online</span>
@@ -202,7 +212,7 @@
                             <div class="col-md-6">
                                 <div class="card dashboard-card">
                                     <div class="card-header">
-                                        <i class="fas fa-battery-three-quarters me-2"></i> Batería Principal
+                                        <i class="fas fa-battery-three-quarters me-2"></i> SmartShunt
                                     </div>
                                     <div class="card-body text-center">
                                         <div class="sensor-value" id="voltage-display">--.-- V</div>
@@ -219,6 +229,10 @@
                                         <div class="progress mt-3" style="height: 20px;">
                                             <div id="soc-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
                                         </div>
+                                        <div class="mt-2 text-muted small">
+                                            <span id="ttg-display">-- min restantes</span> | 
+                                            <span id="ah-display">-- Ah consumidos</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -233,7 +247,7 @@
                                         <div class="row">
                                             <div class="col-6">
                                                 <div class="voltage-display" style="font-size: 2rem;" id="starter-voltage">--.-- V</div>
-                                                <small class="text-muted">Voltaje Arranque</small>
+                                                <small class="text-muted">Voltaje</small>
                                             </div>
                                             <div class="col-6">
                                                 <div class="temp-display" style="font-size: 2rem;" id="starter-temp">--.- °C</div>
@@ -242,7 +256,7 @@
                                         </div>
                                         <div class="mt-3">
                                             <small class="text-muted">
-                                                <i class="fas fa-info-circle"></i> Batería de arranque del vehículo
+                                                <i class="fas fa-info-circle"></i> Sensor de batería
                                             </small>
                                         </div>
                                     </div>
@@ -253,7 +267,7 @@
                             <div class="col-md-6 mt-3">
                                 <div class="card dashboard-card">
                                     <div class="card-header bg-warning">
-                                        <i class="fas fa-solar-panel me-2"></i> Panel Solar
+                                        <i class="fas fa-solar-panel me-2"></i> MPPT Solar
                                     </div>
                                     <div class="card-body text-center">
                                         <div class="sensor-value text-warning" id="solar-display">--- W</div>
@@ -267,6 +281,9 @@
                                                 <div class="h5" id="solar-current">--.- A</div>
                                             </div>
                                         </div>
+                                        <div class="mt-2 text-muted small">
+                                            <span id="yield-today">-- Wh hoy</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -275,15 +292,15 @@
                             <div class="col-md-6 mt-3">
                                 <div class="card dashboard-card">
                                     <div class="card-header bg-success">
-                                        <i class="fas fa-bolt me-2"></i> Inversor Phoenix
+                                        <i class="fas fa-bolt me-2"></i> Phoenix Inverter
                                     </div>
                                     <div class="card-body text-center">
-                                        <div class="sensor-value text-success" id="inverter-display">--- W</div>
+                                        <div class="sensor-value text-success" id="inverter-display">--- VA</div>
                                         <small class="text-muted">Potencia AC</small>
                                         <div class="row mt-3">
                                             <div class="col-12">
-                                                <small class="text-muted">Voltaje AC</small>
-                                                <div class="h5" id="inverter-voltage">--- V</div>
+                                                <small class="text-muted">Voltaje Batería</small>
+                                                <div class="h5" id="inverter-voltage">--.- V</div>
                                             </div>
                                         </div>
                                     </div>
@@ -294,10 +311,10 @@
                             <div class="col-md-6 mt-3">
                                 <div class="card dashboard-card">
                                     <div class="card-header bg-info">
-                                        <i class="fas fa-exchange-alt me-2"></i> DC-DC Converter
+                                        <i class="fas fa-exchange-alt me-2"></i> Orion DC-DC
                                     </div>
                                     <div class="card-body text-center">
-                                        <div class="sensor-value text-info" id="dcdc-display">--.- A</div>
+                                        <div class="sensor-value text-info" id="dcdc-display">--.- V</div>
                                         <div class="row mt-2">
                                             <div class="col-6">
                                                 <small>Entrada</small>
@@ -406,11 +423,11 @@
                         <div>
                             <small class="text-muted">Dispositivos Conectados</small>
                             <div class="d-flex flex-wrap gap-2 mt-2">
-                                <span class="badge bg-secondary">SmartShunt</span>
-                                <span class="badge bg-secondary">MPPT Solar</span>
-                                <span class="badge bg-secondary">Inversor</span>
-                                <span class="badge bg-secondary">DC-DC</span>
-                                <span class="badge bg-secondary">Battery Sense</span>
+                                <span class="badge bg-primary device-badge">SmartShunt</span>
+                                <span class="badge bg-warning device-badge">MPPT Solar</span>
+                                <span class="badge bg-success device-badge">Phoenix Inverter</span>
+                                <span class="badge bg-info device-badge">Orion DC-DC</span>
+                                <span class="badge bg-danger device-badge">Battery Sense</span>
                             </div>
                         </div>
                     </div>
@@ -422,16 +439,16 @@
         <div class="row mt-4">
             <div class="col-12 text-center text-muted">
                 <p>
-                    <span class="autocaravana-icon">🏕️</span> Sistema Siena395 | 
-                    <i class="fas fa-shield-alt"></i> Monitorización profesional | 
-                    <i class="fas fa-mobile-alt"></i> Diseño responsive
+                    <i class="fas fa-caravan me-2"></i> Sistema Siena395 | 
+                    <i class="fas fa-shield-alt me-2"></i> Monitorización profesional | 
+                    <i class="fas fa-mobile-alt me-2"></i> Diseño responsive
                 </p>
                 <p class="small">
                     <a href="https://github.com/uzturre562-blip/siena-monitor" class="text-muted" target="_blank">
-                        <i class="fab fa-github"></i> Ver en GitHub
+                        <i class="fab fa-github me-1"></i> Ver en GitHub
                     </a> | 
                     <a href="https://esphome.io/" class="text-muted" target="_blank">
-                        <i class="fas fa-cube"></i> Powered by ESPHome
+                        <i class="fas fa-caravan me-1"></i> Powered by ESPHome
                     </a>
                 </p>
             </div>
@@ -441,80 +458,84 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Dashboard Script INTELIGENTE -->
+    <!-- Dashboard Script CORREGIDO -->
     <script>
-        // ==================== CONFIGURACIÓN GLOBAL ====================
+        // ==================== CONFIGURACIÓN ====================
         let ESP_IP = null;
         const UPDATE_INTERVAL = 10000; // 10 segundos
         let currentTheme = 'light';
-        let chart = null;
         let isConnected = false;
         
-        // Sensores disponibles en el ESP32
-        const sensors = {
-            'bateria_voltaje': '/sensor/bateria_voltaje',
-            'bateria_corriente': '/sensor/bateria_corriente',
-            'bateria_soc': '/sensor/bateria_soc',
-            'solar_potencia': '/sensor/solar_potencia',
-            'solar_voltaje': '/sensor/solar_voltaje',
-            'solar_corriente': '/sensor/solar_corriente',
-            'inversor_potencia': '/sensor/inversor_potencia',
-            'inversor_voltaje': '/sensor/inversor_voltaje',
-            'dcdc_corriente': '/sensor/dcdc_corriente',
-            'dcdc_voltaje_entrada': '/sensor/dcdc_voltaje_entrada',
-            'dcdc_voltaje_salida': '/sensor/dcdc_voltaje_salida',
-            'bateria_arranque_voltaje': '/sensor/bateria_arranque_voltaje',
-            'bateria_arranque_temperatura': '/sensor/bateria_arranque_temperatura',
-            'senal_wifi': '/sensor/senal_wifi',
-            'tiempo_activo': '/sensor/tiempo_activo'
+        // ENDPOINTS CORRECTOS según tu YAML
+        const endpoints = {
+            'soc_smartshunt': '/sensor/soc_smartshunt/state',
+            'voltage_smartshunt': '/sensor/voltage_smartshunt/state',
+            'current_smartshunt': '/sensor/current_smartshunt/state',
+            'ah_smartshunt': '/sensor/ah_smartshunt/state',
+            'ttg_smartshunt': '/sensor/ttg_smartshunt/state',
+            
+            'voltage_mppt': '/sensor/voltage_mppt/state',
+            'current_mppt': '/sensor/current_mppt/state',
+            'power_mppt': '/sensor/power_mppt/state',
+            'yield_today_mppt': '/sensor/yield_today_mppt/state',
+            
+            'voltage_phoenix': '/sensor/voltage_phoenix/state',
+            'power_ac_phoenix': '/sensor/power_ac_phoenix/state',
+            
+            'voltage_orion_in': '/sensor/voltage_orion_in/state',
+            'voltage_orion_out': '/sensor/voltage_orion_out/state',
+            
+            'voltage_battery_sense': '/sensor/voltage_battery_sense/state',
+            'temp_battery_sense': '/sensor/temp_battery_sense/state',
+            
+            'esp32_ip': '/text_sensor/esp32_ip/state',
+            'tiempo_activo': '/text_sensor/tiempo_activo/state'
         };
 
-        // ==================== DETECCIÓN AUTOMÁTICA DE IP ====================
+        // ==================== DETECCIÓN DE IP ====================
         async function discoverESP32IP() {
-            console.log('🔍 Iniciando detección automática de ESP32...');
-            updateConnectionStatus('conectando', 'Buscando ESP32 en la red...');
+            console.log('🔍 Buscando ESP32...');
+            updateConnectionStatus('loading', 'Escaneando red...');
             
-            // Rangos de IP a probar (en orden de probabilidad)
+            // Rangos más probables
             const ipRanges = [
-                { base: '192.168.43.', start: 100, end: 150 },   // Hotspot Android (MÁS PROBABLE)
-                { base: '192.168.0.', start: 20, end: 40 },      // Tu red de casa
-                { base: '192.168.1.', start: 100, end: 150 },    // Redes comunes
+                { base: '192.168.43.', start: 100, end: 150 },   // Hotspot Android
+                { base: '192.168.0.', start: 20, end: 50 },      // Red casa
+                { base: '192.168.1.', start: 100, end: 150 },    // Red común
                 { base: '192.168.8.', start: 100, end: 150 },    // Huawei
-                { base: '172.20.10.', start: 1, end: 15 }        // Hotspot iOS
+                { base: '172.20.10.', start: 1, end: 15 }        // iOS
             ];
             
-            // Intentar mDNS primero (más rápido si funciona)
+            // Intentar mDNS
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                setTimeout(() => controller.abort(), 2000);
                 
-                const response = await fetch('http://siena395-monitor.local/sensor/senal_wifi', { 
-                    signal: controller.signal,
-                    mode: 'no-cors'
+                const response = await fetch('http://siena395-monitor.local/sensor/soc_smartshunt/state', { 
+                    signal: controller.signal 
                 });
                 
-                clearTimeout(timeoutId);
-                console.log('✅ mDNS funcionando: siena395-monitor.local');
-                return 'siena395-monitor.local';
-            } catch (error) {
+                if (response.ok) {
+                    console.log('✅ mDNS funcionando: siena395-monitor.local');
+                    return 'siena395-monitor.local';
+                }
+            } catch (e) {
                 console.log('⚠️ mDNS no disponible, escaneando IPs...');
             }
             
-            // Escanear rangos de IP
+            // Escanear IPs
             for (const range of ipRanges) {
-                console.log(`🔎 Escaneando rango: ${range.base}${range.start}-${range.end}`);
+                console.log(`🔎 Escaneando ${range.base}${range.start}-${range.end}`);
                 
                 // Probar en paralelo para mayor velocidad
                 const promises = [];
-                
                 for (let i = range.start; i <= range.end; i++) {
-                    const testIP = `${range.base}${i}`;
-                    promises.push(testIPConnection(testIP));
+                    const ip = `${range.base}${i}`;
+                    promises.push(testIPConnection(ip));
                 }
                 
-                // Esperar resultados
                 const results = await Promise.all(promises);
-                const foundIP = results.find(result => result !== null);
+                const foundIP = results.find(ip => ip !== null);
                 
                 if (foundIP) {
                     console.log(`✅ ESP32 encontrado en: ${foundIP}`);
@@ -522,267 +543,289 @@
                 }
             }
             
-            console.log('⚠️ ESP32 no encontrado automáticamente');
-            updateConnectionStatus('error', 'ESP32 no encontrado. Verifica conexión WiFi.');
+            console.log('❌ ESP32 no encontrado');
             return null;
         }
         
         async function testIPConnection(ip) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1000);
+                setTimeout(() => controller.abort(), 1000);
                 
-                const response = await fetch(`http://${ip}/sensor/senal_wifi`, { 
+                const response = await fetch(`http://${ip}/sensor/soc_smartshunt/state`, { 
                     signal: controller.signal 
                 });
                 
-                clearTimeout(timeoutId);
-                if (response.ok) return ip;
-            } catch (error) {
+                if (response.ok) {
+                    return ip;
+                }
+            } catch (e) {
                 // Silenciar errores
             }
             return null;
         }
-        
-        // ==================== FUNCIONES DE ESTADO ====================
+
+        // ==================== GESTIÓN DE ESTADO ====================
         function updateConnectionStatus(status, message) {
-            const statusElement = document.getElementById('connection-status');
+            const statusEl = document.getElementById('connection-status');
             const statusText = document.getElementById('status-text');
-            const connectionBadge = document.getElementById('connection-badge');
+            const badge = document.getElementById('connection-badge');
+            
+            statusEl.className = `status ${status}`;
+            statusText.textContent = message;
             
             switch(status) {
-                case 'conectado':
-                    statusElement.className = 'status connected';
-                    statusElement.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-                    connectionBadge.className = 'badge bg-success';
-                    connectionBadge.textContent = 'Conectado';
+                case 'connected':
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                    badge.className = 'badge bg-success';
+                    badge.textContent = 'Conectado';
                     isConnected = true;
                     enableActionButtons();
                     break;
+                    
                 case 'error':
-                    statusElement.className = 'status error';
-                    statusElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-                    connectionBadge.className = 'badge bg-danger';
-                    connectionBadge.textContent = 'Error';
+                    statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                    badge.className = 'badge bg-danger';
+                    badge.textContent = 'Error';
                     isConnected = false;
                     disableActionButtons();
                     break;
-                case 'conectando':
-                    statusElement.className = 'status loading';
-                    statusElement.innerHTML = `<i class="fas fa-sync fa-spin"></i> ${message}`;
-                    connectionBadge.className = 'badge bg-warning';
-                    connectionBadge.textContent = 'Conectando...';
-                    isConnected = false;
-                    disableActionButtons();
-                    break;
-                case 'offline':
-                    statusElement.className = 'status error';
-                    statusElement.innerHTML = `<i class="fas fa-wifi-slash"></i> ${message}`;
-                    connectionBadge.className = 'badge bg-secondary';
-                    connectionBadge.textContent = 'Offline';
+                    
+                case 'loading':
+                    statusEl.innerHTML = `<i class="fas fa-sync fa-spin"></i> ${message}`;
+                    badge.className = 'badge bg-warning';
+                    badge.textContent = 'Conectando...';
                     isConnected = false;
                     disableActionButtons();
                     break;
             }
         }
-        
+
         function enableActionButtons() {
             if (!ESP_IP) return;
             
-            document.getElementById('dashboard-btn').disabled = false;
+            const buttons = ['dashboard-btn', 'config-btn', 'logs-btn', 'update-btn'];
+            buttons.forEach(id => {
+                const btn = document.getElementById(id);
+                btn.disabled = false;
+            });
+            
             document.getElementById('dashboard-btn').onclick = () => window.open(`http://${ESP_IP}`, '_blank');
-            document.getElementById('dashboard-btn').innerHTML = '<i class="fas fa-tachometer-alt me-2"></i> Dashboard ESPHome';
-            
-            document.getElementById('config-btn').disabled = false;
             document.getElementById('config-btn').onclick = () => window.open(`http://${ESP_IP}/config`, '_blank');
-            
-            document.getElementById('logs-btn').disabled = false;
             document.getElementById('logs-btn').onclick = () => window.open(`http://${ESP_IP}/logs`, '_blank');
-            
-            document.getElementById('update-btn').disabled = false;
             document.getElementById('update-btn').onclick = () => window.open(`http://${ESP_IP}/update`, '_blank');
             
-            // Actualizar enlace en dispositivos
-            const dashboardLink = document.getElementById('dashboard-link');
-            dashboardLink.href = `http://${ESP_IP}`;
-            dashboardLink.style.display = 'block';
+            const link = document.getElementById('dashboard-link');
+            link.href = `http://${ESP_IP}`;
+            link.style.display = 'block';
         }
-        
+
         function disableActionButtons() {
-            document.getElementById('dashboard-btn').disabled = true;
-            document.getElementById('config-btn').disabled = true;
-            document.getElementById('logs-btn').disabled = true;
-            document.getElementById('update-btn').disabled = true;
-            
+            ['dashboard-btn', 'config-btn', 'logs-btn', 'update-btn'].forEach(id => {
+                document.getElementById(id).disabled = true;
+            });
             document.getElementById('dashboard-link').style.display = 'none';
         }
-        
-        // ==================== GESTIÓN DE DATOS ====================
-        async function fetchData() {
-            if (!ESP_IP || !isConnected) {
-                console.log('⚠️ No hay conexión con ESP32');
-                return;
+
+        // ==================== OBTENER DATOS ====================
+        async function fetchSensorData(endpoint) {
+            try {
+                const response = await fetch(`http://${ESP_IP}${endpoint}`);
+                if (!response.ok) throw new Error('Sensor no disponible');
+                
+                const text = await response.text();
+                return text.trim();
+            } catch (error) {
+                console.log(`❌ Error en ${endpoint}:`, error.message);
+                return null;
             }
+        }
+
+        async function fetchAllData() {
+            if (!ESP_IP || !isConnected) return;
             
             try {
-                // Obtener todos los sensores
-                for (const [sensorId, endpoint] of Object.entries(sensors)) {
-                    try {
-                        const response = await fetch(`http://${ESP_IP}${endpoint}`, { timeout: 2000 });
-                        if (response.ok) {
-                            const data = await response.json();
-                            updateDisplay(sensorId, data.value);
-                        }
-                    } catch (error) {
-                        // Sensor no disponible
+                const data = {};
+                
+                // Obtener todos los sensores en paralelo
+                const promises = Object.entries(endpoints).map(async ([key, endpoint]) => {
+                    const value = await fetchSensorData(endpoint);
+                    if (value !== null) {
+                        data[key] = value;
+                        updateDisplay(key, value);
+                    }
+                });
+                
+                await Promise.all(promises);
+                
+                // Actualizar tiempo
+                updateTime();
+                
+                // Actualizar estado
+                if (Object.keys(data).length > 0) {
+                    updateConnectionStatus('connected', `Conectado a ${ESP_IP}`);
+                    
+                    // Actualizar IP si está disponible
+                    if (data.esp32_ip) {
+                        document.getElementById('esp-ip').textContent = data.esp32_ip;
+                        document.getElementById('esp-ip').className = 'badge bg-success';
                     }
                 }
                 
-                updateTime();
-                updateConnectionStatus('conectado', `Conectado a ${ESP_IP}`);
-                
             } catch (error) {
-                console.log('❌ Error de conexión con ESP32');
-                updateConnectionStatus('error', 'Error de conexión. Redetectando...');
+                console.log('❌ Error general:', error);
+                updateConnectionStatus('error', 'Error de conexión');
                 setTimeout(manualIPDiscovery, 5000);
             }
         }
-        
+
         function updateDisplay(sensorId, value) {
-            if (value === undefined || value === null) return;
+            if (!value || value === '') return;
+            
+            const numValue = parseFloat(value);
             
             switch(sensorId) {
-                case 'bateria_voltaje':
-                    document.getElementById('voltage-display').textContent = value.toFixed(2) + ' V';
+                case 'soc_smartshunt':
+                    document.getElementById('soc-display').textContent = numValue.toFixed(1) + '%';
+                    document.getElementById('quick-soc').textContent = numValue.toFixed(1) + '%';
+                    document.getElementById('soc-progress').style.width = numValue + '%';
+                    document.getElementById('soc-progress').textContent = numValue.toFixed(0) + '%';
+                    document.getElementById('soc-progress').className = 
+                        numValue > 50 ? 'progress-bar bg-success' : 
+                        numValue > 20 ? 'progress-bar bg-warning' : 'progress-bar bg-danger';
                     break;
-                case 'bateria_corriente':
-                    document.getElementById('current-display').textContent = value.toFixed(1) + ' A';
+                    
+                case 'voltage_smartshunt':
+                    document.getElementById('voltage-display').textContent = numValue.toFixed(2) + ' V';
                     break;
-                case 'bateria_soc':
-                    const socValue = Math.round(value);
-                    document.getElementById('soc-display').textContent = socValue + '%';
-                    document.getElementById('quick-soc').textContent = socValue + '%';
-                    document.getElementById('soc-progress').style.width = value + '%';
-                    document.getElementById('soc-progress').textContent = socValue + '%';
-                    if (value > 50) document.getElementById('soc-progress').className = 'progress-bar bg-success';
-                    else if (value > 20) document.getElementById('soc-progress').className = 'progress-bar bg-warning';
-                    else document.getElementById('soc-progress').className = 'progress-bar bg-danger';
+                    
+                case 'current_smartshunt':
+                    document.getElementById('current-display').textContent = numValue.toFixed(2) + ' A';
                     break;
-                case 'solar_potencia':
-                    const solarValue = Math.round(value);
-                    document.getElementById('solar-display').textContent = solarValue + ' W';
-                    document.getElementById('quick-solar').textContent = solarValue + ' W';
+                    
+                case 'ah_smartshunt':
+                    document.getElementById('ah-display').textContent = numValue.toFixed(1) + ' Ah';
                     break;
-                case 'solar_voltaje':
-                    document.getElementById('solar-voltage').textContent = value.toFixed(1) + ' V';
+                    
+                case 'ttg_smartshunt':
+                    const hours = Math.floor(numValue / 60);
+                    const minutes = numValue % 60;
+                    document.getElementById('ttg-display').textContent = 
+                        hours > 0 ? `${hours}h ${minutes}min` : `${minutes} min`;
                     break;
-                case 'solar_corriente':
-                    document.getElementById('solar-current').textContent = value.toFixed(1) + ' A';
+                    
+                case 'power_mppt':
+                    document.getElementById('solar-display').textContent = numValue.toFixed(0) + ' W';
+                    document.getElementById('quick-solar').textContent = numValue.toFixed(0) + ' W';
                     break;
-                case 'inversor_potencia':
-                    document.getElementById('inverter-display').textContent = Math.round(value) + ' W';
+                    
+                case 'voltage_mppt':
+                    document.getElementById('solar-voltage').textContent = numValue.toFixed(2) + ' V';
                     break;
-                case 'inversor_voltaje':
-                    document.getElementById('inverter-voltage').textContent = Math.round(value) + ' V';
+                    
+                case 'current_mppt':
+                    document.getElementById('solar-current').textContent = numValue.toFixed(1) + ' A';
                     break;
-                case 'dcdc_corriente':
-                    document.getElementById('dcdc-display').textContent = value.toFixed(1) + ' A';
+                    
+                case 'yield_today_mppt':
+                    document.getElementById('yield-today').textContent = numValue.toFixed(0) + ' Wh';
                     break;
-                case 'dcdc_voltaje_entrada':
-                    document.getElementById('dcdc-in').textContent = value.toFixed(1) + ' V';
+                    
+                case 'power_ac_phoenix':
+                    document.getElementById('inverter-display').textContent = numValue.toFixed(0) + ' VA';
                     break;
-                case 'dcdc_voltaje_salida':
-                    document.getElementById('dcdc-out').textContent = value.toFixed(1) + ' V';
+                    
+                case 'voltage_phoenix':
+                    document.getElementById('inverter-voltage').textContent = numValue.toFixed(2) + ' V';
                     break;
-                case 'bateria_arranque_voltaje':
-                    document.getElementById('starter-voltage').textContent = value.toFixed(2) + ' V';
-                    document.getElementById('quick-starter').textContent = value.toFixed(1) + ' V';
+                    
+                case 'voltage_orion_in':
+                    document.getElementById('dcdc-in').textContent = numValue.toFixed(2) + ' V';
                     break;
-                case 'bateria_arranque_temperatura':
-                    document.getElementById('starter-temp').textContent = value.toFixed(1) + ' °C';
+                    
+                case 'voltage_orion_out':
+                    document.getElementById('dcdc-out').textContent = numValue.toFixed(2) + ' V';
+                    document.getElementById('dcdc-display').textContent = numValue.toFixed(2) + ' V';
                     break;
-                case 'senal_wifi':
-                    const wifiValue = Math.round(value);
-                    document.getElementById('quick-wifi').textContent = wifiValue + ' dBm';
-                    let wifiPercent = 0;
-                    if (wifiValue >= -50) wifiPercent = 100;
-                    else if (wifiValue >= -60) wifiPercent = 80;
-                    else if (wifiValue >= -70) wifiPercent = 60;
-                    else if (wifiValue >= -80) wifiPercent = 40;
-                    else wifiPercent = 20;
-                    document.getElementById('wifi-bar').style.width = wifiPercent + '%';
-                    if (wifiPercent > 60) document.getElementById('wifi-bar').className = 'progress-bar bg-success';
-                    else if (wifiPercent > 30) document.getElementById('wifi-bar').className = 'progress-bar bg-warning';
-                    else document.getElementById('wifi-bar').className = 'progress-bar bg-danger';
+                    
+                case 'voltage_battery_sense':
+                    document.getElementById('starter-voltage').textContent = numValue.toFixed(2) + ' V';
+                    document.getElementById('quick-starter').textContent = numValue.toFixed(1) + ' V';
                     break;
+                    
+                case 'temp_battery_sense':
+                    document.getElementById('starter-temp').textContent = numValue.toFixed(1) + ' °C';
+                    break;
+                    
                 case 'tiempo_activo':
                     document.getElementById('uptime-display').textContent = value;
                     break;
             }
         }
-        
+
         // ==================== FUNCIONES UTILITARIAS ====================
         function updateTime() {
             const now = new Date();
             document.getElementById('last-update').textContent = now.toLocaleTimeString('es-ES');
         }
-        
+
         function refreshData() {
             if (isConnected) {
-                document.getElementById('voltage-display').textContent = 'Actualizando...';
-                fetchData();
+                fetchAllData();
             } else {
                 manualIPDiscovery();
             }
         }
-        
+
         async function manualIPDiscovery() {
-            updateConnectionStatus('conectando', 'Buscando ESP32 manualmente...');
+            updateConnectionStatus('loading', 'Buscando ESP32...');
             ESP_IP = await discoverESP32IP();
             
             if (ESP_IP) {
                 document.getElementById('esp-ip').textContent = ESP_IP;
-                document.getElementById('esp-ip').className = 'badge bg-success';
-                await fetchData();
+                document.getElementById('esp-ip').className = 'badge bg-info';
+                await fetchAllData();
+                
+                // Iniciar actualización periódica
+                setInterval(fetchAllData, UPDATE_INTERVAL);
             } else {
-                updateConnectionStatus('error', 'No se pudo encontrar el ESP32');
+                updateConnectionStatus('error', 'ESP32 no encontrado');
                 document.getElementById('esp-ip').textContent = 'No encontrado';
                 document.getElementById('esp-ip').className = 'badge bg-danger';
             }
         }
-        
+
         // ==================== TEMA CLARO/OSCURO ====================
         function toggleTheme() {
             currentTheme = currentTheme === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', currentTheme);
             
-            const toggleBtn = document.getElementById('themeToggle');
+            const btn = document.getElementById('themeToggle');
             if (currentTheme === 'dark') {
-                toggleBtn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
-                toggleBtn.className = 'btn btn-outline-warning';
+                btn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
+                btn.className = 'btn btn-outline-warning';
             } else {
-                toggleBtn.innerHTML = '<i class="fas fa-moon"></i> Tema Oscuro';
-                toggleBtn.className = 'btn btn-outline-secondary';
+                btn.innerHTML = '<i class="fas fa-moon"></i> Tema Oscuro';
+                btn.className = 'btn btn-outline-secondary';
             }
             
             localStorage.setItem('theme', currentTheme);
         }
-        
+
         // ==================== INICIALIZACIÓN ====================
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Cargar tema guardado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tema
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
                 currentTheme = savedTheme;
                 document.documentElement.setAttribute('data-theme', currentTheme);
             }
             
-            // Configurar botón de tema
-            const toggleBtn = document.getElementById('themeToggle');
-            toggleBtn.addEventListener('click', toggleTheme);
+            const themeBtn = document.getElementById('themeToggle');
+            themeBtn.addEventListener('click', toggleTheme);
             if (currentTheme === 'dark') {
-                toggleBtn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
-                toggleBtn.className = 'btn btn-outline-warning';
+                themeBtn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
+                themeBtn.className = 'btn btn-outline-warning';
             }
             
             // Inicializar
@@ -790,14 +833,9 @@
             disableActionButtons();
             
             // Iniciar detección automática
-            await manualIPDiscovery();
+            manualIPDiscovery();
             
-            // Iniciar actualizaciones periódicas
-            if (ESP_IP) {
-                setInterval(fetchData, UPDATE_INTERVAL);
-            }
-            
-            console.log('🏕️ Dashboard Siena395 PRO inicializado');
+            console.log('🚐 Dashboard Siena395 PRO inicializado');
         });
     </script>
 </body>
