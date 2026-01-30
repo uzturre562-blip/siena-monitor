@@ -3,136 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siena395 PRO - Ultimate Monitor</title>
+    <title>Siena395 ULTRA PRO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent: #00d2ff; --bg: #0f172a; --text: #f8fafc; --card-shadow: rgba(0,0,0,0.3);
+            --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --accent: #00d2ff; --text: #f8fafc;
         }
         [data-theme="light"] {
-            --glass: rgba(0, 0, 0, 0.05);
-            --glass-border: rgba(0, 0, 0, 0.1);
-            --accent: #2563eb; --bg: #f1f5f9; --text: #1e293b; --card-shadow: rgba(0,0,0,0.1);
+            --bg: #f1f5f9; --card: rgba(255, 255, 255, 0.9); --accent: #2563eb; --text: #1e293b;
         }
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            transition: 0.4s;
-            min-height: 100vh;
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; }
+        .glass-card { background: var(--card); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); height: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        
+        /* Animación de Flujo */
+        .flow-container { position: relative; height: 180px; display: flex; justify-content: space-around; align-items: center; }
+        .flow-node { text-align: center; z-index: 2; width: 80px; }
+        .flow-line { position: absolute; height: 2px; background: rgba(255,255,255,0.1); z-index: 1; top: 50%; width: 40%; }
+        .dot-animation {
+            position: absolute; width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+            top: -2px; animation: flow 2s linear infinite; box-shadow: 0 0 10px var(--accent);
         }
-        .glass-card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px var(--card-shadow);
-            height: 100%;
-        }
-        .stat-value { font-size: 2.8rem; font-weight: 800; line-height: 1; margin: 10px 0; }
-        .unit { font-size: 1rem; opacity: 0.6; }
-        .device-icon { font-size: 1.5rem; margin-bottom: 10px; display: block; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .online { background: #10b981; box-shadow: 0 0 8px #10b981; }
-        .offline { background: #ef4444; }
-        #themeToggle { cursor: pointer; font-size: 1.2rem; }
+        @keyframes flow { 0% { left: 0%; } 100% { left: 100%; } }
+        
+        .stat-main { font-size: 2.2rem; font-weight: 800; color: var(--accent); }
+        .stat-sub { font-size: 0.9rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+        #themeToggle { cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="container py-4">
-    <div class="row mb-4 align-items-center">
-        <div class="col-6">
-            <h2 class="fw-bold mb-0">SIENA 395 <span class="text-info">PRO</span></h2>
-            <div class="small opacity-75"><span id="conn-dot" class="status-dot offline"></span> <span id="conn-text">MQTT: OFF</span></div>
+<div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">SIENA 395 <span class="text-info">ULTRA</span></h2>
+        <div>
+            <i id="themeToggle" class="fas fa-adjust me-3"></i>
+            <span class="badge bg-primary" id="esp-status">CONECTANDO...</span>
         </div>
-        <div class="col-6 text-end">
-            <i id="themeToggle" class="fas fa-sun me-3"></i>
-            <span class="badge bg-dark rounded-pill" id="clock">00:00:00</span>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="flow-container">
+                    <div class="flow-node">
+                        <i class="fas fa-sun text-warning fa-2x mb-2"></i>
+                        <div class="small fw-bold" id="flow_solar">0W</div>
+                        <small class="opacity-50">Solar</small>
+                    </div>
+                    <div style="position:relative; width:30%;">
+                        <div class="flow-line"></div>
+                        <div id="solar_dot" class="dot-animation" style="display:none"></div>
+                    </div>
+                    <div class="flow-node">
+                        <i class="fas fa-battery-three-quarters text-info fa-3x mb-2"></i>
+                        <div class="h4 fw-bold" id="soc_smartshunt">--%</div>
+                        <small class="opacity-50">Ultimatron</small>
+                    </div>
+                    <div style="position:relative; width:30%;">
+                        <div class="flow-line"></div>
+                        <div id="inv_dot" class="dot-animation" style="display:none; animation-direction: reverse;"></div>
+                    </div>
+                    <div class="flow-node">
+                        <i class="fas fa-plug text-success fa-2x mb-2"></i>
+                        <div class="small fw-bold" id="flow_inv">0W</div>
+                        <small class="opacity-50">Consumo AC</small>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="row g-3">
-        <div class="col-lg-6">
+        <div class="col-md-6">
+            <div class="glass-card" style="border-top: 4px solid #10b981;">
+                <div class="stat-sub">Phoenix Inverter 12/1200</div>
+                <div class="row align-items-center mt-2">
+                    <div class="col-7">
+                        <div class="stat-main" id="inverter_power">-- <small class="h6 unit">W</small></div>
+                    </div>
+                    <div class="col-5 border-start">
+                        <div class="h5 mb-0" id="inverter_ac_voltage">--V</div>
+                        <small class="opacity-50">Salida AC</small>
+                    </div>
+                </div>
+                <div class="mt-2"><span class="badge bg-dark" id="inverter_state">--</span></div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="glass-card" style="border-top: 4px solid #ef4444;">
+                <div class="stat-sub">Battery Sense (Precisión)</div>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <div class="stat-main text-danger" id="battery_temp_sensor">--<small class="h6">°C</small></div>
+                        <small class="opacity-50">Temperatura</small>
+                    </div>
+                    <div class="col-6 border-start">
+                        <div class="h4 mb-0" id="battery_voltage_sense">--.--V</div>
+                        <small class="opacity-50">Tensión Real</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-6">
             <div class="glass-card text-center">
-                <span class="text-uppercase small opacity-50 fw-bold">SmartShunt · Estado de Carga</span>
-                <div class="stat-value text-info" id="soc_smartshunt">--<span class="unit">%</span></div>
-                <div class="progress mb-3" style="height: 6px; background: rgba(0,0,0,0.2);">
-                    <div id="soc_bar" class="progress-bar bg-info" style="width: 0%"></div>
-                </div>
-                <div class="row g-0 mt-3 border-top border-secondary pt-3">
-                    <div class="col-6">
-                        <small class="opacity-50">Tensión</small>
-                        <div class="h5" id="voltage_smartshunt">--.--V</div>
-                    </div>
-                    <div class="col-6 border-start border-secondary">
-                        <small class="opacity-50">Consumo</small>
-                        <div class="h5" id="current_smartshunt">--.--A</div>
-                    </div>
-                </div>
+                <div class="stat-sub">Motor (Orion)</div>
+                <div class="h4 mt-2" id="orion_input_voltage">--.-V</div>
+                <small class="text-muted" id="orion_output_voltage">Salida: --.-V</small>
             </div>
         </div>
-
-        <div class="col-lg-6">
-            <div class="glass-card text-center" style="border-left: 4px solid #f59e0b;">
-                <i class="fas fa-sun device-icon text-warning"></i>
-                <span class="text-uppercase small opacity-50 fw-bold">Producción Fotovoltaica</span>
-                <div class="stat-value text-warning" id="power_mppt">--<span class="unit">W</span></div>
-                <div class="row g-0 mt-2">
-                    <div class="col-6">
-                        <small class="opacity-50">Panel</small>
-                        <div id="voltage_mppt">--.-V</div>
-                    </div>
-                    <div class="col-6">
-                        <small class="opacity-50">Batería</small>
-                        <div id="battery_voltage_mppt">--.-V</div>
-                    </div>
-                </div>
+        <div class="col-md-4 col-6">
+            <div class="glass-card text-center">
+                <div class="stat-sub">Shunt Voltaje</div>
+                <div class="h4 mt-2" id="voltage_smartshunt">--.--V</div>
             </div>
         </div>
-
-        <div class="col-md-4">
-            <div class="glass-card">
-                <i class="fas fa-thermometer-half text-danger mb-2"></i>
-                <div class="small fw-bold opacity-50">BATTERY SENSE</div>
-                <div class="h3 fw-bold text-danger" id="battery_temp_sensor">--<small>°C</small></div>
-                <div class="small border-top border-secondary pt-2 mt-2">
-                    Ref: <span id="battery_voltage_sense">--.--V</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="glass-card">
-                <i class="fas fa-truck-moving text-primary mb-2"></i>
-                <div class="small fw-bold opacity-50">ORION (ALTERNADOR)</div>
-                <div class="h3 fw-bold text-primary" id="orion_input_voltage">--.-<small>V</small></div>
-                <div class="small border-top border-secondary pt-2 mt-2">
-                    Salida: <span id="orion_output_voltage">--.-V</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="glass-card">
-                <i class="fas fa-plug text-success mb-2"></i>
-                <div class="small fw-bold opacity-50">INVERSOR 220V</div>
-                <div class="h4 fw-bold" id="inverter_state">--</div>
-                <div class="small border-top border-secondary pt-2 mt-2 text-success">
-                    Tensión: <span id="inverter_voltage">--.-V</span>
-                </div>
+        <div class="col-md-4 col-12">
+            <div class="glass-card text-center border-info">
+                <div class="stat-sub">Corriente Neta</div>
+                <div class="h4 mt-2" id="current_smartshunt">--.--A</div>
             </div>
         </div>
 
         <div class="col-12">
             <div class="glass-card">
-                <canvas id="proChart" height="100"></canvas>
+                <canvas id="dualChart" height="110"></canvas>
             </div>
         </div>
     </div>
@@ -142,30 +141,17 @@
     const BROKER = "wss://broker.emqx.io:8084/mqtt";
     const PREFIX = "siena395_monitor_mikel_2026";
     const client = mqtt.connect(BROKER);
-    let myChart;
+    let chart;
 
-    // --- MODO CLARO / OSCURO ---
-    const themeToggle = document.getElementById('themeToggle');
-    themeToggle.addEventListener('click', () => {
-        const doc = document.documentElement;
-        if (doc.getAttribute('data-theme') === 'dark') {
-            doc.setAttribute('data-theme', 'light');
-            themeToggle.className = 'fas fa-moon me-3';
-        } else {
-            doc.setAttribute('data-theme', 'dark');
-            themeToggle.className = 'fas fa-sun me-3';
-        }
-    });
+    // --- INTERRUPTOR DE TEMA ---
+    document.getElementById('themeToggle').onclick = () => {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+    };
 
-    // --- RELOJ ---
-    setInterval(() => {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-    }, 1000);
-
-    // --- MQTT LOGIC ---
     client.on('connect', () => {
-        document.getElementById('conn-dot').className = 'status-dot online';
-        document.getElementById('conn-text').innerText = 'MQTT: ONLINE';
+        document.getElementById('esp-status').className = "badge bg-success";
+        document.getElementById('esp-status').innerText = "ONLINE";
         client.subscribe(`${PREFIX}/#`);
     });
 
@@ -173,59 +159,61 @@
         const val = msg.toString();
         const id = topic.split('/')[2];
         const el = document.getElementById(id);
-        if (!el) return;
+        
+        if (topic.includes('status')) {
+            document.getElementById('esp-status').className = val === 'online' ? "badge bg-success" : "badge bg-danger";
+            document.getElementById('esp-status').innerText = val.toUpperCase();
+        }
 
-        if (id.includes('soc')) {
-            el.innerHTML = `${parseFloat(val).toFixed(1)}<span class="unit">%</span>`;
-            document.getElementById('soc_bar').style.width = val + '%';
-        } else if (id.includes('temp')) {
-            el.innerHTML = `${parseFloat(val).toFixed(1)}<small>°C</small>`;
-        } else if (id === 'power_mppt') {
-            el.innerHTML = `${Math.round(val)}<span class="unit">W</span>`;
-        } else if (id === 'inverter_state') {
-            el.innerText = val.toUpperCase();
-        } else {
-            el.innerText = parseFloat(val).toFixed(2) + 'V';
-            if (id === 'voltage_smartshunt') updateChart(parseFloat(val));
+        if (!el && id !== 'power_mppt' && id !== 'inverter_power') return;
+
+        // Lógica de Flujos
+        if (id === 'power_mppt') {
+            document.getElementById('flow_solar').innerText = Math.round(val) + "W";
+            document.getElementById('solar_dot').style.display = val > 5 ? 'block' : 'none';
+        }
+        if (id === 'inverter_power') {
+            document.getElementById('flow_inv').innerText = Math.round(val) + "W";
+            document.getElementById('inv_dot').style.display = val > 5 ? 'block' : 'none';
+        }
+
+        // Inversor AC (Nuevos campos)
+        if (id === 'inverter_power') el.innerHTML = `${Math.round(val)} <small class="h6 unit">W</small>`;
+        if (id === 'inverter_ac_voltage') el.innerText = parseFloat(val).toFixed(0) + "V";
+
+        if (el) {
+            if (id.includes('soc')) {
+                el.innerText = parseFloat(val).toFixed(1) + '%';
+            } else if (id.includes('temp')) {
+                el.innerHTML = `${parseFloat(val).toFixed(1)}<small class="h6">°C</small>`;
+            } else {
+                el.innerText = parseFloat(val).toFixed(2) + (id.includes('voltage') ? 'V' : 'A');
+                if (id === 'voltage_smartshunt') updateChart(parseFloat(val));
+            }
         }
     });
 
-    // --- CHART LOGIC ---
     function initChart() {
-        const ctx = document.getElementById('proChart').getContext('2d');
-        myChart = new Chart(ctx, {
+        const ctx = document.getElementById('dualChart').getContext('2d');
+        chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Voltaje (V)',
-                    data: [],
-                    borderColor: '#00d2ff',
-                    backgroundColor: 'rgba(0, 210, 255, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0
+                    label: 'Voltaje Batería',
+                    data: [], borderColor: '#00d2ff', tension: 0.4, fill: false, pointRadius: 0
                 }]
             },
-            options: {
-                plugins: { legend: { display: false } },
-                scales: { 
-                    y: { min: 12.5, max: 14.8, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    x: { display: false }
-                }
-            }
+            options: { plugins: { legend: { display: false } }, scales: { y: { min: 12.5, max: 14.8 } } }
         });
     }
 
     function updateChart(v) {
-        if (!myChart) return;
-        myChart.data.labels.push("");
-        myChart.data.datasets[0].data.push(v);
-        if (myChart.data.labels.length > 25) {
-            myChart.data.labels.shift();
-            myChart.data.datasets[0].data.shift();
-        }
-        myChart.update();
+        if (!chart) return;
+        chart.data.labels.push("");
+        chart.data.datasets[0].data.push(v);
+        if (chart.data.labels.length > 30) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+        chart.update();
     }
 
     window.onload = initChart;
