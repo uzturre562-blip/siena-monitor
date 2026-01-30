@@ -32,11 +32,11 @@
             <div class="col-12 d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="mb-0"><i class="fas fa-caravan" style="color:var(--caravan)"></i> Siena395</h1>
-                    <small id="mqtt-info" class="text-muted">Conectando a EMQX...</small>
+                    <small id="mqtt-info" class="text-muted">Conectando al Broker EMQX...</small>
                 </div>
                 <div>
-                    <span id="conn-status" class="status-badge bg-secondary text-white">MQTT: OFF</span>
-                    <span id="esp-status" class="status-badge bg-danger text-white ms-2">ESP32: OFFLINE</span>
+                    <span id="conn-status" class="status-badge bg-secondary text-white">WEB MQTT: OFF</span>
+                    <span id="esp-status" class="status-badge bg-danger text-white ms-2">FURGO: OFFLINE</span>
                 </div>
             </div>
         </div>
@@ -46,18 +46,18 @@
                 <div class="card dashboard-card">
                     <div class="card-header"><i class="fas fa-battery-full me-2"></i>Batería Ultimatron 100Ah</div>
                     <div class="card-body text-center p-4">
-                        <div class="sensor-value" id="soc_val">--%</div>
+                        <div class="sensor-value" id="soc_smartshunt">--%</div>
                         <div class="progress mb-3" style="height: 20px;">
                             <div id="soc_bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
                         </div>
                         <div class="row mt-3">
                             <div class="col-6 border-end">
                                 <small class="text-muted d-block">Voltaje</small>
-                                <strong class="h4" id="vol_val">--.-- V</strong>
+                                <strong class="h4" id="voltage_smartshunt">--.-- V</strong>
                             </div>
                             <div class="col-6">
-                                <small class="text-muted d-block">Corriente</small>
-                                <strong class="h4" id="cur_val">--.-- A</strong>
+                                <small class="text-muted d-block">Consumo</small>
+                                <strong class="h4" id="current_smartshunt">--.-- A</strong>
                             </div>
                         </div>
                     </div>
@@ -66,79 +66,82 @@
 
             <div class="col-md-6">
                 <div class="card dashboard-card">
-                    <div class="card-header bg-warning text-dark"><i class="fas fa-sun me-2"></i>Producción Solar (MPPT)</div>
+                    <div class="card-header bg-warning text-dark"><i class="fas fa-sun me-2"></i>Placas Solares</div>
                     <div class="card-body text-center p-4">
-                        <div class="sensor-value text-warning" id="sol_pow">-- W</div>
-                        <p class="text-muted mt-2" id="sol_vol">Panel: -- V</p>
+                        <div class="sensor-value text-warning" id="power_mppt">-- W</div>
+                        <div class="row mt-3">
+                            <div class="col-6 border-end">
+                                <small class="text-muted d-block">Voltaje Panel</small>
+                                <strong class="h5" id="voltage_mppt">--.- V</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Carga Batería</small>
+                                <strong class="h5" id="battery_voltage_mppt">--.- V</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <div class="col-12 text-center">
+            <div class="col-12">
                 <div class="card dashboard-card p-3">
-                    <canvas id="voltageChart" height="120"></canvas>
+                    <canvas id="voltageChart" height="100"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN BASADA EN TU YAML
+        // CONFIGURACIÓN QUE COINCIDE CON TU YAML
         const BROKER = "wss://broker.emqx.io:8084/mqtt";
         const PREFIX = "siena395_monitor_mikel_2026";
         
         const client = mqtt.connect(BROKER);
         let vChart;
 
-        // --- CONEXIÓN MQTT ---
         client.on('connect', () => {
-            console.log("Conectado al Broker");
             document.getElementById('conn-status').className = "status-badge bg-success text-white";
-            document.getElementById('conn-status').innerText = "MQTT: OK";
-            document.getElementById('mqtt-info').innerText = "Suscrito a siena395_monitor...";
-            
-            // Suscribirse a todo
+            document.getElementById('conn-status').innerText = "WEB MQTT: OK";
+            document.getElementById('mqtt-info').innerText = "Conectado a la nube de EMQX";
             client.subscribe(`${PREFIX}/#`);
         });
 
         client.on('message', (topic, message) => {
             const val = message.toString();
             
-            // 1. Estado del ESP32 (Birth/Will message)
+            // Detectar estado del ESP32 (Birth/Will message)
             if (topic === `${PREFIX}/status`) {
                 const badge = document.getElementById('esp-status');
-                badge.innerText = `ESP32: ${val.toUpperCase()}`;
-                badge.className = val === 'online' ? "status-badge bg-success text-white ms-2" : "status-badge bg-danger text-white ms-2";
+                if (val === 'online') {
+                    badge.innerText = "FURGO: ONLINE";
+                    badge.className = "status-badge bg-success text-white ms-2";
+                } else {
+                    badge.innerText = "FURGO: OFFLINE";
+                    badge.className = "status-badge bg-danger text-white ms-2";
+                }
                 return;
             }
 
-            // 2. Sensores (Extracción del ID del sensor del topic de ESPHome)
+            // Mapear sensores dinámicamente según los IDs de tu YAML
             const sensorId = topic.split('/')[2];
-
-            switch(sensorId) {
-                case 'soc_smartshunt':
-                    document.getElementById('soc_val').innerText = parseFloat(val).toFixed(1) + '%';
+            const element = document.getElementById(sensorId);
+            
+            if (element) {
+                if (sensorId.includes('soc')) {
+                    element.innerText = parseFloat(val).toFixed(1) + '%';
                     document.getElementById('soc_bar').style.width = val + '%';
-                    break;
-                case 'voltage_smartshunt':
-                    document.getElementById('vol_val').innerText = parseFloat(val).toFixed(2) + ' V';
-                    updateChart(parseFloat(val));
-                    break;
-                case 'current_smartshunt':
-                    document.getElementById('cur_val').innerText = parseFloat(val).toFixed(2) + ' A';
-                    break;
-                case 'power_mppt':
-                    document.getElementById('sol_pow').innerText = Math.round(val) + ' W';
-                    break;
-                case 'voltage_mppt':
-                    document.getElementById('sol_vol').innerText = "Panel: " + parseFloat(val).toFixed(1) + ' V';
-                    break;
+                } else if (sensorId.includes('voltage') || sensorId.includes('current')) {
+                    element.innerText = parseFloat(val).toFixed(2) + (sensorId.includes('voltage') ? ' V' : ' A');
+                    if (sensorId === 'voltage_smartshunt') updateChart(parseFloat(val));
+                } else if (sensorId.includes('power')) {
+                    element.innerText = Math.round(val) + ' W';
+                }
             }
         });
 
-        // --- GRÁFICA ---
+        // Lógica de la Gráfica
         function initChart() {
             const ctx = document.getElementById('voltageChart').getContext('2d');
             vChart = new Chart(ctx, {
@@ -146,7 +149,7 @@
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Voltaje Ultimatron',
+                        label: 'Voltaje Ultimatron (V)',
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         data: [],
@@ -156,17 +159,17 @@
                 },
                 options: {
                     responsive: true,
-                    scales: { y: { min: 12.0, max: 14.8 } }
+                    scales: { y: { min: 12.5, max: 14.6 } }
                 }
             });
         }
 
         function updateChart(v) {
             if (!vChart) return;
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             vChart.data.labels.push(time);
             vChart.data.datasets[0].data.push(v);
-            if (vChart.data.labels.length > 15) {
+            if (vChart.data.labels.length > 20) {
                 vChart.data.labels.shift();
                 vChart.data.datasets[0].data.shift();
             }
