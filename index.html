@@ -4,156 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚐 Monitor Victron PRO - Siena395</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-    <style>
-        :root {
-            --primary: #667eea; --secondary: #764ba2; --success: #10b981;
-            --warning: #f59e0b; --danger: #ef4444; --caravan: #f97316;
-            --bg-color: #f5f7fa; --card-bg: #ffffff; --text-color: #333333;
-        }
-        [data-theme="dark"] {
-            --bg-color: #1a1a2e; --card-bg: #16213e; --text-color: #e0e0e0;
-        }
-        body { background: var(--bg-color); color: var(--text-color); transition: 0.3s; padding-top: 20px; }
-        .dashboard-card { background: var(--card-bg); border-radius: 15px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .card-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 15px 15px 0 0 !important; font-weight: bold; }
-        .sensor-value { font-size: 2.2rem; font-weight: bold; color: var(--primary); }
-        .status { padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
-        .status.connected { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
-        .status.loading { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
-        .theme-toggle { position: fixed; top: 20px; right: 20px; z-index: 1000; }
-    </style>
-</head>
-<body>
-    <div class="theme-toggle">
-        <button id="themeToggle" class="btn btn-outline-secondary"><i class="fas fa-moon"></i></button>
-    </div>
+    </head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">🚐 Siena395 Dashboard</span>
+            <div id="connection-badge" class="badge bg-danger">
+                <i class="fas fa-plug"></i> <span id="status-text">Desconectado</span>
+            </div>
+        </div>
+    </nav>
 
     <div class="container">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1><i class="fas fa-caravan text-warning"></i> Siena395 Monitor</h1>
-                <div id="connection-status" class="status loading">
-                    <i class="fas fa-sync fa-spin"></i> <span id="status-text">Conectando a MQTT...</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="dashboard-card p-3 text-center">
-                    <small class="text-muted">SOC Batería</small>
-                    <div class="h3" id="quick-soc">--%</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="dashboard-card p-3 text-center">
-                    <small class="text-muted">Solar</small>
-                    <div class="h3" id="quick-solar">-- W</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="dashboard-card p-3 text-center">
-                    <small class="text-muted">Voltaje</small>
-                    <div class="h3" id="voltage-display">--.- V</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="dashboard-card p-3 text-center">
-                    <small class="text-muted">WiFi</small>
-                    <div class="h3" id="quick-wifi">-- dBm</div>
-                </div>
-            </div>
-        </div>
-		<div class="row">
-            <div class="col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-header"><i class="fas fa-battery-full me-2"></i> SmartShunt (Ultimatron)</div>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
-                        <div class="sensor-value" id="soc-display">--%</div>
-                        <div class="progress my-3" style="height: 25px;">
-                            <div id="soc-progress" class="progress-bar bg-success" style="width: 0%"></div>
+                        <h6 class="text-muted mb-2">BATERÍA PRINCIPAL</h6>
+                        <h2 id="bat-volts">--.- V</h2>
+                        <div class="progress mt-3" style="height: 10px;">
+                            <div id="bat-soc-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
                         </div>
-                        <div class="row">
-                            <div class="col-6"><small>Corriente</small><div class="h5" id="current-display">-- A</div></div>
-                            <div class="col-6"><small>Consumido</small><div class="h5" id="ah-display">-- Ah</div></div>
-                        </div>
+                        <small id="bat-soc-text" class="text-muted">Carga: --%</small>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-header bg-warning text-dark"><i class="fas fa-sun me-2"></i> MPPT Solar</div>
-                    <div class="card-body text-center">
-                        <div class="sensor-value text-warning" id="solar-display">-- W</div>
-                        <div class="row mt-3">
-                            <div class="col-6"><small>V. Paneles</small><div class="h5" id="solar-voltage">-- V</div></div>
-                            <div class="col-6"><small>Cosecha Hoy</small><div class="h5" id="yield-today">-- Wh</div></div>
-                        </div>
-                    </div>
-                </div>
             </div>
-
-            <div class="col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-header bg-info text-white"><i class="fas fa-car me-2"></i> Batería Motor</div>
-                    <div class="card-body text-center">
-                        <div class="h2 text-info" id="starter-voltage">--.-- V</div>
-                        <small class="text-muted">Temperatura: <span id="starter-temp">--</span> °C</small>
-                    </div>
-                </div>
-            </div>
-        </div>
         
-        <footer class="text-center text-muted mt-4 pb-4">
-            <small>Última actualización: <span id="last-update">--:--:--</span></small>
-        </footer>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm p-3">
+                    <canvas id="voltageChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
-	<script>
-        // CONFIGURACIÓN MQTT
-        const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-        const topicPrefix = 'siena395_monitor_mikel_2026';
-
-        client.on('connect', () => {
-            console.log('✅ Conectado a MQTT');
-            document.getElementById('connection-status').className = 'status connected';
-            document.getElementById('status-text').innerText = 'Siena395 ONLINE';
-            client.subscribe(`${topicPrefix}/sensor/#`);
-        });
-
-        client.on('message', (topic, message) => {
-            const val = message.toString();
-            const sensor = topic.split('/').pop(); // Coge la última parte del tópico
-
-            // Mapeo directo a los elementos del HTML
-            if (sensor === 'soc_smartshunt') {
-                document.getElementById('soc-display').innerText = Math.round(val) + '%';
-                document.getElementById('quick-soc').innerText = Math.round(val) + '%';
-                document.getElementById('soc-progress').style.width = val + '%';
-            }
-            if (sensor === 'voltage_smartshunt') document.getElementById('voltage-display').innerText = parseFloat(val).toFixed(2) + ' V';
-            if (sensor === 'current_smartshunt') document.getElementById('current-display').innerText = val + ' A';
-            if (sensor === 'power_mppt') {
-                document.getElementById('solar-display').innerText = val + ' W';
-                document.getElementById('quick-solar').innerText = val + ' W';
-            }
-            if (sensor === 'voltage_mppt') document.getElementById('solar-voltage').innerText = val + ' V';
-            if (sensor === 'yield_today_mppt') document.getElementById('yield-today').innerText = val + ' Wh';
-            if (sensor === 'voltage_battery_sense') document.getElementById('starter-voltage').innerText = val + ' V';
-            if (sensor === 'temp_battery_sense') document.getElementById('starter-temp').innerText = val;
-            if (sensor === 'wifi_signal') document.getElementById('quick-wifi').innerText = val + ' dBm';
-
-            document.getElementById('last-update').innerText = new Date().toLocaleTimeString();
-        });
-
-        // Tema Oscuro
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', theme);
-        });
-    </script>
 </body>
 </html>
+// Función corregida para evitar errores de "null" y tildes
+function updateConnectionStatus(connected, ip = '') {
+    const badge = document.getElementById('connection-badge');
+    const text = document.getElementById('status-text');
+    
+    if (badge && text) {
+        if (connected) {
+            badge.className = 'badge bg-success';
+            text.textContent = 'Conectado: ' + ip;
+        } else {
+            badge.className = 'badge bg-danger';
+            text.textContent = 'Buscando dispositivo...';
+        }
+    }
+}
+
+// Actualización de valores en pantalla
+function updateUI(data) {
+    const elements = {
+        'bat-volts': data.voltage ? data.voltage.toFixed(2) + ' V' : '--.- V',
+        'bat-soc-text': data.soc ? 'Carga: ' + data.soc + '%' : 'Carga: --%',
+        'prod-sol': data.power ? data.power + ' W' : '0 W'
+    };
+
+    for (const [id, val] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    }
+    
+    // Actualizar barra de progreso si existe
+    const bar = document.getElementById('bat-soc-bar');
+    if (bar && data.soc) bar.style.width = data.soc + '%';
+}
+let voltageChart = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('voltageChart');
+    
+    if (ctx) {
+        voltageChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Voltaje Batería (V)',
+                    data: [],
+                    borderColor: '#667eea',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        console.log('✅ Gráfico inicializado correctamente');
+    } else {
+        console.error('❌ No se encontró el elemento canvas #voltageChart');
+    }
+
+    // Iniciar el resto de funciones
+    manualIPDiscovery(); 
+});
