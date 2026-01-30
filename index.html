@@ -19,12 +19,10 @@
             --bg-color: #1a1a2e; --card-bg: #16213e; --text-color: #e0e0e0;
         }
         body { background: var(--bg-color); color: var(--text-color); transition: all 0.3s ease; padding-top: 20px; }
-        .dashboard-card { background: var(--card-bg); border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .dashboard-card { background: var(--card-bg); border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 20px; border: none; }
         .card-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 15px 15px 0 0 !important; font-weight: bold; }
-        .sensor-value { font-size: 2.5rem; font-weight: bold; color: var(--primary); }
-        .status-banner { padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 20px; transition: 0.5s; }
-        .online { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
-        .offline { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+        .sensor-value { font-size: 2.8rem; font-weight: bold; color: var(--primary); }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -33,26 +31,34 @@
         <div class="row mb-4">
             <div class="col-12 d-flex justify-content-between align-items-center">
                 <div>
-                    <h1><i class="fas fa-caravan" style="color:var(--caravan)"></i> Siena395 Monitor</h1>
-                    <p class="text-muted">Vigilando Batería Ultimatron 100Ah</p>
+                    <h1 class="mb-0"><i class="fas fa-caravan" style="color:var(--caravan)"></i> Siena395</h1>
+                    <small id="mqtt-info" class="text-muted">Conectando a EMQX...</small>
                 </div>
-                <div id="mqtt-status-badge" class="badge bg-danger">MQTT Desconectado</div>
+                <div>
+                    <span id="conn-status" class="status-badge bg-secondary text-white">MQTT: OFF</span>
+                    <span id="esp-status" class="status-badge bg-danger text-white ms-2">ESP32: OFFLINE</span>
+                </div>
             </div>
-        </div>
-
-        <div id="system-status" class="status-banner offline">
-            <i class="fas fa-exclamation-triangle"></i> SISTEMA OFFLINE
         </div>
 
         <div class="row">
             <div class="col-md-6">
                 <div class="card dashboard-card">
-                    <div class="card-header"><i class="fas fa-battery-full me-2"></i>SmartShunt (Ultimatron)</div>
-                    <div class="card-body text-center">
-                        <div class="sensor-value" id="val_soc_smartshunt">--%</div>
-                        <div class="h4 text-muted" id="val_voltage_smartshunt">--.-- V</div>
-                        <div class="progress mt-3" style="height: 15px;">
-                            <div id="bar_soc" class="progress-bar bg-success" style="width: 0%"></div>
+                    <div class="card-header"><i class="fas fa-battery-full me-2"></i>Batería Ultimatron 100Ah</div>
+                    <div class="card-body text-center p-4">
+                        <div class="sensor-value" id="soc_val">--%</div>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div id="soc_bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-6 border-end">
+                                <small class="text-muted d-block">Voltaje</small>
+                                <strong class="h4" id="vol_val">--.-- V</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Corriente</small>
+                                <strong class="h4" id="cur_val">--.-- A</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -60,113 +66,111 @@
 
             <div class="col-md-6">
                 <div class="card dashboard-card">
-                    <div class="card-header bg-warning text-dark"><i class="fas fa-sun me-2"></i>MPPT Solar</div>
-                    <div class="card-body text-center">
-                        <div class="sensor-value text-warning" id="val_power_mppt">-- W</div>
-                        <div class="h5 text-muted" id="val_voltage_mppt">--.- V</div>
+                    <div class="card-header bg-warning text-dark"><i class="fas fa-sun me-2"></i>Producción Solar (MPPT)</div>
+                    <div class="card-body text-center p-4">
+                        <div class="sensor-value text-warning" id="sol_pow">-- W</div>
+                        <p class="text-muted mt-2" id="sol_vol">Panel: -- V</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card dashboard-card">
-                    <div class="card-body">
-                        <canvas id="voltageChart" height="100"></canvas>
-                    </div>
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="card dashboard-card p-3">
+                    <canvas id="voltageChart" height="120"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN EXACTA SEGÚN TU YAML
-        const MQTT_BROKER = "wss://broker.emqx.io:8084/mqtt";
-        const TOPIC_PREFIX = "siena395_monitor_mikel_2026";
+        // CONFIGURACIÓN BASADA EN TU YAML
+        const BROKER = "wss://broker.emqx.io:8084/mqtt";
+        const PREFIX = "siena395_monitor_mikel_2026";
         
-        const client = mqtt.connect(MQTT_BROKER);
-        let voltageChart;
+        const client = mqtt.connect(BROKER);
+        let vChart;
 
-        // 1. CONEXIÓN
+        // --- CONEXIÓN MQTT ---
         client.on('connect', () => {
-            document.getElementById('mqtt-status-badge').className = "badge bg-success";
-            document.getElementById('mqtt-status-badge').innerText = "MQTT Conectado";
-            client.subscribe(`${TOPIC_PREFIX}/#`);
-            console.log("Suscrito a:", TOPIC_PREFIX);
+            console.log("Conectado al Broker");
+            document.getElementById('conn-status').className = "status-badge bg-success text-white";
+            document.getElementById('conn-status').innerText = "MQTT: OK";
+            document.getElementById('mqtt-info').innerText = "Suscrito a siena395_monitor...";
+            
+            // Suscribirse a todo
+            client.subscribe(`${PREFIX}/#`);
         });
 
-        // 2. RECEPCIÓN DE DATOS Y COINCIDENCIA CON YAML
         client.on('message', (topic, message) => {
-            const payload = message.toString();
-            const sensor = topic.replace(`${TOPIC_PREFIX}/sensor/`, "").replace("/state", "");
-
-            // Lógica de mapeo YAML -> HTML
-            if (topic === `${TOPIC_PREFIX}/status`) {
-                updateSystemStatus(payload);
+            const val = message.toString();
+            
+            // 1. Estado del ESP32 (Birth/Will message)
+            if (topic === `${PREFIX}/status`) {
+                const badge = document.getElementById('esp-status');
+                badge.innerText = `ESP32: ${val.toUpperCase()}`;
+                badge.className = val === 'online' ? "status-badge bg-success text-white ms-2" : "status-badge bg-danger text-white ms-2";
+                return;
             }
 
-            switch(sensor) {
+            // 2. Sensores (Extracción del ID del sensor del topic de ESPHome)
+            const sensorId = topic.split('/')[2];
+
+            switch(sensorId) {
                 case 'soc_smartshunt':
-                    document.getElementById('val_soc_smartshunt').innerText = parseFloat(payload).toFixed(1) + '%';
-                    document.getElementById('bar_soc').style.width = payload + '%';
+                    document.getElementById('soc_val').innerText = parseFloat(val).toFixed(1) + '%';
+                    document.getElementById('soc_bar').style.width = val + '%';
                     break;
                 case 'voltage_smartshunt':
-                    document.getElementById('val_voltage_smartshunt').innerText = parseFloat(payload).toFixed(2) + ' V';
-                    updateChart(parseFloat(payload));
+                    document.getElementById('vol_val').innerText = parseFloat(val).toFixed(2) + ' V';
+                    updateChart(parseFloat(val));
+                    break;
+                case 'current_smartshunt':
+                    document.getElementById('cur_val').innerText = parseFloat(val).toFixed(2) + ' A';
                     break;
                 case 'power_mppt':
-                    document.getElementById('val_power_mppt').innerText = Math.round(payload) + ' W';
+                    document.getElementById('sol_pow').innerText = Math.round(val) + ' W';
                     break;
                 case 'voltage_mppt':
-                    document.getElementById('val_voltage_mppt').innerText = parseFloat(payload).toFixed(1) + ' V';
+                    document.getElementById('sol_vol').innerText = "Panel: " + parseFloat(val).toFixed(1) + ' V';
                     break;
             }
         });
 
-        function updateSystemStatus(status) {
-            const banner = document.getElementById('system-status');
-            if(status === 'online') {
-                banner.className = "status-banner online";
-                banner.innerHTML = '<i class="fas fa-check-circle"></i> SIENA395 ONLINE';
-            } else {
-                banner.className = "status-banner offline";
-                banner.innerHTML = '<i class="fas fa-ghost"></i> SIENA395 DESCONECTADO';
-            }
-        }
-
-        // 3. GRÁFICA (Ajustada para LiFePO4 12.8V)
+        // --- GRÁFICA ---
         function initChart() {
             const ctx = document.getElementById('voltageChart').getContext('2d');
-            voltageChart = new Chart(ctx, {
+            vChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Voltaje Ultimatron (V)',
+                        label: 'Voltaje Ultimatron',
                         borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         data: [],
                         fill: true,
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4
+                        tension: 0.3
                     }]
                 },
                 options: {
-                    scales: { y: { min: 12.5, max: 14.6 } }
+                    responsive: true,
+                    scales: { y: { min: 12.0, max: 14.8 } }
                 }
             });
         }
 
-        function updateChart(val) {
-            if (!voltageChart) return;
-            const now = new Date().toLocaleTimeString();
-            voltageChart.data.labels.push(now);
-            voltageChart.data.datasets[0].data.push(val);
-            if (voltageChart.data.labels.length > 20) {
-                voltageChart.data.labels.shift();
-                voltageChart.data.datasets[0].data.shift();
+        function updateChart(v) {
+            if (!vChart) return;
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            vChart.data.labels.push(time);
+            vChart.data.datasets[0].data.push(v);
+            if (vChart.data.labels.length > 15) {
+                vChart.data.labels.shift();
+                vChart.data.datasets[0].data.shift();
             }
-            voltageChart.update();
+            vChart.update();
         }
 
         window.onload = initChart;
