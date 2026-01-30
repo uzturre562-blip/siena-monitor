@@ -3,1191 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ð GIOTTILINE SIENA 395 - VICTRON SISTEMA</title>
-    <!-- Bootstrap 5 -->
+    <title>🚐 Monitor Victron PRO - Siena395</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --caravan: #f97316;
-            --bg-color: #f5f7fa;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --border-color: #e0e0e0;
+            --primary: #667eea; --secondary: #764ba2; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --caravan: #f97316;
+            --bg-color: #f5f7fa; --card-bg: #ffffff; --text-color: #333333;
         }
-        
         [data-theme="dark"] {
-            --bg-color: #1a1a2e;
-            --card-bg: #16213e;
-            --text-color: #e0e0e0;
-            --border-color: #2d3748;
-            --caravan: #fdba74;
+            --bg-color: #1a1a2e; --card-bg: #16213e; --text-color: #e0e0e0;
         }
-        
-        body { 
-            background: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            padding-top: 20px;
-            transition: all 0.3s ease;
-        }
-        .dashboard-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-            margin-bottom: 20px;
-        }
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-        }
-        .card-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-            font-weight: bold;
-        }
-        .sensor-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-        .nav-tabs .nav-link.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-        }
-        .quick-stats {
-            background: var(--card-bg);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: 1px solid var(--border-color);
-        }
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        .temp-display {
-            color: #ff6b6b;
-            font-weight: bold;
-        }
-        .voltage-display {
-            color: #4ecdc4;
-            font-weight: bold;
-        }
-        .caravan-icon {
-            color: var(--caravan);
-            font-size: 1.5em;
-            margin-right: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .status {
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-            text-align: center;
-            font-weight: bold;
-        }
-        .status.connected {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
-            border: 1px solid #4CAF50;
-        }
-        .status.error {
-            background: rgba(244, 67, 54, 0.2);
-            color: #F44336;
-            border: 1px solid #F44336;
-        }
-        .status.loading {
-            background: rgba(255, 193, 7, 0.2);
-            color: #FFC107;
-            border: 1px solid #FFC107;
-        }
-        .device-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin: 2px;
-        }
-        .test-mode-badge {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            z-index: 1000;
-        }
-        .manual-ip-input {
-            width: 200px;
-            display: inline-block;
-            margin-right: 10px;
-        }
+        body { background: var(--bg-color); color: var(--text-color); transition: 0.3s; padding-top: 20px; }
+        .dashboard-card { background: var(--card-bg); border-radius: 15px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 15px 15px 0 0 !important; font-weight: bold; }
+        .sensor-value { font-size: 2.2rem; font-weight: bold; color: var(--primary); }
+        .status { padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
+        .status.connected { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+        .status.loading { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+        .theme-toggle { position: fixed; top: 20px; right: 20px; z-index: 1000; }
     </style>
 </head>
 <body>
-    <!-- Theme Toggle -->
     <div class="theme-toggle">
-        <button id="themeToggle" class="btn btn-outline-secondary">
-            <i class="fas fa-moon"></i> Tema Oscuro
-        </button>
-    </div>
-
-    <!-- Modo Prueba Badge -->
-    <div class="test-mode-badge">
-        <span id="testModeBadge" class="badge bg-warning" style="display: none;">
-            <i class="fas fa-flask"></i> MODO PRUEBA
-        </span>
+        <button id="themeToggle" class="btn btn-outline-secondary"><i class="fas fa-moon"></i></button>
     </div>
 
     <div class="container">
-        <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1><i class="fas fa-caravan caravan-icon"></i> GIOTTILINE SIENA 395 - Monitor Victron PRO_v.1.0.0</h1>
-                        <p class="text-muted"><i class="fas fa-road me-1"></i> Sistema de monitorizaciÃ³n profesional para autocaravana</p>
-                    </div>
-                    <div class="text-end">
-                        <span id="online-badge" class="badge bg-danger me-2"><i class="fas fa-wifi"></i> Offline</span>
-                        <span class="badge bg-primary">5 Dispositivos</span>
-                    </div>
+                <h1><i class="fas fa-caravan text-warning"></i> Siena395 Monitor</h1>
+                <div id="connection-status" class="status loading">
+                    <i class="fas fa-sync fa-spin"></i> <span id="status-text">Conectando a MQTT...</span>
                 </div>
             </div>
         </div>
 
-        <!-- Estado de ConexiÃ³n -->
-        <div id="connection-status" class="status loading">
-            <i class="fas fa-sync fa-spin"></i> 
-            <span id="status-text">Buscando ESP32 en la red...</span>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="dashboard-card p-3 text-center">
+                    <small class="text-muted">SOC Batería</small>
+                    <div class="h3" id="quick-soc">--%</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-card p-3 text-center">
+                    <small class="text-muted">Solar</small>
+                    <div class="h3" id="quick-solar">-- W</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-card p-3 text-center">
+                    <small class="text-muted">Voltaje</small>
+                    <div class="h3" id="voltage-display">--.- V</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-card p-3 text-center">
+                    <small class="text-muted">WiFi</small>
+                    <div class="h3" id="quick-wifi">-- dBm</div>
+                </div>
+            </div>
         </div>
-
-        <!-- Controles Manuales (solo modo prueba) -->
-        <div id="manual-controls" class="row mb-3" style="display: none;">
-            <div class="col-12">
-                <div class="card dashboard-card">
-                    <div class="card-header bg-warning">
-                        <i class="fas fa-cogs me-2"></i> Controles de Prueba
-                    </div>
-                    <div class="card-body">
+		<div class="row">
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <div class="card-header"><i class="fas fa-battery-full me-2"></i> SmartShunt (Ultimatron)</div>
+                    <div class="card-body text-center">
+                        <div class="sensor-value" id="soc-display">--%</div>
+                        <div class="progress my-3" style="height: 25px;">
+                            <div id="soc-progress" class="progress-bar bg-success" style="width: 0%"></div>
+                        </div>
                         <div class="row">
-                            <div class="col-md-4">
-                                <button onclick="simulateData()" class="btn btn-primary w-100 mb-2">
-                                    <i class="fas fa-bolt me-2"></i> Generar Datos Aleatorios
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <button onclick="resetTestData()" class="btn btn-secondary w-100 mb-2">
-                                    <i class="fas fa-redo me-2"></i> Restablecer Datos
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <input type="text" id="manualIP" class="form-control" placeholder="IP del ESP32">
-                                    <button onclick="setManualIP()" class="btn btn-success">
-                                        <i class="fas fa-plug"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            <div class="col-6"><small>Corriente</small><div class="h5" id="current-display">-- A</div></div>
+                            <div class="col-6"><small>Consumido</small><div class="h5" id="ah-display">-- Ah</div></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <div class="card-header bg-warning text-dark"><i class="fas fa-sun me-2"></i> MPPT Solar</div>
+                    <div class="card-body text-center">
+                        <div class="sensor-value text-warning" id="solar-display">-- W</div>
+                        <div class="row mt-3">
+                            <div class="col-6"><small>V. Paneles</small><div class="h5" id="solar-voltage">-- V</div></div>
+                            <div class="col-6"><small>Cosecha Hoy</small><div class="h5" id="yield-today">-- Wh</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <div class="card-header bg-info text-white"><i class="fas fa-car me-2"></i> Batería Motor</div>
+                    <div class="card-body text-center">
+                        <div class="h2 text-info" id="starter-voltage">--.-- V</div>
+                        <small class="text-muted">Temperatura: <span id="starter-temp">--</span> °C</small>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Quick Stats -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="quick-stats text-center">
-                    <div class="text-muted mb-2"><i class="fas fa-battery-full fa-2x"></i></div>
-                    <div class="h4" id="quick-soc">--%</div>
-                    <small>Estado BaterÃ­a</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="quick-stats text-center">
-                    <div class="text-muted mb-2"><i class="fas fa-sun fa-2x"></i></div>
-                    <div class="h4" id="quick-solar">-- W</div>
-                    <small>ProducciÃ³n Solar</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="quick-stats text-center">
-                    <div class="text-muted mb-2"><i class="fas fa-car-battery fa-2x"></i></div>
-                    <div class="h4" id="quick-starter">-- V</div>
-                    <small>BaterÃ­a Arranque</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="quick-stats text-center">
-                    <div class="text-muted mb-2"><i class="fas fa-signal fa-2x"></i></div>
-                    <div class="h4" id="quick-wifi">-- dBm</div>
-                    <small>SeÃ±al WiFi</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="row">
-            <!-- Left Column - Data -->
-            <div class="col-md-8">
-                <!-- Tabs -->
-                <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button">Dashboard</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button">GrÃ¡ficas</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="devices-tab" data-bs-toggle="tab" data-bs-target="#devices" type="button">Dispositivos</button>
-                    </li>
-                </ul>
-
-                <div class="tab-content" id="dashboardTabsContent">
-                    <!-- Tab 1: Dashboard -->
-                    <div class="tab-pane fade show active" id="home" role="tabpanel">
-                        <div class="row">
-                            <!-- BaterÃ­a Principal -->
-                            <div class="col-md-6">
-                                <div class="card dashboard-card">
-                                    <div class="card-header">
-                                        <i class="fas fa-battery-three-quarters me-2"></i> SmartShunt
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <div class="sensor-value" id="voltage-display">--.-- V</div>
-                                        <div class="row mt-3">
-                                            <div class="col-6">
-                                                <small class="text-muted">Corriente</small>
-                                                <div class="h5" id="current-display">--.- A</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">SOC</small>
-                                                <div class="h5" id="soc-display">--%</div>
-                                            </div>
-                                        </div>
-                                        <div class="progress mt-3" style="height: 20px;">
-                                            <div id="soc-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                        </div>
-                                        <div class="mt-2 text-muted small">
-                                            <span id="ttg-display">-- min restantes</span> | 
-                                            <span id="ah-display">-- Ah consumidos</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Battery Sense -->
-                            <div class="col-md-6">
-                                <div class="card dashboard-card">
-                                    <div class="card-header" style="background: linear-gradient(135deg, #ff6b6b, #ff8e8e);">
-                                        <i class="fas fa-car me-2"></i> Battery Sense
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <div class="voltage-display" style="font-size: 2rem;" id="starter-voltage">--.-- V</div>
-                                                <small class="text-muted">Voltaje</small>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="temp-display" style="font-size: 2rem;" id="starter-temp">--.- Â°C</div>
-                                                <small class="text-muted">Temperatura</small>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <small class="text-muted">
-                                                <i class="fas fa-info-circle"></i> Sensor de baterÃ­a de arranque
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Panel Solar -->
-                            <div class="col-md-6 mt-3">
-                                <div class="card dashboard-card">
-                                    <div class="card-header bg-warning">
-                                        <i class="fas fa-solar-panel me-2"></i> MPPT Solar
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <div class="sensor-value text-warning" id="solar-display">--- W</div>
-                                        <div class="row mt-3">
-                                            <div class="col-6">
-                                                <small class="text-muted">Voltaje</small>
-                                                <div class="h5" id="solar-voltage">--.- V</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Corriente</small>
-                                                <div class="h5" id="solar-current">--.- A</div>
-                                            </div>
-                                        </div>
-                                        <div class="mt-2 text-muted small">
-                                            <span id="yield-today">-- Wh hoy</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Inversor -->
-                            <div class="col-md-6 mt-3">
-                                <div class="card dashboard-card">
-                                    <div class="card-header bg-success">
-                                        <i class="fas fa-bolt me-2"></i> Phoenix Inverter
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <div class="sensor-value text-success" id="inverter-display">--- VA</div>
-                                        <small class="text-muted">Potencia AC</small>
-                                        <div class="row mt-3">
-                                            <div class="col-12">
-                                                <small class="text-muted">Voltaje BaterÃ­a</small>
-                                                <div class="h5" id="inverter-voltage">--.- V</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- DC-DC -->
-                            <div class="col-md-6 mt-3">
-                                <div class="card dashboard-card">
-                                    <div class="card-header bg-info">
-                                        <i class="fas fa-exchange-alt me-2"></i> Orion DC-DC
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <div class="sensor-value text-info" id="dcdc-display">--.- V</div>
-                                        <div class="row mt-2">
-                                            <div class="col-6">
-                                                <small>Entrada</small>
-                                                <div class="h6" id="dcdc-in">--.- V</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small>Salida</small>
-                                                <div class="h6" id="dcdc-out">--.- V</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab 2: GrÃ¡ficas -->
-                    <div class="tab-pane fade" id="charts" role="tabpanel">
-                        <div class="card dashboard-card">
-                            <div class="card-header">
-                                <i class="fas fa-chart-line me-2"></i> GrÃ¡ficas en Tiempo Real
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <canvas id="voltageChart" height="200"></canvas>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <canvas id="powerChart" height="200"></canvas>
-                                    </div>
-                                </div>
-                                <div class="mt-4">
-                                    <p class="text-muted"><i class="fas fa-info-circle me-2"></i>Las grÃ¡ficas se actualizan automÃ¡ticamente cada 10 segundos</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab 3: Dispositivos -->
-                    <div class="tab-pane fade" id="devices" role="tabpanel">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="card dashboard-card">
-                                    <div class="card-body">
-                                        <h5><i class="fas fa-microchip me-2"></i> Sistema ESP32</h5>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <p><strong>IP Detectada:</strong> <span id="esp-ip" class="badge bg-info">Buscando...</span></p>
-                                                <p><strong>Estado:</strong> <span id="connection-badge" class="badge bg-secondary">Desconectado</span></p>
-                                                <p><strong>Tiempo activo:</strong> <span id="uptime-display">--:--</span></p>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <button onclick="manualIPDiscovery()" class="btn btn-sm btn-primary mb-2 w-100">
-                                                    <i class="fas fa-search me-1"></i> Redetectar ESP32
-                                                </button>
-                                                <button onclick="enableTestMode()" class="btn btn-sm btn-warning mb-2 w-100">
-                                                    <i class="fas fa-flask me-1"></i> Activar Modo Prueba
-                                                </button>
-                                                <a href="#" id="dashboard-link" target="_blank" class="btn btn-sm btn-success mb-2 w-100" style="display: none;">
-                                                    <i class="fas fa-external-link-alt me-1"></i> Abrir Dashboard ESPHome
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column - Actions -->
-            <div class="col-md-4">
-                <!-- Quick Actions -->
-                <div class="card dashboard-card mb-4">
-                    <div class="card-header bg-dark text-white">
-                        <i class="fas fa-bolt me-2"></i> Acciones RÃ¡pidas
-                    </div>
-                    <div class="card-body">
-                        <button class="btn btn-primary w-100 mb-2" onclick="refreshData()">
-                            <i class="fas fa-sync-alt me-2"></i> Actualizar Datos
-                        </button>
-                        <div class="d-grid gap-2">
-                            <button id="dashboard-btn" class="btn btn-outline-primary" disabled>
-                                <i class="fas fa-tachometer-alt me-2"></i> Dashboard ESPHome
-                            </button>
-                            <button id="config-btn" class="btn btn-outline-secondary" disabled>
-                                <i class="fas fa-cog me-2"></i> ConfiguraciÃ³n
-                            </button>
-                            <button id="logs-btn" class="btn btn-outline-info" disabled>
-                                <i class="fas fa-terminal me-2"></i> Ver Logs
-                            </button>
-                            <button id="update-btn" class="btn btn-outline-warning" disabled>
-                                <i class="fas fa-cloud-upload-alt me-2"></i> OTA Update
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Status -->
-                <div class="card dashboard-card">
-                    <div class="card-header">
-                        <i class="fas fa-info-circle me-2"></i> Estado del Sistema
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <small class="text-muted">Ãltima actualizaciÃ³n</small>
-                            <div id="last-update">--:--:--</div>
-                        </div>
-                        <div class="mb-3">
-                            <small class="text-muted">SeÃ±al WiFi</small>
-                            <div class="progress" style="height: 10px;">
-                                <div id="wifi-bar" class="progress-bar bg-success" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <small class="text-muted">Dispositivos Conectados</small>
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                <span id="badge-smartshunt" class="badge bg-secondary device-badge">SmartShunt</span>
-                                <span id="badge-mppt" class="badge bg-secondary device-badge">MPPT Solar</span>
-                                <span id="badge-phoenix" class="badge bg-secondary device-badge">Phoenix Inverter</span>
-                                <span id="badge-orion" class="badge bg-secondary device-badge">Orion DC-DC</span>
-                                <span id="badge-battery" class="badge bg-secondary device-badge">Battery Sense</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="row mt-4">
-            <div class="col-12 text-center text-muted">
-                <p>
-                    <i class="fas fa-caravan me-2"></i> Sistema Siena395 | 
-                    <i class="fas fa-shield-alt me-2"></i> MonitorizaciÃ³n profesional | 
-                    <i class="fas fa-mobile-alt me-2"></i> DiseÃ±o responsive
-                </p>
-                <p class="small">
-                    <a href="https://github.com/uzturre562-blip/siena-monitor" class="text-muted" target="_blank">
-                        <i class="fab fa-github me-1"></i> Ver en GitHub
-                    </a> | 
-                    <a href="https://esphome.io/" class="text-muted" target="_blank">
-                        <i class="fas fa-caravan me-1"></i> Powered by ESPHome
-                    </a>
-                </p>
-            </div>
-        </div>
+        
+        <footer class="text-center text-muted mt-4 pb-4">
+            <small>Última actualización: <span id="last-update">--:--:--</span></small>
+        </footer>
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Dashboard Script COMPLETO Y FUNCIONAL -->
-    <script>
-        // ==================== CONFIGURACIÃN ====================
-        let ESP_IP = null;
-        const UPDATE_INTERVAL = 10000; // 10 segundos
-        let currentTheme = 'light';
-        let isConnected = false;
-        let testMode = false;
-        let testData = {};
-        
-        // ENDPOINTS CORRECTOS segÃºn tu ESPHome FUNCIONANDO
-        const endpoints = {
-            // SMART SHUNT
-            'soc_smartshunt': '/sensor/soc_smartshunt/state',
-            'voltage_smartshunt': '/sensor/voltage_smartshunt/state',
-            'current_smartshunt': '/sensor/current_smartshunt/state',
-            'ah_smartshunt': '/sensor/ah_smartshunt/state',
-            'ttg_smartshunt': '/sensor/ttg_smartshunt/state',
-            
-            // MPPT SOLAR
-            'voltage_mppt': '/sensor/voltage_mppt/state',
-            'current_mppt': '/sensor/current_mppt/state',
-            'power_mppt': '/sensor/power_mppt/state',
-            'yield_today_mppt': '/sensor/yield_today_mppt/state',
-            
-            // PHOENIX INVERTER
-            'voltage_phoenix': '/sensor/voltage_phoenix/state',
-            'power_ac_phoenix': '/sensor/power_ac_phoenix/state',
-            
-            // ORION DC-DC
-            'voltage_orion_in': '/sensor/voltage_orion_in/state',
-            'voltage_orion_out': '/sensor/voltage_orion_out/state',
-            
-            // BATTERY SENSE
-            'voltage_battery_sense': '/sensor/voltage_battery_sense/state',
-            'temp_battery_sense': '/sensor/temp_battery_sense/state',
-            
-            // SISTEMA
-            'esp32_ip': '/text_sensor/esp32_ip/state',
-            'tiempo_activo': '/text_sensor/tiempo_activo/state'
-        };
-
-        // ==================== DATOS DE PRUEBA ====================
-        function initializeTestData() {
-            testData = {
-                'soc_smartshunt': '99.8',
-                'voltage_smartshunt': '13.49',
-                'current_smartshunt': '0.000',
-                'ah_smartshunt': '-0.2',
-                'ttg_smartshunt': '99999',
-                
-                'voltage_mppt': '13.50',
-                'current_mppt': '0.0',
-                'power_mppt': '0',
-                'yield_today_mppt': '0',
-                
-                'voltage_phoenix': '13.49',
-                'power_ac_phoenix': '0',
-                
-                'voltage_orion_in': '12.26',
-                'voltage_orion_out': '0.00',
-                
-                'voltage_battery_sense': 'NA',
-                'temp_battery_sense': '12.0',
-                
-                'esp32_ip': '192.168.43.216',
-                'tiempo_activo': '1h 30m 15s'
-            };
-        }
-
-        // ==================== DETECCIÃN DE IP ====================
-        async function discoverESP32IP() {
-            console.log('ð Buscando ESP32...');
-            updateConnectionStatus('loading', 'Escaneando red...');
-            
-            // En modo prueba, usar datos de prueba
-            if (testMode) {
-                console.log('ð§ Modo prueba activado');
-                ESP_IP = 'siena395-monitor.local';
-                updateConnectionStatus('connected', 'Modo prueba activado');
-                enableActionButtons();
-                simulateData();
-                return ESP_IP;
-            }
-            
-            // Intentar IPs comunes
-            const commonIPs = [
-                '192.168.43.216',  // IP de tu captura
-                '192.168.1.100',
-                '192.168.1.101',
-                '192.168.0.100',
-                '192.168.0.101',
-                'siena395-monitor.local'  // mDNS
-            ];
-            
-            for (const ip of commonIPs) {
-                console.log(`ð Probando ${ip}...`);
-                if (await testIPConnection(ip)) {
-                    console.log(`â ESP32 encontrado en: ${ip}`);
-                    return ip;
-                }
-            }
-            
-            console.log('â ESP32 no encontrado');
-            return null;
-        }
-        
-        async function testIPConnection(ip) {
-            try {
-                const controller = new AbortController();
-                setTimeout(() => controller.abort(), 2000);
-                
-                const response = await fetch(`http://${ip}/sensor/soc_smartshunt/state`, { 
-                    signal: controller.signal 
-                });
-                
-                if (response.ok) {
-                    return ip;
-                }
-            } catch (e) {
-                // Silenciar errores
-            }
-            return null;
-        }
-
-        // ==================== GESTIÃN DE ESTADO ====================
-        function updateConnectionStatus(status, message) {
-            const statusEl = document.getElementById('connection-status');
-            const statusText = document.getElementById('status-text');
-            const badge = document.getElementById('connection-badge');
-            const onlineBadge = document.getElementById('online-badge');
-            
-            statusEl.className = `status ${status}`;
-            statusText.textContent = message;
-            
-            switch(status) {
-                case 'connected':
-                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-                    badge.className = 'badge bg-success';
-                    badge.textContent = 'Conectado';
-                    onlineBadge.className = 'badge bg-success me-2';
-                    onlineBadge.innerHTML = '<i class="fas fa-wifi"></i> Online';
-                    isConnected = true;
-                    enableActionButtons();
-                    break;
-                    
-                case 'error':
-                    statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-                    badge.className = 'badge bg-danger';
-                    badge.textContent = 'Error';
-                    onlineBadge.className = 'badge bg-danger me-2';
-                    onlineBadge.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline';
-                    isConnected = false;
-                    disableActionButtons();
-                    break;
-                    
-                case 'loading':
-                    statusEl.innerHTML = `<i class="fas fa-sync fa-spin"></i> ${message}`;
-                    badge.className = 'badge bg-warning';
-                    badge.textContent = 'Conectando...';
-                    onlineBadge.className = 'badge bg-warning me-2';
-                    onlineBadge.innerHTML = '<i class="fas fa-wifi"></i> Conectando...';
-                    isConnected = false;
-                    disableActionButtons();
-                    break;
-            }
-        }
-
-        function enableActionButtons() {
-            if (!ESP_IP) return;
-            
-            const buttons = ['dashboard-btn', 'config-btn', 'logs-btn', 'update-btn'];
-            buttons.forEach(id => {
-                const btn = document.getElementById(id);
-                btn.disabled = false;
-            });
-            
-            document.getElementById('dashboard-btn').onclick = () => window.open(`http://${ESP_IP}`, '_blank');
-            document.getElementById('config-btn').onclick = () => window.open(`http://${ESP_IP}/config`, '_blank');
-            document.getElementById('logs-btn').onclick = () => window.open(`http://${ESP_IP}/logs`, '_blank');
-            document.getElementById('update-btn').onclick = () => window.open(`http://${ESP_IP}/update`, '_blank');
-            
-            const link = document.getElementById('dashboard-link');
-            link.href = `http://${ESP_IP}`;
-            link.style.display = 'block';
-        }
-
-        function disableActionButtons() {
-            ['dashboard-btn', 'config-btn', 'logs-btn', 'update-btn'].forEach(id => {
-                document.getElementById(id).disabled = true;
-            });
-            document.getElementById('dashboard-link').style.display = 'none';
-        }
-
-        // ==================== OBTENER DATOS ====================
-        async function fetchSensorData(endpoint) {
-            if (testMode && testData[endpoint]) {
-                // Simular delay de red
-                await new Promise(resolve => setTimeout(resolve, 100));
-                return testData[endpoint];
-            }
-            
-            try {
-                const response = await fetch(`http://${ESP_IP}${endpoint}`);
-                if (!response.ok) throw new Error('Sensor no disponible');
-                
-                const text = await response.text();
-                return text.trim();
-            } catch (error) {
-                console.log(`â Error en ${endpoint}:`, error.message);
-                return null;
-            }
-        }
-
-        async function fetchAllData() {
-            if (!ESP_IP || !isConnected) return;
-            
-            try {
-                const data = {};
-                let deviceCount = 0;
-                
-                // Obtener todos los sensores
-                for (const [key, endpoint] of Object.entries(endpoints)) {
-                    const value = await fetchSensorData(endpoint);
-                    if (value !== null && value !== '') {
-                        data[key] = value;
-                        updateDisplay(key, value);
-                        if (key.includes('voltage') || key.includes('current') || key.includes('power')) {
-                            deviceCount++;
-                        }
-                    }
-                }
-                
-                // Actualizar tiempo
-                updateTime();
-                
-                // Actualizar estado de dispositivos
-                updateDeviceBadges(deviceCount);
-                
-                // Actualizar estado
-                if (Object.keys(data).length > 0) {
-                    if (testMode) {
-                        updateConnectionStatus('connected', `Modo prueba activado`);
-                    } else {
-                        updateConnectionStatus('connected', `Conectado a ${ESP_IP}`);
-                    }
-                    
-                    // Actualizar IP si estÃ¡ disponible
-                    if (data.esp32_ip && data.esp32_ip !== 'NA') {
-                        document.getElementById('esp-ip').textContent = data.esp32_ip;
-                        document.getElementById('esp-ip').className = 'badge bg-success';
-                    }
-                }
-                
-            } catch (error) {
-                console.log('â Error general:', error);
-                if (!testMode) {
-                    updateConnectionStatus('error', 'Error de conexiÃ³n');
-                    setTimeout(manualIPDiscovery, 5000);
-                }
-            }
-        }
-
-        function updateDisplay(sensorId, value) {
-            if (!value || value === '' || value === 'NA') return;
-            
-            const numValue = parseFloat(value);
-            
-            switch(sensorId) {
-                case 'soc_smartshunt':
-                    document.getElementById('soc-display').textContent = numValue.toFixed(1) + '%';
-                    document.getElementById('quick-soc').textContent = numValue.toFixed(1) + '%';
-                    document.getElementById('soc-progress').style.width = numValue + '%';
-                    document.getElementById('soc-progress').textContent = numValue.toFixed(0) + '%';
-                    document.getElementById('soc-progress').className = 
-                        numValue > 50 ? 'progress-bar bg-success' : 
-                        numValue > 20 ? 'progress-bar bg-warning' : 'progress-bar bg-danger';
-                    break;
-                    
-                case 'voltage_smartshunt':
-                    document.getElementById('voltage-display').textContent = numValue.toFixed(2) + ' V';
-                    break;
-                    
-                case 'current_smartshunt':
-                    document.getElementById('current-display').textContent = numValue.toFixed(3) + ' A';
-                    break;
-                    
-                case 'ah_smartshunt':
-                    document.getElementById('ah-display').textContent = numValue.toFixed(1) + ' Ah';
-                    break;
-                    
-                case 'ttg_smartshunt':
-                    if (numValue > 10000) {
-                        document.getElementById('ttg-display').textContent = 'â restantes';
-                    } else {
-                        const hours = Math.floor(numValue / 60);
-                        const minutes = Math.floor(numValue % 60);
-                        document.getElementById('ttg-display').textContent = 
-                            hours > 0 ? `${hours}h ${minutes}min` : `${minutes} min`;
-                    }
-                    break;
-                    
-                case 'power_mppt':
-                    document.getElementById('solar-display').textContent = numValue.toFixed(0) + ' W';
-                    document.getElementById('quick-solar').textContent = numValue.toFixed(0) + ' W';
-                    break;
-                    
-                case 'voltage_mppt':
-                    document.getElementById('solar-voltage').textContent = numValue.toFixed(2) + ' V';
-                    break;
-                    
-                case 'current_mppt':
-                    document.getElementById('solar-current').textContent = numValue.toFixed(1) + ' A';
-                    break;
-                    
-                case 'yield_today_mppt':
-                    document.getElementById('yield-today').textContent = numValue.toFixed(0) + ' Wh';
-                    break;
-                    
-                case 'power_ac_phoenix':
-                    document.getElementById('inverter-display').textContent = numValue.toFixed(0) + ' VA';
-                    break;
-                    
-                case 'voltage_phoenix':
-                    document.getElementById('inverter-voltage').textContent = numValue.toFixed(2) + ' V';
-                    break;
-                    
-                case 'voltage_orion_in':
-                    document.getElementById('dcdc-in').textContent = numValue.toFixed(2) + ' V';
-                    break;
-                    
-                case 'voltage_orion_out':
-                    document.getElementById('dcdc-out').textContent = numValue.toFixed(2) + ' V';
-                    document.getElementById('dcdc-display').textContent = numValue.toFixed(2) + ' V';
-                    break;
-                    
-                case 'voltage_battery_sense':
-                    document.getElementById('starter-voltage').textContent = numValue.toFixed(2) + ' V';
-                    document.getElementById('quick-starter').textContent = numValue.toFixed(1) + ' V';
-                    break;
-                    
-                case 'temp_battery_sense':
-                    document.getElementById('starter-temp').textContent = numValue.toFixed(1) + ' Â°C';
-                    break;
-                    
-                case 'tiempo_activo':
-                    document.getElementById('uptime-display').textContent = value;
-                    break;
-                    
-                case 'esp32_ip':
-                    if (value && value !== 'NA') {
-                        document.getElementById('esp-ip').textContent = value;
-                        document.getElementById('esp-ip').className = 'badge bg-success';
-                    }
-                    break;
-            }
-        }
-
-        function updateDeviceBadges(count) {
-            const badges = [
-                'badge-smartshunt',
-                'badge-mppt', 
-                'badge-phoenix',
-                'badge-orion',
-                'badge-battery'
-            ];
-            
-            badges.forEach((badgeId, index) => {
-                const badge = document.getElementById(badgeId);
-                if (index < count) {
-                    badge.className = 'badge bg-success device-badge';
-                } else {
-                    badge.className = 'badge bg-secondary device-badge';
-                }
-            });
-        }
-
-        // ==================== FUNCIONES UTILITARIAS ====================
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('last-update').textContent = now.toLocaleTimeString('es-ES');
-        }
-
-        function refreshData() {
-            if (isConnected) {
-                fetchAllData();
-            } else {
-                manualIPDiscovery();
-            }
-        }
-
-        async function manualIPDiscovery() {
-            updateConnectionStatus('loading', 'Buscando ESP32...');
-            ESP_IP = await discoverESP32IP();
-            
-            if (ESP_IP) {
-                document.getElementById('esp-ip').textContent = ESP_IP;
-                document.getElementById('esp-ip').className = 'badge bg-info';
-                await fetchAllData();
-                
-                // Iniciar actualizaciÃ³n periÃ³dica
-                if (!window.updateInterval) {
-                    window.updateInterval = setInterval(fetchAllData, UPDATE_INTERVAL);
-                }
-            } else {
-                updateConnectionStatus('error', 'ESP32 no encontrado. Activa modo prueba.');
-                document.getElementById('esp-ip').textContent = 'No encontrado';
-                document.getElementById('esp-ip').className = 'badge bg-danger';
-            }
-        }
-
-        // ==================== MODO PRUEBA ====================
-        function enableTestMode() {
-            testMode = true;
-            initializeTestData();
-            
-            // Mostrar controles
-            document.getElementById('manual-controls').style.display = 'block';
-            document.getElementById('testModeBadge').style.display = 'inline-block';
-            
-            // Actualizar estado
-            ESP_IP = 'siena395-monitor.local';
-            updateConnectionStatus('connected', 'Modo prueba activado');
-            enableActionButtons();
-            
-            // Cargar datos iniciales
-            simulateData();
-            
-            console.log('ð§ Modo prueba activado');
-        }
-
-        function simulateData() {
-            // Generar datos aleatorios realistas
-            testData = {
-                'soc_smartshunt': (Math.random() * 20 + 80).toFixed(1),
-                'voltage_smartshunt': (Math.random() * 0.5 + 13.0).toFixed(2),
-                'current_smartshunt': (Math.random() * 10 - 5).toFixed(3),
-                'ah_smartshunt': (Math.random() * 20 - 10).toFixed(1),
-                'ttg_smartshunt': Math.floor(Math.random() * 200 + 100).toString(),
-                
-                'voltage_mppt': (Math.random() * 1 + 13.0).toFixed(2),
-                'current_mppt': (Math.random() * 10).toFixed(1),
-                'power_mppt': Math.floor(Math.random() * 300).toString(),
-                'yield_today_mppt': Math.floor(Math.random() * 500).toString(),
-                
-                'voltage_phoenix': (Math.random() * 0.3 + 13.3).toFixed(2),
-                'power_ac_phoenix': Math.floor(Math.random() * 100).toString(),
-                
-                'voltage_orion_in': (Math.random() * 2 + 12.0).toFixed(2),
-                'voltage_orion_out': (Math.random() * 0.5 + 13.0).toFixed(2),
-                
-                'voltage_battery_sense': (Math.random() * 1 + 12.0).toFixed(2),
-                'temp_battery_sense': (Math.random() * 10 + 15.0).toFixed(1),
-                
-                'esp32_ip': '192.168.43.216',
-                'tiempo_activo': '1h 30m 15s'
-            };
-            
-            // Actualizar display
-            Object.entries(testData).forEach(([key, value]) => {
-                updateDisplay(key, value);
-            });
-            
-            updateTime();
-            updateConnectionStatus('connected', 'Modo prueba - Datos simulados');
-        }
-
-        function resetTestData() {
-            initializeTestData();
-            Object.entries(testData).forEach(([key, value]) => {
-                updateDisplay(key, value);
-            });
-            updateTime();
-        }
-
-        function setManualIP() {
-            const ip = document.getElementById('manualIP').value;
-            if (ip) {
-                ESP_IP = ip;
-                testMode = false;
-                document.getElementById('manual-controls').style.display = 'none';
-                document.getElementById('testModeBadge').style.display = 'none';
-                manualIPDiscovery();
-            }
-        }
-
-        // ==================== TEMA CLARO/OSCURO ====================
-        function toggleTheme() {
-            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', currentTheme);
-            
-            const btn = document.getElementById('themeToggle');
-            if (currentTheme === 'dark') {
-                btn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
-                btn.className = 'btn btn-outline-warning';
-            } else {
-                btn.innerHTML = '<i class="fas fa-moon"></i> Tema Oscuro';
-                btn.className = 'btn btn-outline-secondary';
-            }
-            
-            localStorage.setItem('theme', currentTheme);
-        }
-
-        // ==================== GRÃFICAS ====================
-        function initializeCharts() {
-            // GrÃ¡fica de voltaje
-            const voltageCtx = document.getElementById('voltageChart').getContext('2d');
-            window.voltageChart = new Chart(voltageCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Voltaje BaterÃ­a (V)',
-                        data: [],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 2,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: 12,
-                            max: 15
-                        }
-                    }
-                }
-            });
-            
-            // GrÃ¡fica de potencia
-            const powerCtx = document.getElementById('powerChart').getContext('2d');
-            window.powerChart = new Chart(powerCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Potencia Solar (W)',
-                        data: [],
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        borderWidth: 2,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    }
-                }
-            });
-        }
-
-// ==================== CONFIGURACIÓN MQTT PROFESIONAL ====================
+	<script>
+        // CONFIGURACIÓN MQTT
         const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
         const topicPrefix = 'siena395_monitor_mikel_2026';
 
         client.on('connect', () => {
-            console.log('✅ Conectado al Broker MQTT - Siena395');
+            console.log('✅ Conectado a MQTT');
+            document.getElementById('connection-status').className = 'status connected';
+            document.getElementById('status-text').innerText = 'Siena395 ONLINE';
             client.subscribe(`${topicPrefix}/sensor/#`);
-            
-            // Actualizamos tu indicador de estado original
-            const statusText = document.getElementById('status-text');
-            if(statusText) statusText.textContent = 'Siena395 Conectada (Online)';
-            const statusDot = document.getElementById('connection-status');
-            if(statusDot) statusDot.className = 'status connected';
-            
-            enableActionButtons();
         });
 
         client.on('message', (topic, message) => {
-            const payload = message.toString();
-            const sensorId = topic.split('/').slice(-2, -1)[0];
+            const val = message.toString();
+            const sensor = topic.split('/').pop(); // Coge la última parte del tópico
 
-            // Mapeo a los IDs reales de tu HTML de 900 líneas
-            switch(sensorId) {
-                case 'soc_ultimatron':
-                    const soc = parseFloat(payload);
-                    // Actualiza tu barra de progreso
-                    const progressBar = document.getElementById('soc-progress');
-                    if(progressBar) progressBar.style.width = soc + '%';
-                    // Actualiza el porcentaje grande
-                    const socDisp = document.getElementById('soc-display');
-                    if(socDisp) socDisp.innerText = Math.round(soc) + '%';
-                    // Actualiza el acceso rápido
-                    const quickSoc = document.getElementById('quick-soc');
-                    if(quickSoc) quickSoc.innerText = Math.round(soc) + '%';
-                    break;
-
-                case 'tension_smartshunt':
-                    const v = parseFloat(payload).toFixed(2);
-                    const vDisp = document.getElementById('voltage-display');
-                    if(vDisp) vDisp.innerText = v + ' V';
-                    break;
-
-                case 'potencia_solar':
-                    const p = Math.round(payload);
-                    const sDisp = document.getElementById('solar-display');
-                    if(sDisp) sDisp.innerText = p + ' W';
-                    const qSolar = document.getElementById('quick-solar');
-                    if(qSolar) qSolar.innerText = p + ' W';
-                    break;
-                
-                case 'temperatura_bateria':
-                    const tDisp = document.getElementById('tempBateria'); // O el ID que uses para temp
-                    if(tDisp) tDisp.innerText = parseFloat(payload).toFixed(1) + ' °C';
-                    break;
+            // Mapeo directo a los elementos del HTML
+            if (sensor === 'soc_smartshunt') {
+                document.getElementById('soc-display').innerText = Math.round(val) + '%';
+                document.getElementById('quick-soc').innerText = Math.round(val) + '%';
+                document.getElementById('soc-progress').style.width = val + '%';
             }
-            
-            // Actualiza la hora de "Última actualización"
-            const lastUpd = document.getElementById('last-update');
-            if(lastUpd) lastUpd.innerText = new Date().toLocaleTimeString();
+            if (sensor === 'voltage_smartshunt') document.getElementById('voltage-display').innerText = parseFloat(val).toFixed(2) + ' V';
+            if (sensor === 'current_smartshunt') document.getElementById('current-display').innerText = val + ' A';
+            if (sensor === 'power_mppt') {
+                document.getElementById('solar-display').innerText = val + ' W';
+                document.getElementById('quick-solar').innerText = val + ' W';
+            }
+            if (sensor === 'voltage_mppt') document.getElementById('solar-voltage').innerText = val + ' V';
+            if (sensor === 'yield_today_mppt') document.getElementById('yield-today').innerText = val + ' Wh';
+            if (sensor === 'voltage_battery_sense') document.getElementById('starter-voltage').innerText = val + ' V';
+            if (sensor === 'temp_battery_sense') document.getElementById('starter-temp').innerText = val;
+            if (sensor === 'wifi_signal') document.getElementById('quick-wifi').innerText = val + ' dBm';
+
+            document.getElementById('last-update').innerText = new Date().toLocaleTimeString();
         });
 
-        // ==================== FUNCIONES UI MANTENIDAS ====================
-        function toggleTheme() {
-            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', currentTheme);
-            const btn = document.getElementById('themeToggle');
-            if (currentTheme === 'dark') {
-                btn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
-            } else {
-                btn.innerHTML = '<i class="fas fa-moon"></i> Tema Oscuro';
-            }
-            localStorage.setItem('theme', currentTheme);
-        }
-
-        function enableActionButtons() {
-            const buttons = document.querySelectorAll('.btn-action');
-            buttons.forEach(btn => { btn.disabled = false; btn.style.opacity = '1'; });
-        }
-
-        function disableActionButtons() {
-            const buttons = document.querySelectorAll('.btn-action');
-            buttons.forEach(btn => { btn.disabled = true; btn.style.opacity = '0.5'; });
-        }
-
-        function updateTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            document.querySelectorAll('.last-update').forEach(el => el.innerText = 'Actualizado: ' + timeStr);
-        }
-
-        // ==================== INICIALIZACIÓN ====================
-        document.addEventListener('DOMContentLoaded', function() {
-            updateTime();
-            disableActionButtons();
-            
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                currentTheme = savedTheme;
-                document.documentElement.setAttribute('data-theme', currentTheme);
-            }
-            
-            const themeBtn = document.getElementById('themeToggle');
-            if(themeBtn) themeBtn.addEventListener('click', toggleTheme);
-            
-            console.log('🚐 Dashboard Siena395 vía MQTT LISTO');
+        // Tema Oscuro
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
         });
     </script>
 </body>
