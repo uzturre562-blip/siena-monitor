@@ -3,44 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siena395 ULTRA PRO</title>
+    <title>Siena395 ULTRA PRO v2</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --accent: #00d2ff; --text: #f8fafc;
+            --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --accent: #00d2ff; --text: #f8fafc; --border: rgba(255,255,255,0.1);
         }
         [data-theme="light"] {
-            --bg: #f1f5f9; --card: rgba(255, 255, 255, 0.9); --accent: #2563eb; --text: #1e293b;
+            --bg: #f1f5f9; --card: rgba(255, 255, 255, 0.9); --accent: #2563eb; --text: #1e293b; --border: rgba(0,0,0,0.1);
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; }
-        .glass-card { background: var(--card); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); height: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; min-height: 100vh; }
+        .glass-card { background: var(--card); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; border: 1px solid var(--border); height: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
+        /* Switch Modo Claro/Oscuro PRO */
+        .theme-switch { cursor: pointer; padding: 10px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); }
+
         /* Animación de Flujo */
-        .flow-container { position: relative; height: 180px; display: flex; justify-content: space-around; align-items: center; }
-        .flow-node { text-align: center; z-index: 2; width: 80px; }
-        .flow-line { position: absolute; height: 2px; background: rgba(255,255,255,0.1); z-index: 1; top: 50%; width: 40%; }
+        .flow-container { position: relative; height: 160px; display: flex; justify-content: space-around; align-items: center; }
+        .flow-node { text-align: center; z-index: 2; width: 90px; }
+        .flow-line { position: absolute; height: 2px; background: var(--border); z-index: 1; top: 50%; width: 35%; }
         .dot-animation {
             position: absolute; width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
             top: -2px; animation: flow 2s linear infinite; box-shadow: 0 0 10px var(--accent);
         }
         @keyframes flow { 0% { left: 0%; } 100% { left: 100%; } }
         
-        .stat-main { font-size: 2.2rem; font-weight: 800; color: var(--accent); }
-        .stat-sub { font-size: 0.9rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
-        #themeToggle { cursor: pointer; }
+        .stat-main { font-size: 2.5rem; font-weight: 800; color: var(--accent); line-height: 1; }
+        .stat-sub { font-size: 0.75rem; opacity: 0.6; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
 <div class="container py-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">SIENA 395 <span class="text-info">ULTRA</span></h2>
         <div>
-            <i id="themeToggle" class="fas fa-adjust me-3"></i>
-            <span class="badge bg-primary" id="esp-status">CONECTANDO...</span>
+            <h2 class="fw-bold mb-0">SIENA 395 <span class="text-info">PRO</span></h2>
+            <div class="small"><span id="esp-status-dot" class="badge bg-danger rounded-circle p-1"> </span> <span id="esp-status-text">OFFLINE</span></div>
+        </div>
+        <div class="d-flex align-items-center">
+            <div id="themeToggle" class="theme-switch me-3"><i class="fas fa-moon"></i></div>
+            <span class="badge bg-dark rounded-pill py-2 px-3" id="clock">00:00:00</span>
         </div>
     </div>
 
@@ -50,26 +55,25 @@
                 <div class="flow-container">
                     <div class="flow-node">
                         <i class="fas fa-sun text-warning fa-2x mb-2"></i>
-                        <div class="small fw-bold" id="flow_solar">0W</div>
-                        <small class="opacity-50">Solar</small>
+                        <div class="fw-bold" id="flow_solar">0W</div>
+                        <div class="stat-sub">Solar</div>
                     </div>
-                    <div style="position:relative; width:30%;">
+                    <div style="position:relative; width:25%;">
                         <div class="flow-line"></div>
                         <div id="solar_dot" class="dot-animation" style="display:none"></div>
                     </div>
                     <div class="flow-node">
-                        <i class="fas fa-battery-three-quarters text-info fa-3x mb-2"></i>
-                        <div class="h4 fw-bold" id="soc_smartshunt">--%</div>
-                        <small class="opacity-50">Ultimatron</small>
+                        <div class="stat-main" id="soc_smartshunt">--%</div>
+                        <div class="stat-sub">Ultimatron</div>
                     </div>
-                    <div style="position:relative; width:30%;">
+                    <div style="position:relative; width:25%;">
                         <div class="flow-line"></div>
                         <div id="inv_dot" class="dot-animation" style="display:none; animation-direction: reverse;"></div>
                     </div>
                     <div class="flow-node">
                         <i class="fas fa-plug text-success fa-2x mb-2"></i>
-                        <div class="small fw-bold" id="flow_inv">0W</div>
-                        <small class="opacity-50">Consumo AC</small>
+                        <div class="fw-bold" id="flow_inv">0VA</div>
+                        <div class="stat-sub">Carga AC</div>
                     </div>
                 </div>
             </div>
@@ -77,61 +81,63 @@
     </div>
 
     <div class="row g-3">
-        <div class="col-md-6">
-            <div class="glass-card" style="border-top: 4px solid #10b981;">
-                <div class="stat-sub">Phoenix Inverter 12/1200</div>
-                <div class="row align-items-center mt-2">
-                    <div class="col-7">
-                        <div class="stat-main" id="inverter_power">-- <small class="h6 unit">W</small></div>
-                    </div>
-                    <div class="col-5 border-start">
-                        <div class="h5 mb-0" id="inverter_ac_voltage">--V</div>
-                        <small class="opacity-50">Salida AC</small>
-                    </div>
-                </div>
-                <div class="mt-2"><span class="badge bg-dark" id="inverter_state">--</span></div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="glass-card" style="border-top: 4px solid #ef4444;">
-                <div class="stat-sub">Battery Sense (Precisión)</div>
-                <div class="row mt-2">
+        <div class="col-lg-4">
+            <div class="glass-card border-info">
+                <div class="stat-sub">SmartShunt Principal</div>
+                <div class="stat-main mt-2" id="current_smartshunt">--.--<small class="h5">A</small></div>
+                <div class="row mt-3">
                     <div class="col-6">
-                        <div class="stat-main text-danger" id="battery_temp_sensor">--<small class="h6">°C</small></div>
-                        <small class="opacity-50">Temperatura</small>
+                        <small class="opacity-50">Voltaje</small>
+                        <div class="fw-bold" id="voltage_smartshunt">--.--V</div>
                     </div>
-                    <div class="col-6 border-start">
-                        <div class="h4 mb-0" id="battery_voltage_sense">--.--V</div>
-                        <small class="opacity-50">Tensión Real</small>
+                    <div class="col-6 border-start border-secondary">
+                        <small class="opacity-50">Potencia</small>
+                        <div class="fw-bold" id="power_smartshunt">--W</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 col-6">
-            <div class="glass-card text-center">
-                <div class="stat-sub">Motor (Orion)</div>
-                <div class="h4 mt-2" id="orion_input_voltage">--.-V</div>
-                <small class="text-muted" id="orion_output_voltage">Salida: --.-V</small>
+        <div class="col-lg-4">
+            <div class="glass-card border-success">
+                <div class="stat-sub">Phoenix 12/2000VA</div>
+                <div class="stat-main text-success mt-2" id="inverter_power">--<small class="h5">VA</small></div>
+                <div class="row mt-3 text-center">
+                    <div class="col-6">
+                        <small class="opacity-50">Batería</small>
+                        <div class="fw-bold" id="voltage_phoenix">--.--V</div>
+                    </div>
+                    <div class="col-6 border-start border-secondary">
+                        <small class="opacity-50">Estado</small>
+                        <div id="inverter_state" class="badge bg-secondary">--</div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-4 col-6">
-            <div class="glass-card text-center">
-                <div class="stat-sub">Shunt Voltaje</div>
-                <div class="h4 mt-2" id="voltage_smartshunt">--.--V</div>
-            </div>
-        </div>
-        <div class="col-md-4 col-12">
-            <div class="glass-card text-center border-info">
-                <div class="stat-sub">Corriente Neta</div>
-                <div class="h4 mt-2" id="current_smartshunt">--.--A</div>
+
+        <div class="col-lg-4">
+            <div class="glass-card border-danger">
+                <div class="stat-sub">Battery Sense</div>
+                <div class="d-flex justify-content-between align-items-center mt-1">
+                    <div class="stat-main text-danger" id="battery_temp_sensor">--<small class="h5">°C</small></div>
+                    <div class="text-end">
+                        <small class="opacity-50">Ref.</small>
+                        <div id="battery_voltage_sense">--.-V</div>
+                    </div>
+                </div>
+                <div class="mt-3 pt-2 border-top border-secondary">
+                    <div class="stat-sub">Alternador (Orion)</div>
+                    <div class="d-flex justify-content-between">
+                        <span id="orion_input_voltage">In: --V</span>
+                        <span id="orion_output_voltage">Out: --V</span>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="col-12">
             <div class="glass-card">
-                <canvas id="dualChart" height="110"></canvas>
+                <canvas id="mainChart" height="100"></canvas>
             </div>
         </div>
     </div>
@@ -143,15 +149,20 @@
     const client = mqtt.connect(BROKER);
     let chart;
 
-    // --- INTERRUPTOR DE TEMA ---
-    document.getElementById('themeToggle').onclick = () => {
-        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', theme);
+    // --- MODO CLARO/OSCURO ---
+    const themeBtn = document.getElementById('themeToggle');
+    themeBtn.onclick = () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        themeBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
     };
 
+    // --- RELOJ ---
+    setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
+
     client.on('connect', () => {
-        document.getElementById('esp-status').className = "badge bg-success";
-        document.getElementById('esp-status').innerText = "ONLINE";
+        document.getElementById('esp-status-dot').className = "badge bg-success rounded-circle p-1";
+        document.getElementById('esp-status-text').innerText = "ONLINE";
         client.subscribe(`${PREFIX}/#`);
     });
 
@@ -159,51 +170,34 @@
         const val = msg.toString();
         const id = topic.split('/')[2];
         const el = document.getElementById(id);
-        
-        if (topic.includes('status')) {
-            document.getElementById('esp-status').className = val === 'online' ? "badge bg-success" : "badge bg-danger";
-            document.getElementById('esp-status').innerText = val.toUpperCase();
-        }
 
-        if (!el && id !== 'power_mppt' && id !== 'inverter_power') return;
-
-        // Lógica de Flujos
+        // Actualizar Flujos
         if (id === 'power_mppt') {
             document.getElementById('flow_solar').innerText = Math.round(val) + "W";
             document.getElementById('solar_dot').style.display = val > 5 ? 'block' : 'none';
         }
         if (id === 'inverter_power') {
-            document.getElementById('flow_inv').innerText = Math.round(val) + "W";
-            document.getElementById('inv_dot').style.display = val > 5 ? 'block' : 'none';
+            document.getElementById('flow_inv').innerText = Math.round(val) + "VA";
+            document.getElementById('inv_dot').style.display = val > 10 ? 'block' : 'none';
         }
 
-        // Inversor AC (Nuevos campos)
-        if (id === 'inverter_power') el.innerHTML = `${Math.round(val)} <small class="h6 unit">W</small>`;
-        if (id === 'inverter_ac_voltage') el.innerText = parseFloat(val).toFixed(0) + "V";
-
         if (el) {
-            if (id.includes('soc')) {
-                el.innerText = parseFloat(val).toFixed(1) + '%';
-            } else if (id.includes('temp')) {
-                el.innerHTML = `${parseFloat(val).toFixed(1)}<small class="h6">°C</small>`;
-            } else {
-                el.innerText = parseFloat(val).toFixed(2) + (id.includes('voltage') ? 'V' : 'A');
+            if (id === 'soc_smartshunt') el.innerText = parseFloat(val).toFixed(1) + '%';
+            else if (id === 'inverter_power') el.innerHTML = `${Math.round(val)}<small class="h5">VA</small>`;
+            else if (id === 'battery_temp_sensor') el.innerHTML = `${parseFloat(val).toFixed(1)}<small class="h5">°C</small>`;
+            else if (id === 'inverter_state') el.innerText = val.toUpperCase();
+            else {
+                el.innerText = parseFloat(val).toFixed(2) + (id.includes('current') ? 'A' : 'V');
                 if (id === 'voltage_smartshunt') updateChart(parseFloat(val));
             }
         }
     });
 
     function initChart() {
-        const ctx = document.getElementById('dualChart').getContext('2d');
+        const ctx = document.getElementById('mainChart').getContext('2d');
         chart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Voltaje Batería',
-                    data: [], borderColor: '#00d2ff', tension: 0.4, fill: false, pointRadius: 0
-                }]
-            },
+            data: { labels: [], datasets: [{ label: 'V SmartShunt', data: [], borderColor: '#00d2ff', tension: 0.4, pointRadius: 0 }] },
             options: { plugins: { legend: { display: false } }, scales: { y: { min: 12.5, max: 14.8 } } }
         });
     }
@@ -215,7 +209,6 @@
         if (chart.data.labels.length > 30) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
         chart.update();
     }
-
     window.onload = initChart;
 </script>
 </body>
