@@ -1084,8 +1084,133 @@
         }
 
         // ==================== INICIALIZACIÓN ====================
+        // ==================== CONFIGURACIÓN MQTT ====================
+        const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+        const topicPrefix = 'siena395_monitor_mikel_2026';
+
+        client.on('connect', () => {
+            console.log('✅ Conectado al Broker MQTT - Siena395');
+            client.subscribe(`${topicPrefix}/sensor/#`);
+            enableActionButtons();
+            
+            const statusText = document.getElementById('discoveryStatus');
+            if(statusText) statusText.innerHTML = '<i class="fas fa-check-circle text-success"></i> Sistema Online (MQTT)';
+        });
+
+        client.on('message', (topic, message) => {
+            const payload = message.toString();
+            const sensorId = topic.split('/').slice(-2, -1)[0];
+
+            switch(sensorId) {
+                case 'soc_ultimatron':
+                    updateGauge('soc', parseFloat(payload));
+                    document.getElementById('socValue').innerText = Math.round(payload) + '%';
+                    break;
+                case 'tension_smartshunt':
+                    updateGauge('voltage', parseFloat(payload));
+                    document.getElementById('batteryVoltage').innerText = parseFloat(payload).toFixed(2) + ' V';
+                    break;
+                case 'corriente_smartshunt':
+                    document.getElementById('batteryCurrent').innerText = parseFloat(payload).toFixed(1) + ' A';
+                    break;
+                case 'potencia_solar':
+                    document.getElementById('solarPower').innerText = Math.round(payload) + ' W';
+                    break;
+                case 'temperatura_bateria':
+                    document.getElementById('tempBateria').innerText = parseFloat(payload).toFixed(1) + ' °C';
+                    break;
+                case 'potencia_salida_phoenix':
+                    document.getElementById('inverterPower').innerText = Math.round(payload) + ' W';
+                    break;
+                case 'energia_hoy':
+                    document.getElementById('solarYield').innerText = Math.round(payload) + ' Wh';
+                    break;
+                case 'voltaje_entrada_orion':
+                    document.getElementById('dcdcVoltage').innerText = parseFloat(payload).toFixed(1) + ' V';
+                    break;
+                case 'tiempo_restante':
+                    let hours = (parseFloat(payload) / 3600).toFixed(1);
+                    document.getElementById('timeToGo').innerText = hours + ' h';
+                    break;
+            }
+        });
+
+        // ==================== FUNCIONES UI ORIGINALES ====================
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            const btn = document.getElementById('themeToggle');
+            if (currentTheme === 'dark') {
+                btn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
+                btn.className = 'btn btn-outline-warning';
+            } else {
+                btn.innerHTML = '<i class="fas fa-moon"></i> Tema Oscuro';
+                btn.className = 'btn btn-outline-secondary';
+            }
+            localStorage.setItem('theme', currentTheme);
+        }
+
+        function enableActionButtons() {
+            const buttons = document.querySelectorAll('.btn-action');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+        }
+
+        function disableActionButtons() {
+            const buttons = document.querySelectorAll('.btn-action');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
+
+        // ==================== LÓGICA DE GRÁFICOS ====================
+        let socChart, voltageChart;
+        function initCharts() {
+            const ctxSoc = document.getElementById('socChart').getContext('2d');
+            socChart = new Chart(ctxSoc, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: ['#10b981', '#e0e0e0'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270,
+                        cutout: '80%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { tooltip: { enabled: false } }
+                }
+            });
+        }
+
+        function updateGauge(type, value) {
+            if (type === 'soc' && socChart) {
+                socChart.data.datasets[0].data = [value, 100 - value];
+                socChart.data.datasets[0].backgroundColor[0] = value < 20 ? '#ef4444' : (value < 50 ? '#f59e0b' : '#10b981');
+                socChart.update();
+            }
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            const elements = document.querySelectorAll('.last-update');
+            elements.forEach(el => el.innerText = 'Actualizado: ' + timeStr);
+        }
+
+        // ==================== INICIALIZACIÓN ====================
         document.addEventListener('DOMContentLoaded', function() {
-            // Tema
+            initCharts();
+            updateTime();
+            disableActionButtons();
+            
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
                 currentTheme = savedTheme;
@@ -1093,22 +1218,9 @@
             }
             
             const themeBtn = document.getElementById('themeToggle');
-            themeBtn.addEventListener('click', toggleTheme);
-            if (currentTheme === 'dark') {
-                themeBtn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
-                themeBtn.className = 'btn btn-outline-warning';
-            }
+            if(themeBtn) themeBtn.addEventListener('click', toggleTheme);
             
-            // Inicializar
-            updateTime();
-            disableActionButtons();
-            initializeTestData();
-            initializeCharts();
-            
-            // Iniciar detección automática
-            manualIPDiscovery();
-            
-            console.log('🚐 Dashboard Siena395 PRO inicializado');
+            console.log('🚐 Dashboard Siena395 PRO vía MQTT Activo');
         });
     </script>
 </body>
