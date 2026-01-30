@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚐 GIOTTILINE SIENA 395 - VICTRON SISTEMA</title>
+    <title>ð GIOTTILINE SIENA 395 - VICTRON SISTEMA</title>
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -158,7 +158,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h1><i class="fas fa-caravan caravan-icon"></i> GIOTTILINE SIENA 395 - Monitor Victron PRO_v.1.0.0</h1>
-                        <p class="text-muted"><i class="fas fa-road me-1"></i> Sistema de monitorización profesional para autocaravana</p>
+                        <p class="text-muted"><i class="fas fa-road me-1"></i> Sistema de monitorizaciÃ³n profesional para autocaravana</p>
                     </div>
                     <div class="text-end">
                         <span id="online-badge" class="badge bg-danger me-2"><i class="fas fa-wifi"></i> Offline</span>
@@ -168,7 +168,7 @@
             </div>
         </div>
 
-        <!-- Estado de Conexión -->
+        <!-- Estado de ConexiÃ³n -->
         <div id="connection-status" class="status loading">
             <i class="fas fa-sync fa-spin"></i> 
             <span id="status-text">Buscando ESP32 en la red...</span>
@@ -213,28 +213,28 @@
                 <div class="quick-stats text-center">
                     <div class="text-muted mb-2"><i class="fas fa-battery-full fa-2x"></i></div>
                     <div class="h4" id="quick-soc">--%</div>
-                    <small>Estado Batería</small>
+                    <small>Estado BaterÃ­a</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="quick-stats text-center">
                     <div class="text-muted mb-2"><i class="fas fa-sun fa-2x"></i></div>
                     <div class="h4" id="quick-solar">-- W</div>
-                    <small>Producción Solar</small>
+                    <small>ProducciÃ³n Solar</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="quick-stats text-center">
                     <div class="text-muted mb-2"><i class="fas fa-car-battery fa-2x"></i></div>
                     <div class="h4" id="quick-starter">-- V</div>
-                    <small>Batería Arranque</small>
+                    <small>BaterÃ­a Arranque</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="quick-stats text-center">
                     <div class="text-muted mb-2"><i class="fas fa-signal fa-2x"></i></div>
                     <div class="h4" id="quick-wifi">-- dBm</div>
-                    <small>Señal WiFi</small>
+                    <small>SeÃ±al WiFi</small>
                 </div>
             </div>
         </div>
@@ -249,7 +249,7 @@
                         <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button">Dashboard</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button">Gráficas</button>
+                        <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button">GrÃ¡ficas</button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="devices-tab" data-bs-toggle="tab" data-bs-target="#devices" type="button">Dispositivos</button>
@@ -260,7 +260,7 @@
                     <!-- Tab 1: Dashboard -->
                     <div class="tab-pane fade show active" id="home" role="tabpanel">
                         <div class="row">
-                            <!-- Batería Principal -->
+                            <!-- BaterÃ­a Principal -->
                             <div class="col-md-6">
                                 <div class="card dashboard-card">
                                     <div class="card-header">
@@ -302,13 +302,13 @@
                                                 <small class="text-muted">Voltaje</small>
                                             </div>
                                             <div class="col-6">
-                                                <div class="temp-display" style="font-size: 2rem;" id="starter-temp">--.- °C</div>
+                                                <div class="temp-display" style="font-size: 2rem;" id="starter-temp">--.- Â°C</div>
                                                 <small class="text-muted">Temperatura</small>
                                             </div>
                                         </div>
                                         <div class="mt-3">
                                             <small class="text-muted">
-                                                <i class="fas fa-info-circle"></i> Sensor de batería de arranque
+                                                <i class="fas fa-info-circle"></i> Sensor de baterÃ­a de arranque
                                             </small>
                                         </div>
                                     </div>
@@ -351,7 +351,7 @@
                                         <small class="text-muted">Potencia AC</small>
                                         <div class="row mt-3">
                                             <div class="col-12">
-                                                <small class="text-muted">Voltaje Batería</small>
+                                                <small class="text-muted">Voltaje BaterÃ­a</small>
                                                 <div class="h5" id="inverter-voltage">--.- V</div>
                                             </div>
                                         </div>
@@ -383,11 +383,11 @@
                         </div>
                     </div>
 
-                    <!-- Tab 2: Gráficas -->
+                    <!-- Tab 2: GrÃ¡ficas -->
                     <div class="tab-pane fade" id="charts" role="tabpanel">
                         <div class="card dashboard-card">
                             <div class="card-header">
-                                <i class="fas fa-chart-line me-2"></i> Gráficas en Tiempo Real
+                                <i class="fas fa-chart-line me-2"></i> GrÃ¡ficas en Tiempo Real
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -399,7 +399,7 @@
                                     </div>
                                 </div>
                                 <div class="mt-4">
-                                    <p class="text-muted"><i class="fas fa-info-circle me-2"></i>Las gráficas se actualizan automáticamente cada 10 segundos</p>
+                                    <p class="text-muted"><i class="fas fa-info-circle me-2"></i>Las grÃ¡ficas se actualizan automÃ¡ticamente cada 10 segundos</p>
                                 </div>
                             </div>
                         </div>
@@ -443,7 +443,7 @@
                 <!-- Quick Actions -->
                 <div class="card dashboard-card mb-4">
                     <div class="card-header bg-dark text-white">
-                        <i class="fas fa-bolt me-2"></i> Acciones Rápidas
+                        <i class="fas fa-bolt me-2"></i> Acciones RÃ¡pidas
                     </div>
                     <div class="card-body">
                         <button class="btn btn-primary w-100 mb-2" onclick="refreshData()">
@@ -454,7 +454,7 @@
                                 <i class="fas fa-tachometer-alt me-2"></i> Dashboard ESPHome
                             </button>
                             <button id="config-btn" class="btn btn-outline-secondary" disabled>
-                                <i class="fas fa-cog me-2"></i> Configuración
+                                <i class="fas fa-cog me-2"></i> ConfiguraciÃ³n
                             </button>
                             <button id="logs-btn" class="btn btn-outline-info" disabled>
                                 <i class="fas fa-terminal me-2"></i> Ver Logs
@@ -473,11 +473,11 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <small class="text-muted">Última actualización</small>
+                            <small class="text-muted">Ãltima actualizaciÃ³n</small>
                             <div id="last-update">--:--:--</div>
                         </div>
                         <div class="mb-3">
-                            <small class="text-muted">Señal WiFi</small>
+                            <small class="text-muted">SeÃ±al WiFi</small>
                             <div class="progress" style="height: 10px;">
                                 <div id="wifi-bar" class="progress-bar bg-success" style="width: 0%"></div>
                             </div>
@@ -502,8 +502,8 @@
             <div class="col-12 text-center text-muted">
                 <p>
                     <i class="fas fa-caravan me-2"></i> Sistema Siena395 | 
-                    <i class="fas fa-shield-alt me-2"></i> Monitorización profesional | 
-                    <i class="fas fa-mobile-alt me-2"></i> Diseño responsive
+                    <i class="fas fa-shield-alt me-2"></i> MonitorizaciÃ³n profesional | 
+                    <i class="fas fa-mobile-alt me-2"></i> DiseÃ±o responsive
                 </p>
                 <p class="small">
                     <a href="https://github.com/uzturre562-blip/siena-monitor" class="text-muted" target="_blank">
@@ -522,7 +522,7 @@
     
     <!-- Dashboard Script COMPLETO Y FUNCIONAL -->
     <script>
-        // ==================== CONFIGURACIÓN ====================
+        // ==================== CONFIGURACIÃN ====================
         let ESP_IP = null;
         const UPDATE_INTERVAL = 10000; // 10 segundos
         let currentTheme = 'light';
@@ -530,7 +530,7 @@
         let testMode = false;
         let testData = {};
         
-        // ENDPOINTS CORRECTOS según tu ESPHome FUNCIONANDO
+        // ENDPOINTS CORRECTOS segÃºn tu ESPHome FUNCIONANDO
         const endpoints = {
             // SMART SHUNT
             'soc_smartshunt': '/sensor/soc_smartshunt/state',
@@ -590,14 +590,14 @@
             };
         }
 
-        // ==================== DETECCIÓN DE IP ====================
+        // ==================== DETECCIÃN DE IP ====================
         async function discoverESP32IP() {
-            console.log('🔍 Buscando ESP32...');
+            console.log('ð Buscando ESP32...');
             updateConnectionStatus('loading', 'Escaneando red...');
             
             // En modo prueba, usar datos de prueba
             if (testMode) {
-                console.log('🔧 Modo prueba activado');
+                console.log('ð§ Modo prueba activado');
                 ESP_IP = 'siena395-monitor.local';
                 updateConnectionStatus('connected', 'Modo prueba activado');
                 enableActionButtons();
@@ -616,14 +616,14 @@
             ];
             
             for (const ip of commonIPs) {
-                console.log(`🔎 Probando ${ip}...`);
+                console.log(`ð Probando ${ip}...`);
                 if (await testIPConnection(ip)) {
-                    console.log(`✅ ESP32 encontrado en: ${ip}`);
+                    console.log(`â ESP32 encontrado en: ${ip}`);
                     return ip;
                 }
             }
             
-            console.log('❌ ESP32 no encontrado');
+            console.log('â ESP32 no encontrado');
             return null;
         }
         
@@ -645,7 +645,7 @@
             return null;
         }
 
-        // ==================== GESTIÓN DE ESTADO ====================
+        // ==================== GESTIÃN DE ESTADO ====================
         function updateConnectionStatus(status, message) {
             const statusEl = document.getElementById('connection-status');
             const statusText = document.getElementById('status-text');
@@ -729,7 +729,7 @@
                 const text = await response.text();
                 return text.trim();
             } catch (error) {
-                console.log(`❌ Error en ${endpoint}:`, error.message);
+                console.log(`â Error en ${endpoint}:`, error.message);
                 return null;
             }
         }
@@ -767,7 +767,7 @@
                         updateConnectionStatus('connected', `Conectado a ${ESP_IP}`);
                     }
                     
-                    // Actualizar IP si está disponible
+                    // Actualizar IP si estÃ¡ disponible
                     if (data.esp32_ip && data.esp32_ip !== 'NA') {
                         document.getElementById('esp-ip').textContent = data.esp32_ip;
                         document.getElementById('esp-ip').className = 'badge bg-success';
@@ -775,9 +775,9 @@
                 }
                 
             } catch (error) {
-                console.log('❌ Error general:', error);
+                console.log('â Error general:', error);
                 if (!testMode) {
-                    updateConnectionStatus('error', 'Error de conexión');
+                    updateConnectionStatus('error', 'Error de conexiÃ³n');
                     setTimeout(manualIPDiscovery, 5000);
                 }
             }
@@ -813,7 +813,7 @@
                     
                 case 'ttg_smartshunt':
                     if (numValue > 10000) {
-                        document.getElementById('ttg-display').textContent = '∞ restantes';
+                        document.getElementById('ttg-display').textContent = 'â restantes';
                     } else {
                         const hours = Math.floor(numValue / 60);
                         const minutes = Math.floor(numValue % 60);
@@ -862,7 +862,7 @@
                     break;
                     
                 case 'temp_battery_sense':
-                    document.getElementById('starter-temp').textContent = numValue.toFixed(1) + ' °C';
+                    document.getElementById('starter-temp').textContent = numValue.toFixed(1) + ' Â°C';
                     break;
                     
                 case 'tiempo_activo':
@@ -920,7 +920,7 @@
                 document.getElementById('esp-ip').className = 'badge bg-info';
                 await fetchAllData();
                 
-                // Iniciar actualización periódica
+                // Iniciar actualizaciÃ³n periÃ³dica
                 if (!window.updateInterval) {
                     window.updateInterval = setInterval(fetchAllData, UPDATE_INTERVAL);
                 }
@@ -948,7 +948,7 @@
             // Cargar datos iniciales
             simulateData();
             
-            console.log('🔧 Modo prueba activado');
+            console.log('ð§ Modo prueba activado');
         }
 
         function simulateData() {
@@ -1023,16 +1023,16 @@
             localStorage.setItem('theme', currentTheme);
         }
 
-        // ==================== GRÁFICAS ====================
+        // ==================== GRÃFICAS ====================
         function initializeCharts() {
-            // Gráfica de voltaje
+            // GrÃ¡fica de voltaje
             const voltageCtx = document.getElementById('voltageChart').getContext('2d');
             window.voltageChart = new Chart(voltageCtx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Voltaje Batería (V)',
+                        label: 'Voltaje BaterÃ­a (V)',
                         data: [],
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -1057,7 +1057,7 @@
                 }
             });
             
-            // Gráfica de potencia
+            // GrÃ¡fica de potencia
             const powerCtx = document.getElementById('powerChart').getContext('2d');
             window.powerChart = new Chart(powerCtx, {
                 type: 'line',
@@ -1083,131 +1083,98 @@
             });
         }
 
-        // ==================== INICIALIZACIÓN ====================
-        // ==================== CONFIGURACIÓN MQTT ====================
+// ==================== CONFIGURACIÓN MQTT PROFESIONAL ====================
         const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
         const topicPrefix = 'siena395_monitor_mikel_2026';
 
         client.on('connect', () => {
             console.log('✅ Conectado al Broker MQTT - Siena395');
             client.subscribe(`${topicPrefix}/sensor/#`);
-            enableActionButtons();
             
-            const statusText = document.getElementById('discoveryStatus');
-            if(statusText) statusText.innerHTML = '<i class="fas fa-check-circle text-success"></i> Sistema Online (MQTT)';
+            // Actualizamos tu indicador de estado original
+            const statusText = document.getElementById('status-text');
+            if(statusText) statusText.textContent = 'Siena395 Conectada (Online)';
+            const statusDot = document.getElementById('connection-status');
+            if(statusDot) statusDot.className = 'status connected';
+            
+            enableActionButtons();
         });
 
         client.on('message', (topic, message) => {
             const payload = message.toString();
             const sensorId = topic.split('/').slice(-2, -1)[0];
 
+            // Mapeo a los IDs reales de tu HTML de 900 líneas
             switch(sensorId) {
                 case 'soc_ultimatron':
-                    updateGauge('soc', parseFloat(payload));
-                    document.getElementById('socValue').innerText = Math.round(payload) + '%';
+                    const soc = parseFloat(payload);
+                    // Actualiza tu barra de progreso
+                    const progressBar = document.getElementById('soc-progress');
+                    if(progressBar) progressBar.style.width = soc + '%';
+                    // Actualiza el porcentaje grande
+                    const socDisp = document.getElementById('soc-display');
+                    if(socDisp) socDisp.innerText = Math.round(soc) + '%';
+                    // Actualiza el acceso rápido
+                    const quickSoc = document.getElementById('quick-soc');
+                    if(quickSoc) quickSoc.innerText = Math.round(soc) + '%';
                     break;
+
                 case 'tension_smartshunt':
-                    updateGauge('voltage', parseFloat(payload));
-                    document.getElementById('batteryVoltage').innerText = parseFloat(payload).toFixed(2) + ' V';
+                    const v = parseFloat(payload).toFixed(2);
+                    const vDisp = document.getElementById('voltage-display');
+                    if(vDisp) vDisp.innerText = v + ' V';
                     break;
-                case 'corriente_smartshunt':
-                    document.getElementById('batteryCurrent').innerText = parseFloat(payload).toFixed(1) + ' A';
-                    break;
+
                 case 'potencia_solar':
-                    document.getElementById('solarPower').innerText = Math.round(payload) + ' W';
+                    const p = Math.round(payload);
+                    const sDisp = document.getElementById('solar-display');
+                    if(sDisp) sDisp.innerText = p + ' W';
+                    const qSolar = document.getElementById('quick-solar');
+                    if(qSolar) qSolar.innerText = p + ' W';
                     break;
+                
                 case 'temperatura_bateria':
-                    document.getElementById('tempBateria').innerText = parseFloat(payload).toFixed(1) + ' °C';
-                    break;
-                case 'potencia_salida_phoenix':
-                    document.getElementById('inverterPower').innerText = Math.round(payload) + ' W';
-                    break;
-                case 'energia_hoy':
-                    document.getElementById('solarYield').innerText = Math.round(payload) + ' Wh';
-                    break;
-                case 'voltaje_entrada_orion':
-                    document.getElementById('dcdcVoltage').innerText = parseFloat(payload).toFixed(1) + ' V';
-                    break;
-                case 'tiempo_restante':
-                    let hours = (parseFloat(payload) / 3600).toFixed(1);
-                    document.getElementById('timeToGo').innerText = hours + ' h';
+                    const tDisp = document.getElementById('tempBateria'); // O el ID que uses para temp
+                    if(tDisp) tDisp.innerText = parseFloat(payload).toFixed(1) + ' °C';
                     break;
             }
+            
+            // Actualiza la hora de "Última actualización"
+            const lastUpd = document.getElementById('last-update');
+            if(lastUpd) lastUpd.innerText = new Date().toLocaleTimeString();
         });
 
-        // ==================== FUNCIONES UI ORIGINALES ====================
+        // ==================== FUNCIONES UI MANTENIDAS ====================
         function toggleTheme() {
             currentTheme = currentTheme === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', currentTheme);
             const btn = document.getElementById('themeToggle');
             if (currentTheme === 'dark') {
                 btn.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
-                btn.className = 'btn btn-outline-warning';
             } else {
                 btn.innerHTML = '<i class="fas fa-moon"></i> Tema Oscuro';
-                btn.className = 'btn btn-outline-secondary';
             }
             localStorage.setItem('theme', currentTheme);
         }
 
         function enableActionButtons() {
             const buttons = document.querySelectorAll('.btn-action');
-            buttons.forEach(btn => {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            });
+            buttons.forEach(btn => { btn.disabled = false; btn.style.opacity = '1'; });
         }
 
         function disableActionButtons() {
             const buttons = document.querySelectorAll('.btn-action');
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-            });
-        }
-
-        // ==================== LÓGICA DE GRÁFICOS ====================
-        let socChart, voltageChart;
-        function initCharts() {
-            const ctxSoc = document.getElementById('socChart').getContext('2d');
-            socChart = new Chart(ctxSoc, {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [0, 100],
-                        backgroundColor: ['#10b981', '#e0e0e0'],
-                        borderWidth: 0,
-                        circumference: 180,
-                        rotation: 270,
-                        cutout: '80%'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { tooltip: { enabled: false } }
-                }
-            });
-        }
-
-        function updateGauge(type, value) {
-            if (type === 'soc' && socChart) {
-                socChart.data.datasets[0].data = [value, 100 - value];
-                socChart.data.datasets[0].backgroundColor[0] = value < 20 ? '#ef4444' : (value < 50 ? '#f59e0b' : '#10b981');
-                socChart.update();
-            }
+            buttons.forEach(btn => { btn.disabled = true; btn.style.opacity = '0.5'; });
         }
 
         function updateTime() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            const elements = document.querySelectorAll('.last-update');
-            elements.forEach(el => el.innerText = 'Actualizado: ' + timeStr);
+            document.querySelectorAll('.last-update').forEach(el => el.innerText = 'Actualizado: ' + timeStr);
         }
 
         // ==================== INICIALIZACIÓN ====================
         document.addEventListener('DOMContentLoaded', function() {
-            initCharts();
             updateTime();
             disableActionButtons();
             
@@ -1220,7 +1187,7 @@
             const themeBtn = document.getElementById('themeToggle');
             if(themeBtn) themeBtn.addEventListener('click', toggleTheme);
             
-            console.log('🚐 Dashboard Siena395 PRO vía MQTT Activo');
+            console.log('🚐 Dashboard Siena395 vía MQTT LISTO');
         });
     </script>
 </body>
