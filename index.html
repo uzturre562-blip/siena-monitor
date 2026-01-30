@@ -18,65 +18,70 @@
         [data-theme="dark"] {
             --bg-color: #1a1a2e; --card-bg: #16213e; --text-color: #e0e0e0;
         }
-        body { background: var(--bg-color); color: var(--text-color); transition: all 0.3s ease; padding-top: 20px; }
-        .dashboard-card { background: var(--card-bg); border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 20px; border: none; }
-        .card-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 15px 15px 0 0 !important; font-weight: bold; }
-        .sensor-value { font-size: 2.8rem; font-weight: bold; color: var(--primary); }
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        body { background: var(--bg-color); color: var(--text-color); transition: all 0.3s ease; padding-top: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .dashboard-card { background: var(--card-bg); border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 20px; border: none; overflow: hidden; }
+        .card-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; font-weight: bold; padding: 15px; }
+        .sensor-value { font-size: 3rem; font-weight: bold; color: var(--primary); transition: all 0.5s; }
+        .status-badge { padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px; }
+        .progress { background-color: rgba(0,0,0,0.1); border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="row mb-4">
-            <div class="col-12 d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="mb-0"><i class="fas fa-caravan" style="color:var(--caravan)"></i> Siena395</h1>
-                    <small id="mqtt-info" class="text-muted">Conectando al Broker EMQX...</small>
-                </div>
-                <div>
-                    <span id="conn-status" class="status-badge bg-secondary text-white">WEB MQTT: OFF</span>
-                    <span id="esp-status" class="status-badge bg-danger text-white ms-2">FURGO: OFFLINE</span>
-                </div>
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-7">
+                <h1 class="display-6 fw-bold mb-0"><i class="fas fa-caravan" style="color:var(--caravan)"></i> Siena395 <span class="fs-4 text-muted">PRO</span></h1>
+                <p class="text-muted" id="last-update">Batería Ultimatron 100Ah · Esperando datos...</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <span id="conn-status" class="status-badge bg-secondary text-white shadow-sm">MQTT: CONECTANDO</span>
+                <span id="esp-status" class="status-badge bg-danger text-white ms-2 shadow-sm">FURGO: OFFLINE</span>
             </div>
         </div>
 
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-lg-6">
                 <div class="card dashboard-card">
-                    <div class="card-header"><i class="fas fa-battery-full me-2"></i>Batería Ultimatron 100Ah</div>
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="fas fa-bolt me-2"></i>ESTADO DE CARGA</span>
+                        <i class="fas fa-microchip"></i>
+                    </div>
                     <div class="card-body text-center p-4">
                         <div class="sensor-value" id="soc_smartshunt">--%</div>
-                        <div class="progress mb-3" style="height: 20px;">
-                            <div id="soc_bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                        <div class="progress mb-4" style="height: 25px;">
+                            <div id="soc_bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 0%"></div>
                         </div>
-                        <div class="row mt-3">
+                        <div class="row">
                             <div class="col-6 border-end">
-                                <small class="text-muted d-block">Voltaje</small>
-                                <strong class="h4" id="voltage_smartshunt">--.-- V</strong>
+                                <p class="text-muted mb-0">Voltaje</p>
+                                <h3 id="voltage_smartshunt">--.-- V</h3>
                             </div>
                             <div class="col-6">
-                                <small class="text-muted d-block">Consumo</small>
-                                <strong class="h4" id="current_smartshunt">--.-- A</strong>
+                                <p class="text-muted mb-0">Corriente</p>
+                                <h3 id="current_smartshunt">--.-- A</h3>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-lg-6">
                 <div class="card dashboard-card">
-                    <div class="card-header bg-warning text-dark"><i class="fas fa-sun me-2"></i>Placas Solares</div>
+                    <div class="card-header bg-warning text-dark d-flex justify-content-between" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <span><i class="fas fa-sun me-2"></i>PRODUCCIÓN SOLAR</span>
+                        <i class="fas fa-solar-panel"></i>
+                    </div>
                     <div class="card-body text-center p-4">
                         <div class="sensor-value text-warning" id="power_mppt">-- W</div>
-                        <div class="row mt-3">
+                        <div class="row mt-4">
                             <div class="col-6 border-end">
-                                <small class="text-muted d-block">Voltaje Panel</small>
-                                <strong class="h5" id="voltage_mppt">--.- V</strong>
+                                <p class="text-muted mb-0">Panel Solar</p>
+                                <h4 id="voltage_mppt">--.- V</h4>
                             </div>
                             <div class="col-6">
-                                <small class="text-muted d-block">Carga Batería</small>
-                                <strong class="h5" id="battery_voltage_mppt">--.- V</strong>
+                                <p class="text-muted mb-0">Carga Batt</p>
+                                <h4 id="battery_voltage_mppt">--.- V</h4>
                             </div>
                         </div>
                     </div>
@@ -84,64 +89,68 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row mt-2">
             <div class="col-12">
                 <div class="card dashboard-card p-3">
-                    <canvas id="voltageChart" height="100"></canvas>
+                    <canvas id="voltageChart" height="90"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN QUE COINCIDE CON TU YAML
         const BROKER = "wss://broker.emqx.io:8084/mqtt";
         const PREFIX = "siena395_monitor_mikel_2026";
         
         const client = mqtt.connect(BROKER);
         let vChart;
 
+        // --- MANEJO DE CONEXIÓN ---
         client.on('connect', () => {
-            document.getElementById('conn-status').className = "status-badge bg-success text-white";
-            document.getElementById('conn-status').innerText = "WEB MQTT: OK";
-            document.getElementById('mqtt-info').innerText = "Conectado a la nube de EMQX";
+            document.getElementById('conn-status').className = "status-badge bg-success text-white shadow-sm";
+            document.getElementById('conn-status').innerText = "MQTT: CONECTADO";
             client.subscribe(`${PREFIX}/#`);
         });
 
         client.on('message', (topic, message) => {
             const val = message.toString();
+            const sensorId = topic.split('/')[2];
             
-            // Detectar estado del ESP32 (Birth/Will message)
+            // Actualizar hora del último dato
+            document.getElementById('last-update').innerText = "Batería Ultimatron 100Ah · Actualizado: " + new Date().toLocaleTimeString();
+
+            // 1. Estado del ESP32
             if (topic === `${PREFIX}/status`) {
                 const badge = document.getElementById('esp-status');
-                if (val === 'online') {
-                    badge.innerText = "FURGO: ONLINE";
-                    badge.className = "status-badge bg-success text-white ms-2";
-                } else {
-                    badge.innerText = "FURGO: OFFLINE";
-                    badge.className = "status-badge bg-danger text-white ms-2";
-                }
+                badge.innerText = val === 'online' ? "FURGO: ONLINE" : "FURGO: OFFLINE";
+                badge.className = val === 'online' ? "status-badge bg-success text-white ms-2 shadow-sm" : "status-badge bg-danger text-white ms-2 shadow-sm";
                 return;
             }
 
-            // Mapear sensores dinámicamente según los IDs de tu YAML
-            const sensorId = topic.split('/')[2];
-            const element = document.getElementById(sensorId);
-            
-            if (element) {
+            // 2. Mapeo dinámico de sensores (Coincide con IDs del YAML)
+            const el = document.getElementById(sensorId);
+            if (el) {
                 if (sensorId.includes('soc')) {
-                    element.innerText = parseFloat(val).toFixed(1) + '%';
-                    document.getElementById('soc_bar').style.width = val + '%';
-                } else if (sensorId.includes('voltage') || sensorId.includes('current')) {
-                    element.innerText = parseFloat(val).toFixed(2) + (sensorId.includes('voltage') ? ' V' : ' A');
+                    const numSoc = parseFloat(val).toFixed(1);
+                    el.innerText = numSoc + '%';
+                    document.getElementById('soc_bar').style.width = numSoc + '%';
+                    // Cambiar color barra según carga
+                    document.getElementById('soc_bar').className = numSoc < 20 ? "progress-bar bg-danger" : "progress-bar bg-success";
+                } 
+                else if (sensorId.includes('voltage')) {
+                    el.innerText = parseFloat(val).toFixed(2) + ' V';
                     if (sensorId === 'voltage_smartshunt') updateChart(parseFloat(val));
-                } else if (sensorId.includes('power')) {
-                    element.innerText = Math.round(val) + ' W';
+                }
+                else if (sensorId.includes('current')) {
+                    el.innerText = parseFloat(val).toFixed(2) + ' A';
+                }
+                else if (sensorId.includes('power')) {
+                    el.innerText = Math.round(val) + ' W';
                 }
             }
         });
 
-        // Lógica de la Gráfica
+        // --- LÓGICA DE LA GRÁFICA ---
         function initChart() {
             const ctx = document.getElementById('voltageChart').getContext('2d');
             vChart = new Chart(ctx, {
@@ -154,26 +163,31 @@
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         data: [],
                         fill: true,
-                        tension: 0.3
+                        tension: 0.4,
+                        pointRadius: 2
                     }]
                 },
                 options: {
                     responsive: true,
-                    scales: { y: { min: 12.5, max: 14.6 } }
+                    scales: { 
+                        y: { min: 12.6, max: 14.6, ticks: { stepSize: 0.2 } },
+                        x: { display: true }
+                    },
+                    plugins: { legend: { display: false } }
                 }
             });
         }
 
         function updateChart(v) {
             if (!vChart) return;
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            vChart.data.labels.push(time);
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            vChart.data.labels.push(now);
             vChart.data.datasets[0].data.push(v);
             if (vChart.data.labels.length > 20) {
                 vChart.data.labels.shift();
                 vChart.data.datasets[0].data.shift();
             }
-            vChart.update();
+            vChart.update('none'); // Update suave
         }
 
         window.onload = initChart;
