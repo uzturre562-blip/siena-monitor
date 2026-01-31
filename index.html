@@ -966,11 +966,71 @@
             temperature: { batteryTemp: 22.5, batterySenseVoltage: 12.7 }
         };
         
-        // Variables para diagrama de flujo
+        // Variables globales
+        let socChart = null;
+        let historicalData = {
+            soc: [],
+            voltage: [],
+            temperature: [],
+            solarPower: []
+        };
+        let systemLogs = [];
+        let autoScrollLogs = true;
         let flowDiagram = null;
         let flowNodes = [];
         let flowLines = [];
         let flowScale = 1;
+        let dataReceivedCount = 0;
+        let lastUpdateTime = new Date();
+        
+        // Elementos DOM cacheados
+        const elements = {
+            // Batería
+            socValue: document.getElementById('socValue'),
+            batteryLevel: document.getElementById('batteryLevel'),
+            voltageValue: document.getElementById('voltageValue'),
+            currentValue: document.getElementById('currentValue'),
+            consumedAh: document.getElementById('consumedAh'),
+            timeToGo: document.getElementById('timeToGo'),
+            
+            // Solar
+            solarVoltage: document.getElementById('solarVoltage'),
+            solarPower: document.getElementById('solarPower'),
+            energyToday: document.getElementById('energyToday'),
+            
+            // Inversor
+            inverterVoltage: document.getElementById('inverterVoltage'),
+            inverterPower: document.getElementById('inverterPower'),
+            
+            // Orion
+            orionInputVoltage: document.getElementById('orionInputVoltage'),
+            orionOutputVoltage: document.getElementById('orionOutputVoltage'),
+            
+            // Temperatura
+            tempValue: document.getElementById('tempValue'),
+            batterySenseVoltage: document.getElementById('batterySenseVoltage'),
+            
+            // Sistema
+            uptimeValue: document.getElementById('uptimeValue'),
+            mqttStatusText: document.getElementById('mqttStatusText'),
+            lastUpdate: document.getElementById('lastUpdate'),
+            
+            // Estado
+            connectionStatus: document.getElementById('connectionStatus'),
+            connectionText: document.getElementById('connectionText'),
+            
+            // Información
+            mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
+            dataCount: document.getElementById('dataCount'),
+            wifiStatus: document.getElementById('wifiStatus'),
+            
+            // Alarmas
+            alarmsContainer: document.getElementById('alarmsContainer'),
+            alarmCount: document.getElementById('alarmCount'),
+            
+            // Logs
+            logsContainer: document.getElementById('logsContainer')
+        };
         
         // Inicialización
         function initDashboard() {
@@ -985,9 +1045,9 @@
             // Iniciar simulación
             setTimeout(() => {
                 setConnectedStatus(true);
-                addLog("Dashboard iniciado", "success");
-                addLog(`Conectando a MQTT: ${MQTT_BROKER}`, "info");
-                addLog(`Topic: ${MQTT_TOPIC_PREFIX}`, "info");
+                addLog("Dashboard Siena395 Monitor iniciado", "success");
+                addLog(`Conectando a MQTT broker: ${MQTT_BROKER}`, "info");
+                addLog(`Topic prefix: ${MQTT_TOPIC_PREFIX}`, "info");
             }, 500);
             
             startDataSimulation();
@@ -1024,7 +1084,139 @@
             });
         }
         
-        // Inicializar diagrama de flujo RESPONSIVE
+        // Inicializar datos históricos
+        function initHistoricalData() {
+            const now = new Date();
+            // Crear 24 horas de datos históricos simulados
+            for (let i = 23; i >= 0; i--) {
+                const time = new Date(now.getTime() - i * 3600000);
+                historicalData.soc.push({
+                    time: time,
+                    value: 80 + Math.random() * 20
+                });
+                historicalData.voltage.push({
+                    time: time,
+                    value: 12.5 + Math.random() * 1.5
+                });
+                historicalData.temperature.push({
+                    time: time,
+                    value: 20 + Math.random() * 10
+                });
+                historicalData.solarPower.push({
+                    time: time,
+                    value: Math.random() * 200
+                });
+            }
+            addLog("Datos históricos inicializados (24h)", "info");
+        }
+        
+        // Inicializar gráficos
+        function initCharts() {
+            const ctx = document.getElementById('socChart').getContext('2d');
+            
+            // Preparar datos para el gráfico
+            const labels = historicalData.soc.map(d => 
+                d.time.getHours().toString().padStart(2, '0') + ':00'
+            );
+            const data = historicalData.soc.map(d => d.value);
+            
+            // Determinar colores según tema
+            const isDark = document.body.classList.contains('dark-mode');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDark ? '#edf2f7' : '#2d3748';
+            
+            socChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'SOC (%)',
+                        data: data,
+                        borderColor: '#3182ce',
+                        backgroundColor: 'rgba(49, 130, 206, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#3182ce'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, maxTicksLimit: 8 }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        }
+                    }
+                }
+            });
+            
+            // Configurar selector de rango
+            document.getElementById('chartRange').addEventListener('change', function() {
+                updateChartData(this.value);
+            });
+            
+            addLog("Gráfico histórico inicializado", "info");
+        }
+        
+        // Actualizar tema de gráficos
+        function updateChartTheme() {
+            if (!socChart) return;
+            
+            const isDark = document.body.classList.contains('dark-mode');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDark ? '#edf2f7' : '#2d3748';
+            
+            socChart.options.scales.x.grid.color = gridColor;
+            socChart.options.scales.x.ticks.color = textColor;
+            socChart.options.scales.y.grid.color = gridColor;
+            socChart.options.scales.y.ticks.color = textColor;
+            socChart.options.plugins.legend.labels.color = textColor;
+            
+            socChart.update();
+        }
+        
+        // Actualizar datos del gráfico
+        function updateChartData(range) {
+            if (!socChart) return;
+            
+            let hours;
+            switch(range) {
+                case '12h': hours = 12; break;
+                case '6h': hours = 6; break;
+                case '1h': hours = 1; break;
+                default: hours = 24;
+            }
+            
+            // Filtrar datos según rango
+            const cutoffTime = new Date(new Date().getTime() - hours * 3600000);
+            const filteredData = historicalData.soc.filter(d => d.time >= cutoffTime);
+            
+            // Actualizar gráfico
+            socChart.data.labels = filteredData.map(d => 
+                d.time.getHours().toString().padStart(2, '0') + ':' + 
+                d.time.getMinutes().toString().padStart(2, '0')
+            );
+            socChart.data.datasets[0].data = filteredData.map(d => d.value);
+            socChart.update();
+            
+            addLog(`Gráfico actualizado a rango de ${range}`, "info");
+        }
+        
+        // Inicializar diagrama de flujo
         function initFlowDiagram() {
             flowDiagram = document.getElementById('flowDiagram');
             updateFlowDiagram();
@@ -1037,9 +1229,11 @@
                 if (isActive) {
                     lines.forEach(line => line.classList.remove('active'));
                     this.innerHTML = '<i class="fas fa-play"></i> Animación';
+                    addLog("Animación de flujo desactivada", "info");
                 } else {
                     lines.forEach(line => line.classList.add('active'));
                     this.innerHTML = '<i class="fas fa-pause"></i> Animación';
+                    addLog("Animación de flujo activada", "info");
                 }
             });
             
@@ -1047,11 +1241,13 @@
             document.getElementById('zoomIn').addEventListener('click', () => {
                 flowScale = Math.min(flowScale * 1.2, 2);
                 updateFlowDiagramScale();
+                addLog(`Zoom aumentado a ${flowScale.toFixed(1)}x`, "info");
             });
             
             document.getElementById('zoomOut').addEventListener('click', () => {
                 flowScale = Math.max(flowScale / 1.2, 0.5);
                 updateFlowDiagramScale();
+                addLog(`Zoom reducido a ${flowScale.toFixed(1)}x`, "info");
             });
             
             // Touch gestures para zoom
@@ -1079,6 +1275,8 @@
                     }
                 }
             });
+            
+            addLog("Diagrama de flujo inicializado", "info");
         }
         
         function getTouchDistance(touch1, touch2) {
@@ -1089,6 +1287,8 @@
         
         function updateFlowDiagram() {
             flowDiagram.innerHTML = '';
+            flowNodes = [];
+            flowLines = [];
             
             // Tamaños responsivos basados en el ancho del contenedor
             const containerWidth = flowDiagram.offsetWidth;
@@ -1235,28 +1435,172 @@
             const info = {
                 solar: "Panel solar: Genera energía del sol",
                 mppt: "Controlador MPPT: Optimiza la carga solar",
-                battery: "Batería Ultimatron: Almacena energía",
+                battery: "Batería Ultimatron 100Ah: Almacena energía",
                 orion: "Orion DC-DC: Carga desde el alternador",
-                inverter: "Inversor Phoenix: Convierte DC a AC",
-                load: "Cargas: Consumo de la autocaravana"
+                inverter: "Inversor Phoenix: Convierte DC 12V a AC 230V",
+                load: "Cargas: Consumo de la autocaravana Siena395"
             };
             
             addLog(`Nodo: ${node.name} - ${info[node.id]}`, "info");
         }
         
-        // Redibujar diagrama al cambiar tamaño
-        window.addEventListener('resize', () => {
-            if (flowDiagram) {
-                updateFlowDiagram();
+        // Inicializar logs
+        function initLogs() {
+            // Agregar logs iniciales
+            addLog("Sistema de logs inicializado", "success");
+            
+            // Configurar botones de logs
+            document.getElementById('clearLogs').addEventListener('click', () => {
+                systemLogs = [];
+                updateLogsDisplay();
+                addLog("Logs limpiados", "warning");
+            });
+            
+            document.getElementById('toggleAutoScroll').addEventListener('click', function() {
+                autoScrollLogs = !autoScrollLogs;
+                this.innerHTML = autoScrollLogs ? 
+                    '<i class="fas fa-scroll"></i>' : 
+                    '<i class="fas fa-scroll"></i>';
+                this.title = autoScrollLogs ? 'Auto-scroll activado' : 'Auto-scroll desactivado';
+                addLog(`Auto-scroll ${autoScrollLogs ? 'activado' : 'desactivado'}`, "info");
+            });
+            
+            document.getElementById('exportLogs').addEventListener('click', () => {
+                exportLogs();
+            });
+        }
+        
+        // Agregar log al sistema
+        function addLog(message, type = "info") {
+            const logEntry = {
+                time: new Date(),
+                message: message,
+                type: type
+            };
+            
+            systemLogs.unshift(logEntry); // Agregar al principio
+            
+            // Mantener máximo 100 logs
+            if (systemLogs.length > 100) {
+                systemLogs.pop();
             }
-        });
+            
+            updateLogsDisplay();
+        }
         
-        // Resto del código (charts, logs, etc.) igual que antes pero optimizado para móvil...
-        // [El resto del código JavaScript sería similar al anterior pero optimizado para móvil]
-        // Por espacio, incluyo solo las partes críticas
+        // Actualizar visualización de logs
+        function updateLogsDisplay() {
+            const container = elements.logsContainer;
+            container.innerHTML = '';
+            
+            systemLogs.forEach(log => {
+                const logEl = document.createElement('div');
+                logEl.className = 'log-entry';
+                
+                const timeStr = log.time.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit' 
+                });
+                
+                logEl.innerHTML = `
+                    <div class="log-time">${timeStr}</div>
+                    <div class="log-message log-${log.type}">${log.message}</div>
+                `;
+                
+                container.appendChild(logEl);
+            });
+            
+            // Auto-scroll si está activado
+            if (autoScrollLogs && systemLogs.length > 0) {
+                container.scrollTop = 0;
+            }
+        }
         
-        let dataReceivedCount = 0;
+        // Exportar logs
+        function exportLogs() {
+            const logText = systemLogs.map(log => 
+                `[${log.time.toLocaleString()}] ${log.message}`
+            ).join('\n');
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `siena395-logs-${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog("Logs exportados a archivo", "success");
+        }
         
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Botón de refresco
+            document.getElementById('refreshBattery').addEventListener('click', function() {
+                this.classList.add('fa-spin');
+                simulateDataUpdate();
+                setTimeout(() => {
+                    this.classList.remove('fa-spin');
+                }, 1000);
+                addLog("Datos actualizados manualmente", "info");
+            });
+            
+            // Redibujar diagrama al cambiar tamaño
+            window.addEventListener('resize', () => {
+                if (flowDiagram) {
+                    updateFlowDiagram();
+                }
+            });
+        }
+        
+        // Actualizar estado de conexión
+        function setConnectedStatus(connected) {
+            const statusDot = elements.connectionStatus;
+            const statusText = elements.connectionText;
+            const mqttText = elements.mqttStatusText;
+            
+            if (connected) {
+                statusDot.style.backgroundColor = "var(--success)";
+                statusText.textContent = "Conectado a MQTT";
+                statusText.style.color = "var(--success)";
+                mqttText.textContent = "Conectado";
+                mqttText.style.color = "var(--success)";
+                elements.mqttConnectionInfo.textContent = `Conectado a ${MQTT_BROKER}`;
+                elements.wifiStatus.textContent = "Online";
+            } else {
+                statusDot.style.backgroundColor = "var(--danger)";
+                statusText.textContent = "Desconectado de MQTT";
+                statusText.style.color = "var(--danger)";
+                mqttText.textContent = "Desconectado";
+                mqttText.style.color = "var(--danger)";
+                elements.mqttConnectionInfo.textContent = `Intentando conectar a ${MQTT_BROKER}...`;
+                elements.wifiStatus.textContent = "Offline";
+            }
+        }
+        
+        // Actualizar tiempo desde última actualización
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const diff = Math.floor((now - lastUpdateTime) / 1000);
+            
+            let text = "Ahora mismo";
+            if (diff > 0) {
+                if (diff < 60) {
+                    text = `Hace ${diff}s`;
+                } else if (diff < 3600) {
+                    text = `Hace ${Math.floor(diff/60)}m`;
+                } else {
+                    text = `Hace ${Math.floor(diff/3600)}h`;
+                }
+            }
+            
+            elements.lastUpdate.textContent = text;
+        }
+        
+        // Actualizar toda la UI
         function updateDashboardUI() {
             // Batería
             const soc = dashboardData.battery.soc;
@@ -1267,7 +1611,7 @@
             elements.consumedAh.textContent = dashboardData.battery.consumedAh.toFixed(1);
             elements.timeToGo.textContent = dashboardData.battery.timeToGo.toFixed(1);
             
-            // Color de batería
+            // Color de batería según SOC
             let batteryColor;
             if (soc <= 10) {
                 batteryColor = "linear-gradient(90deg, var(--danger), #c53030)";
@@ -1280,19 +1624,25 @@
             }
             elements.batteryLevel.style.background = batteryColor;
             
-            // Resto de datos...
+            // Solar
             elements.solarVoltage.textContent = dashboardData.solar.voltage.toFixed(1);
             elements.solarPower.textContent = Math.round(dashboardData.solar.power);
             elements.energyToday.textContent = dashboardData.solar.energyToday.toFixed(2);
+            
+            // Inversor
             elements.inverterVoltage.textContent = dashboardData.inverter.voltage.toFixed(1);
             elements.inverterPower.textContent = Math.round(dashboardData.inverter.power);
+            
+            // Orion
             elements.orionInputVoltage.textContent = dashboardData.orion.inputVoltage.toFixed(1);
             elements.orionOutputVoltage.textContent = dashboardData.orion.outputVoltage.toFixed(1);
             
+            // Temperatura
             const temp = dashboardData.temperature.batteryTemp;
             elements.tempValue.textContent = temp.toFixed(1);
             elements.batterySenseVoltage.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(1);
             
+            // Color de temperatura
             if (temp <= 5 || temp >= 45) {
                 elements.tempValue.style.color = "var(--danger)";
             } else if (temp <= 10 || temp >= 40) {
@@ -1301,40 +1651,236 @@
                 elements.tempValue.style.color = "var(--primary)";
             }
             
-            // Contador de datos
-            elements.dataCount.textContent = `${dataReceivedCount} datos`;
-        }
-        
-        function simulateDataUpdate() {
-            // Simular datos...
-            dataReceivedCount++;
-            updateDashboardUI();
-        }
-        
-        // Inicializar cuando se carga la página
-        document.addEventListener('DOMContentLoaded', () => {
-            // Cachear elementos DOM
-            window.elements = {
-                socValue: document.getElementById('socValue'),
-                batteryLevel: document.getElementById('batteryLevel'),
-                voltageValue: document.getElementById('voltageValue'),
-                currentValue: document.getElementById('currentValue'),
-                consumedAh: document.getElementById('consumedAh'),
-                timeToGo: document.getElementById('timeToGo'),
-                solarVoltage: document.getElementById('solarVoltage'),
-                solarPower: document.getElementById('solarPower'),
-                energyToday: document.getElementById('energyToday'),
-                inverterVoltage: document.getElementById('inverterVoltage'),
-                inverterPower: document.getElementById('inverterPower'),
-                orionInputVoltage: document.getElementById('orionInputVoltage'),
-                orionOutputVoltage: document.getElementById('orionOutputVoltage'),
-                tempValue: document.getElementById('tempValue'),
-                batterySenseVoltage: document.getElementById('batterySenseVoltage'),
-                dataCount: document.getElementById('dataCount')
-            };
+            // Voltajes
+            elements.voltageSmartShunt.textContent = dashboardData.battery.voltage.toFixed(1);
+            elements.voltageMppt.textContent = dashboardData.solar.voltage.toFixed(1);
+            elements.voltagePhoenix.textContent = dashboardData.inverter.voltage.toFixed(1);
+            elements.voltageBatterySense.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(1);
             
-            initDashboard();
-        });
+            // Actualizar datos históricos
+            updateHistoricalData();
+            
+            // Actualizar alarmas
+            updateAlarms();
+            
+            // Actualizar contador de datos
+            elements.dataCount.textContent = `${dataReceivedCount} datos`;
+            
+            // Actualizar uptime (simulado)
+            const uptimeHours = dataReceivedCount * 3 / 3600;
+            const days = Math.floor(uptimeHours / 24);
+            const hours = Math.floor(uptimeHours % 24);
+            elements.uptimeValue.textContent = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+        }
+        
+        // Actualizar datos históricos
+        function updateHistoricalData() {
+            const now = new Date();
+            
+            // Agregar nuevos datos
+            historicalData.soc.push({
+                time: new Date(now),
+                value: dashboardData.battery.soc
+            });
+            
+            historicalData.voltage.push({
+                time: new Date(now),
+                value: dashboardData.battery.voltage
+            });
+            
+            historicalData.temperature.push({
+                time: new Date(now),
+                value: dashboardData.temperature.batteryTemp
+            });
+            
+            historicalData.solarPower.push({
+                time: new Date(now),
+                value: dashboardData.solar.power
+            });
+            
+            // Mantener máximo 1000 puntos
+            Object.keys(historicalData).forEach(key => {
+                if (historicalData[key].length > 1000) {
+                    historicalData[key] = historicalData[key].slice(-1000);
+                }
+            });
+            
+            // Actualizar gráfico si existe
+            if (socChart) {
+                updateChartData(document.getElementById('chartRange').value);
+            }
+        }
+        
+        // Actualizar alarmas
+        function updateAlarms() {
+            const alarms = [];
+            const soc = dashboardData.battery.soc;
+            const temp = dashboardData.temperature.batteryTemp;
+            
+            // Alarma SOC crítico
+            if (soc <= 10) {
+                alarms.push({
+                    type: "danger",
+                    icon: "fa-exclamation-circle",
+                    title: "¡BATERÍA CRÍTICA!",
+                    message: `SOC al ${soc.toFixed(1)}% - CARGAR INMEDIATAMENTE`,
+                    time: "Ahora"
+                });
+            }
+            
+            // Alarma SOC bajo
+            if (soc <= 20 && soc > 10) {
+                alarms.push({
+                    type: "warning",
+                    icon: "fa-exclamation-triangle",
+                    title: "Batería Baja",
+                    message: `SOC al ${soc.toFixed(1)}% - Cargar batería pronto`,
+                    time: "Ahora"
+                });
+            }
+            
+            // Alarma temperatura peligrosa
+            if (temp <= 5 || temp >= 45) {
+                alarms.push({
+                    type: "danger",
+                    icon: "fa-thermometer-full",
+                    title: "Temperatura Peligrosa",
+                    message: `Temperatura de batería: ${temp.toFixed(1)}°C`,
+                    time: "Ahora"
+                });
+            }
+            
+            // Alarma temperatura extrema
+            if ((temp <= 10 && temp > 5) || (temp >= 40 && temp < 45)) {
+                alarms.push({
+                    type: "warning",
+                    icon: "fa-thermometer-half",
+                    title: "Temperatura Extrema",
+                    message: `Temperatura de batería: ${temp.toFixed(1)}°C`,
+                    time: "Ahora"
+                });
+            }
+            
+            // Alarma voltaje bajo
+            if (dashboardData.battery.voltage < 11.5) {
+                alarms.push({
+                    type: "warning",
+                    icon: "fa-bolt",
+                    title: "Voltaje Bajo",
+                    message: `Voltaje de batería: ${dashboardData.battery.voltage.toFixed(1)}V`,
+                    time: "Ahora"
+                });
+            }
+            
+            // Actualizar contador de alarmas
+            const alarmCount = elements.alarmCount;
+            alarmCount.textContent = alarms.length;
+            if (alarms.length > 0) {
+                alarmCount.style.display = "block";
+            } else {
+                alarmCount.style.display = "none";
+            }
+            
+            // Mostrar alarmas
+            const container = elements.alarmsContainer;
+            if (alarms.length === 0) {
+                container.innerHTML = `
+                    <div class="alarm alarm-success">
+                        <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <div class="info-label">Sistema estable</div>
+                            <div class="info-value">Todas las alarmas desactivadas</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            alarms.forEach(alarm => {
+                html += `
+                    <div class="alarm alarm-${alarm.type}">
+                        <div class="alarm-icon"><i class="fas ${alarm.icon}"></i></div>
+                        <div>
+                            <div class="info-label">${alarm.title}</div>
+                            <div class="info-value">${alarm.message}</div>
+                            <div class="info-label" style="margin-top: 5px; font-size: 0.8rem;">${alarm.time}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Simular actualización de datos
+        function simulateDataUpdate() {
+            // Simular fluctuaciones aleatorias
+            const randomFactor = (Math.random() - 0.5) * 0.3;
+            
+            // Actualizar datos de batería
+            dashboardData.battery.soc = Math.max(0, Math.min(100, dashboardData.battery.soc + randomFactor));
+            dashboardData.battery.voltage = 12.5 + Math.random() * 1.5;
+            dashboardData.battery.current = (Math.random() - 0.5) * 20;
+            dashboardData.battery.consumedAh = -15 + Math.random() * 5;
+            dashboardData.battery.timeToGo = 10 + Math.random() * 20;
+            
+            // Actualizar datos solares (más activos durante el día)
+            const hour = new Date().getHours();
+            const isDay = hour >= 7 && hour <= 19;
+            dashboardData.solar.voltage = 13.0 + Math.random() * 1.0;
+            dashboardData.solar.power = isDay ? Math.max(0, 50 + Math.random() * 150) : Math.random() * 20;
+            dashboardData.solar.energyToday = 0.8 + Math.random() * 0.3;
+            
+            // Actualizar temperatura de batería
+            dashboardData.temperature.batteryTemp = 20 + (Math.random() - 0.5) * 10;
+            dashboardData.temperature.batterySenseVoltage = 12.5 + Math.random() * 1.0;
+            
+            // Actualizar otros voltajes
+            dashboardData.inverter.voltage = dashboardData.battery.voltage - 0.2 + Math.random() * 0.4;
+            dashboardData.inverter.power = 100 + Math.random() * 300;
+            dashboardData.orion.inputVoltage = 13.5 + Math.random() * 1.0;
+            dashboardData.orion.outputVoltage = 14.0 + Math.random() * 0.5;
+            
+            // Actualizar tiempo
+            lastUpdateTime = new Date();
+            
+            // Incrementar contador
+            dataReceivedCount++;
+            
+            // Actualizar UI
+            updateDashboardUI();
+            
+            // Simular desconexión aleatoria de MQTT
+            if (Math.random() > 0.95) {
+                const wasConnected = true; // En simulación siempre está conectado
+                setConnectedStatus(!wasConnected);
+                
+                if (wasConnected) {
+                    addLog("Desconectado del broker MQTT (simulación)", "warning");
+                } else {
+                    addLog("Reconectado al broker MQTT (simulación)", "success");
+                }
+                
+                // Volver a conectar después de 5 segundos
+                setTimeout(() => {
+                    setConnectedStatus(true);
+                    addLog("Conexión MQTT restablecida", "success");
+                }, 5000);
+            }
+        }
+        
+        // Iniciar simulación de datos
+        function startDataSimulation() {
+            // Simular datos cada 3 segundos
+            setInterval(simulateDataUpdate, 3000);
+            
+            // Simular primera actualización
+            setTimeout(simulateDataUpdate, 500);
+        }
+        
+        // Inicializar dashboard cuando se carga la página
+        document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
 </html>
