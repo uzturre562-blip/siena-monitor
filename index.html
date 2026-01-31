@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Siena395 Monitor</title>
+    <title>GIOTTILINE SIENA 395 - SISTEMA VICTRON v1.0.1 DPSK</title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- MQTT.js para conexión real -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
             /* Modo claro (default) */
@@ -32,9 +34,9 @@
         }
 
         .dark-mode {
-            /* Modo oscuro */
-            --primary: #edf2f7;
-            --secondary: #cbd5e0;
+            /* Modo oscuro - MEJORADO CONTRASTE */
+            --primary: #ffffff;
+            --secondary: #e2e8f0;
             --accent: #63b3ed;
             --danger: #fc8181;
             --warning: #f6ad55;
@@ -44,10 +46,14 @@
             --dark: #f7fafc;
             --bg-color: #1a202c;
             --card-bg: #2d3748;
-            --text-color: #edf2f7;
+            --text-color: #ffffff;
             --border-color: #4a5568;
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.35);
+            
+            /* Color específico para header en modo oscuro */
+            --header-bg-dark: linear-gradient(135deg, #4a5568, #2d3748);
+            --header-text-dark: #ffffff;
         }
 
         * {
@@ -75,7 +81,7 @@
             margin: 0 auto;
         }
 
-        /* Header - Optimizado para móvil */
+        /* Header - MEJORADO CONTRASTE en modo oscuro */
         header {
             grid-column: 1 / -1;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -87,6 +93,11 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        .dark-mode header {
+            background: var(--header-bg-dark);
+            color: var(--header-text-dark);
         }
 
         .header-top {
@@ -104,10 +115,19 @@
             gap: 8px;
         }
 
+        .dark-mode .header-left h1 {
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
         .header-left p {
             opacity: 0.9;
             font-size: 0.8rem;
             margin-top: 2px;
+        }
+
+        .dark-mode .header-left p {
+            color: #e2e8f0;
         }
 
         .header-right {
@@ -137,9 +157,9 @@
             100% { opacity: 1; }
         }
 
-        /* Botón modo oscuro/claro - Tamaño táctil */
+        /* Botón modo oscuro/claro */
         .theme-toggle {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             border: none;
             border-radius: 50%;
             width: 36px;
@@ -150,15 +170,19 @@
             cursor: pointer;
             color: white;
             font-size: 1.1rem;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        .dark-mode .theme-toggle {
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .theme-toggle:active {
             transform: scale(0.95);
         }
 
-        /* Cards - Optimizadas para toque */
+        /* Cards */
         .card {
             background-color: var(--card-bg);
             border-radius: var(--border-radius);
@@ -196,7 +220,7 @@
             font-size: 1.1rem;
         }
 
-        /* Battery Section - Optimizado para móvil */
+        /* Battery Section */
         .battery-section {
             grid-column: 1 / -1;
         }
@@ -242,7 +266,6 @@
             font-size: 0.9rem;
         }
 
-        /* Dígitos SOC optimizados para móvil */
         .soc-display {
             text-align: center;
             margin: 8px 0;
@@ -300,26 +323,27 @@
             margin-left: 2px;
         }
 
-        /* Diagrama de Flujo - Responsive y escalable */
+        /* Diagrama de Flujo - MEJORADO DISEÑO */
         .flow-section {
             grid-column: 1 / -1;
-            min-height: 280px;
+            min-height: 320px;
         }
 
         .flow-diagram {
             position: relative;
-            height: 250px;
-            background: var(--light);
-            border-radius: 8px;
+            height: 280px;
+            background: linear-gradient(145deg, var(--light), var(--card-bg));
+            border-radius: 12px;
             overflow: hidden;
             margin-top: 10px;
             touch-action: none;
+            border: 2px solid var(--border-color);
         }
 
         .flow-node {
             position: absolute;
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -327,42 +351,46 @@
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             text-align: center;
             z-index: 2;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+            transition: all 0.3s ease;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .flow-node:active {
             transform: scale(0.95);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
         }
 
         .flow-node i {
-            font-size: 1.2rem;
-            margin-bottom: 3px;
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
 
         .flow-line {
             position: absolute;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent), var(--info));
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--info), var(--success));
             transform-origin: 0 0;
             z-index: 1;
             transition: all 0.5s ease;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(49, 130, 206, 0.3);
         }
 
         .flow-line.active {
-            animation: flowAnimation 2s infinite;
-            background-size: 200% 100%;
+            animation: flowAnimation 3s infinite linear;
+            background-size: 300% 100%;
         }
 
         @keyframes flowAnimation {
             0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
         }
 
         /* Botones de acción */
@@ -379,29 +407,30 @@
             cursor: pointer;
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
+            font-weight: 500;
         }
 
         .action-button:active {
             transform: scale(0.95);
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
-        /* Gráficos históricos - Optimizados para móvil */
+        /* Gráficos históricos */
         .chart-section {
             grid-column: 1 / -1;
-            min-height: 280px;
+            min-height: 300px;
         }
 
         .chart-container {
-            height: 220px;
+            height: 240px;
             margin-top: 10px;
             position: relative;
         }
 
-        /* Logs del sistema - Scroll táctil mejorado */
+        /* Logs del sistema */
         .logs-section {
             grid-column: 1 / -1;
-            max-height: 280px;
+            max-height: 320px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -417,40 +446,45 @@
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.75rem;
             -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--border-color);
         }
 
         .log-entry {
-            padding: 5px 8px;
+            padding: 6px 8px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             gap: 8px;
+            align-items: flex-start;
         }
 
         .log-time {
             color: var(--secondary);
             white-space: nowrap;
             font-size: 0.7rem;
-            min-width: 45px;
+            min-width: 50px;
+            margin-top: 1px;
         }
 
         .log-message {
             color: var(--text-color);
             flex: 1;
             word-break: break-word;
+            line-height: 1.3;
         }
 
         .log-info { color: var(--info); }
         .log-warning { color: var(--warning); }
         .log-error { color: var(--danger); }
         .log-success { color: var(--success); }
+        .log-mqtt { color: #9f7aea; }
 
-        /* Secciones más pequeñas - Grid responsivo */
+        /* Secciones más pequeñas */
         .solar-section, .inverter-section, .orion-section, 
         .temp-section, .voltage-section, .energy-section {
-            min-height: 150px;
+            min-height: 160px;
         }
 
-        /* Alarmas - Scroll horizontal en móvil */
+        /* Alarmas */
         .alarms-section {
             grid-column: 1 / -1;
             margin-top: 8px;
@@ -459,59 +493,60 @@
         .alarms-container {
             display: flex;
             overflow-x: auto;
-            gap: 10px;
+            gap: 12px;
             margin-top: 10px;
-            padding-bottom: 5px;
+            padding-bottom: 8px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
         }
 
         .alarms-container::-webkit-scrollbar {
-            height: 4px;
+            height: 5px;
         }
 
         .alarms-container::-webkit-scrollbar-thumb {
             background: var(--accent);
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .alarm {
             flex: 0 0 auto;
-            width: 280px;
-            padding: 12px;
-            border-radius: 8px;
+            width: 300px;
+            padding: 14px;
+            border-radius: 10px;
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            border-left: 4px solid;
+            border-left: 5px solid;
+            box-shadow: var(--shadow);
         }
 
         .alarm-warning {
-            background-color: rgba(245, 158, 11, 0.1);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
             border-left-color: var(--warning);
         }
 
         .alarm-danger {
-            background-color: rgba(229, 62, 62, 0.1);
+            background: linear-gradient(135deg, rgba(229, 62, 62, 0.15), rgba(229, 62, 62, 0.05));
             border-left-color: var(--danger);
         }
 
         .alarm-info {
-            background-color: rgba(66, 153, 225, 0.1);
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.15), rgba(66, 153, 225, 0.05));
             border-left-color: var(--info);
         }
 
         .alarm-success {
-            background-color: rgba(56, 161, 105, 0.1);
+            background: linear-gradient(135deg, rgba(56, 161, 105, 0.15), rgba(56, 161, 105, 0.05));
             border-left-color: var(--success);
         }
 
         .alarm-icon {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-top: 2px;
         }
 
-        /* Footer optimizado */
+        /* Footer */
         footer {
             grid-column: 1 / -1;
             text-align: center;
@@ -528,11 +563,16 @@
             font-weight: 500;
             padding: 5px;
             display: inline-block;
+            transition: opacity 0.3s;
         }
 
-        /* Media Queries específicas para tus dispositivos */
+        .github-link:hover {
+            opacity: 0.8;
+        }
 
-        /* Xiaomi 14 (393px ancho) y similares */
+        /* Media Queries específicas */
+
+        /* Xiaomi 14 (393px ancho) */
         @media (max-width: 393px) {
             body {
                 padding: 8px;
@@ -543,7 +583,7 @@
             }
             
             .card {
-                padding: 12px;
+                padding: 14px;
             }
             
             .soc-value {
@@ -556,21 +596,25 @@
             }
             
             .flow-diagram {
-                height: 220px;
+                height: 250px;
             }
             
             .flow-node {
-                width: 55px;
-                height: 55px;
+                width: 60px;
+                height: 60px;
                 font-size: 0.65rem;
             }
             
             .flow-node i {
-                font-size: 1rem;
+                font-size: 1.2rem;
+            }
+            
+            .alarm {
+                width: 280px;
             }
         }
 
-        /* Tablets como Lenovo TAB M10 Plus (1200px+) */
+        /* Tablets como Lenovo TAB M10 Plus */
         @media (min-width: 768px) {
             .container {
                 grid-template-columns: repeat(2, 1fr);
@@ -595,21 +639,21 @@
             }
             
             .flow-diagram {
-                height: 300px;
+                height: 320px;
             }
             
             .flow-node {
-                width: 70px;
-                height: 70px;
+                width: 80px;
+                height: 80px;
                 font-size: 0.8rem;
             }
             
             .flow-node i {
-                font-size: 1.4rem;
+                font-size: 1.6rem;
             }
             
             .alarm {
-                width: 320px;
+                width: 350px;
             }
         }
 
@@ -634,6 +678,10 @@
             .soc-value {
                 font-size: 3.5rem;
             }
+            
+            .flow-diagram {
+                height: 340px;
+            }
         }
 
         /* Orientación horizontal en móviles */
@@ -648,24 +696,24 @@
             
             .flow-section {
                 grid-column: span 2;
-                min-height: 200px;
+                min-height: 220px;
             }
             
             .flow-diagram {
-                height: 180px;
+                height: 200px;
             }
             
             .chart-section, .logs-section {
                 grid-column: span 3;
-                min-height: 200px;
+                min-height: 220px;
             }
             
             .chart-container {
-                height: 160px;
+                height: 180px;
             }
             
             .logs-container {
-                max-height: 160px;
+                max-height: 180px;
             }
         }
 
@@ -673,21 +721,16 @@
         button, .action-button, .theme-toggle {
             touch-action: manipulation;
         }
-
-        /* Prevenir zoom en inputs en iOS */
-        input, select, textarea {
-            font-size: 16px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header optimizado para móvil -->
+        <!-- Header con MEJOR CONTRASTE en modo oscuro -->
         <header>
             <div class="header-top">
                 <div class="header-left">
                     <h1><i class="fas fa-caravan"></i> Siena395 Monitor</h1>
-                    <p>Sistema de monitorización Victron</p>
+                    <p>Sistema de monitorización Victron - Autocaravana Siena395</p>
                 </div>
                 <div class="header-right">
                     <div class="status-indicator">
@@ -706,15 +749,18 @@
                     <i class="fas fa-microchip"></i> ESP32
                 </div>
                 <div>
-                    <i class="fas fa-wifi"></i> <span id="wifiStatus">Conectado</span>
+                    <i class="fas fa-wifi"></i> <span id="wifiStatus">Conectando...</span>
                 </div>
                 <div>
                     <i class="fas fa-database"></i> <span id="dataCount">0 datos</span>
                 </div>
+                <div>
+                    <i class="fas fa-broadcast-tower"></i> <span id="mqttStatus">MQTT: --</span>
+                </div>
             </div>
         </header>
 
-        <!-- Sección Batería - SOC optimizado -->
+        <!-- Sección Batería -->
         <section class="card battery-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-battery-full card-icon"></i> Ultimatron 100Ah</h2>
@@ -754,20 +800,20 @@
             </div>
         </section>
 
-        <!-- Diagrama de Flujo del Sistema - Responsive -->
+        <!-- Diagrama de Flujo - DISEÑO MEJORADO -->
         <section class="card flow-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-project-diagram card-icon"></i> Flujo de Energía</h2>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="action-button" id="toggleFlow">
                         <i class="fas fa-play"></i> Animación
                     </button>
-                    <button class="action-button" id="zoomIn" title="Acercar">
-                        <i class="fas fa-search-plus"></i>
+                    <button class="action-button" id="resetZoom" title="Restablecer zoom">
+                        <i class="fas fa-expand-arrows-alt"></i> Reset
                     </button>
-                    <button class="action-button" id="zoomOut" title="Alejar">
-                        <i class="fas fa-search-minus"></i>
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--secondary);">
+                        <i class="fas fa-hand-point-up"></i> Toca los nodos
+                    </div>
                 </div>
             </div>
             
@@ -779,12 +825,12 @@
         <!-- Gráfico histórico SOC -->
         <section class="card chart-section">
             <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-chart-line card-icon"></i> Histórico SOC</h2>
-                <select id="chartRange" class="action-button" style="padding: 6px 10px; background: var(--light); color: var(--text-color);">
-                    <option value="24h">24h</option>
-                    <option value="12h">12h</option>
-                    <option value="6h">6h</option>
-                    <option value="1h">1h</option>
+                <h2 class="card-title"><i class="fas fa-chart-line card-icon"></i> Histórico SOC (Últimas 24h)</h2>
+                <select id="chartRange" class="action-button" style="padding: 6px 12px; background: var(--light); color: var(--text-color); min-width: 100px;">
+                    <option value="24h">24 horas</option>
+                    <option value="12h">12 horas</option>
+                    <option value="6h">6 horas</option>
+                    <option value="1h">1 hora</option>
                 </select>
             </div>
             
@@ -797,15 +843,18 @@
         <section class="card logs-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-terminal card-icon"></i> Logs del Sistema</h2>
-                <div style="display: flex; gap: 8px;">
-                    <button class="action-button" id="clearLogs">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="action-button" id="clearLogs" title="Limpiar logs">
                         <i class="fas fa-trash"></i>
                     </button>
-                    <button class="action-button" id="toggleAutoScroll">
+                    <button class="action-button" id="toggleAutoScroll" title="Auto-scroll">
                         <i class="fas fa-scroll"></i>
                     </button>
-                    <button class="action-button" id="exportLogs">
+                    <button class="action-button" id="exportLogs" title="Exportar logs">
                         <i class="fas fa-download"></i>
+                    </button>
+                    <button class="action-button" id="toggleMQTT" title="Conectar/Desconectar MQTT">
+                        <i class="fas fa-plug"></i> MQTT
                     </button>
                 </div>
             </div>
@@ -815,16 +864,16 @@
             </div>
         </section>
 
-        <!-- Secciones de datos - Grid responsivo -->
+        <!-- Secciones de datos -->
         <section class="card solar-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-sun card-icon"></i> Panel Solar</h2>
             </div>
-            <div class="info-item" style="margin-bottom: 8px;">
+            <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Voltaje Batería</div>
                 <div class="info-value"><span id="solarVoltage">13.2</span><span class="info-unit">V</span></div>
             </div>
-            <div class="info-item" style="margin-bottom: 8px;">
+            <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Potencia Solar</div>
                 <div class="info-value"><span id="solarPower">125</span><span class="info-unit">W</span></div>
             </div>
@@ -838,7 +887,7 @@
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-bolt card-icon"></i> Inversor Phoenix</h2>
             </div>
-            <div class="info-item" style="margin-bottom: 8px;">
+            <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Voltaje Batería</div>
                 <div class="info-value"><span id="inverterVoltage">12.6</span><span class="info-unit">V</span></div>
             </div>
@@ -852,7 +901,7 @@
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-exchange-alt card-icon"></i> Orion DC-DC</h2>
             </div>
-            <div class="info-item" style="margin-bottom: 8px;">
+            <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Voltaje Entrada</div>
                 <div class="info-value"><span id="orionInputVoltage">13.8</span><span class="info-unit">V</span></div>
             </div>
@@ -868,7 +917,7 @@
             </div>
             <div class="soc-display" style="margin: 0 0 12px 0;">
                 <div class="soc-value" id="tempValue" style="font-size: 2.2rem;">22.5</div>
-                <div class="soc-label">°C Batería</div>
+                <div class="soc-label">°C Batería Ultimatron</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Voltaje Battery Sense</div>
@@ -878,15 +927,15 @@
 
         <section class="card voltage-section">
             <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-tachometer-alt card-icon"></i> Voltajes</h2>
+                <h2 class="card-title"><i class="fas fa-tachometer-alt card-icon"></i> Voltajes del Sistema</h2>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="info-item">
                     <div class="info-label">SmartShunt</div>
                     <div class="info-value"><span id="voltageSmartShunt">12.8</span><span class="info-unit">V</span></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">MPPT</div>
+                    <div class="info-label">MPPT Solar</div>
                     <div class="info-value"><span id="voltageMppt">13.2</span><span class="info-unit">V</span></div>
                 </div>
                 <div class="info-item">
@@ -904,33 +953,33 @@
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-charging-station card-icon"></i> Sistema</h2>
             </div>
-            <div class="info-item" style="margin-bottom: 8px;">
+            <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Uptime Monitor</div>
-                <div class="info-value" id="uptimeValue">2d 5h</div>
+                <div class="info-value" id="uptimeValue">0d 0h</div>
             </div>
-            <div class="info-item" style="margin-bottom: 8px;">
+            <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">MQTT Status</div>
-                <div class="info-value" style="color: var(--success);" id="mqttStatusText">Conectado</div>
+                <div class="info-value" style="color: var(--success);" id="mqttStatusText">Desconectado</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Última Actualización</div>
-                <div class="info-value" id="lastUpdate">Ahora</div>
+                <div class="info-value" id="lastUpdate">--:--:--</div>
             </div>
         </section>
 
-        <!-- Alarmas - Scroll horizontal en móvil -->
+        <!-- Alarmas -->
         <section class="card alarms-section">
             <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-exclamation-triangle card-icon"></i> Alarmas</h2>
-                <div id="alarmCount" style="background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; display: none;">0</div>
+                <h2 class="card-title"><i class="fas fa-exclamation-triangle card-icon"></i> Sistema de Alarmas</h2>
+                <div id="alarmCount" style="background: var(--danger); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; display: none; font-weight: 600;">0</div>
             </div>
             
             <div class="alarms-container" id="alarmsContainer">
                 <div class="alarm alarm-success">
                     <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
                     <div>
-                        <div class="info-label">Sistema estable</div>
-                        <div class="info-value">Todas las alarmas desactivadas</div>
+                        <div class="info-label">Sistema inicializado</div>
+                        <div class="info-value">Esperando datos del sistema Victron...</div>
                     </div>
                 </div>
             </div>
@@ -940,24 +989,25 @@
         <footer>
             <p>
                 <a href="https://github.com/uzturre562-blip/siena-monitor" class="github-link" target="_blank">
-                    <i class="fab fa-github"></i> Siena395 Monitor &copy; 2026
+                    <i class="fab fa-github"></i> Siena395 Monitor &copy; 2026 - Autocaravana Siena395
                 </a>
             </p>
-            <p style="margin-top: 8px; font-size: 0.7rem;">
-                <span id="mqttConnectionInfo">Conectando a broker.emqx.io...</span>
+            <p style="margin-top: 8px; font-size: 0.75rem;">
+                <span id="mqttConnectionInfo">Broker: broker.emqx.io | Topic: siena395_monitor_mikel_2026/#</span>
             </p>
             <p style="margin-top: 4px; font-size: 0.7rem; opacity: 0.7;">
-                Optimizado para Xiaomi 14 y Lenovo TAB M10 Plus
+                Optimizado para Xiaomi 14 y Lenovo TAB M10 Plus | Conectado vía MQTT
             </p>
         </footer>
     </div>
 
     <script>
-        // Configuración MQTT
+        // ==================== CONFIGURACIÓN ====================
         const MQTT_BROKER = "broker.emqx.io";
+        const MQTT_PORT = 8084; // Puerto WebSocket seguro
         const MQTT_TOPIC_PREFIX = "siena395_monitor_mikel_2026";
         
-        // Estado del dashboard
+        // ==================== VARIABLES GLOBALES ====================
         let dashboardData = {
             battery: { soc: 85, voltage: 12.8, current: 5.3, consumedAh: -12.5, timeToGo: 15.2 },
             solar: { voltage: 13.2, power: 125, energyToday: 0.85 },
@@ -966,14 +1016,8 @@
             temperature: { batteryTemp: 22.5, batterySenseVoltage: 12.7 }
         };
         
-        // Variables globales
         let socChart = null;
-        let historicalData = {
-            soc: [],
-            voltage: [],
-            temperature: [],
-            solarPower: []
-        };
+        let historicalData = { soc: [], voltage: [], temperature: [], solarPower: [] };
         let systemLogs = [];
         let autoScrollLogs = true;
         let flowDiagram = null;
@@ -982,8 +1026,11 @@
         let flowScale = 1;
         let dataReceivedCount = 0;
         let lastUpdateTime = new Date();
+        let mqttClient = null;
+        let isMQTTConnected = false;
+        let simulationInterval = null;
         
-        // Elementos DOM cacheados
+        // ==================== ELEMENTOS DOM ====================
         const elements = {
             // Batería
             socValue: document.getElementById('socValue'),
@@ -1014,6 +1061,7 @@
             uptimeValue: document.getElementById('uptimeValue'),
             mqttStatusText: document.getElementById('mqttStatusText'),
             lastUpdate: document.getElementById('lastUpdate'),
+            mqttStatus: document.getElementById('mqttStatus'),
             
             // Estado
             connectionStatus: document.getElementById('connectionStatus'),
@@ -1032,7 +1080,8 @@
             logsContainer: document.getElementById('logsContainer')
         };
         
-        // Inicialización
+        // ==================== FUNCIONES PRINCIPALES ====================
+        
         function initDashboard() {
             setupTheme();
             initHistoricalData();
@@ -1040,25 +1089,30 @@
             initFlowDiagram();
             initLogs();
             setupEventListeners();
-            updateDashboardUI();
             
-            // Iniciar simulación
+            // Intentar conectar a MQTT inmediatamente
+            connectToMQTT();
+            
+            // Si no hay conexión MQTT en 10 segundos, activar simulación
             setTimeout(() => {
-                setConnectedStatus(true);
-                addLog("Dashboard Siena395 Monitor iniciado", "success");
-                addLog(`Conectando a MQTT broker: ${MQTT_BROKER}`, "info");
-                addLog(`Topic prefix: ${MQTT_TOPIC_PREFIX}`, "info");
-            }, 500);
+                if (!isMQTTConnected) {
+                    addLog("⚠️ No se pudo conectar a MQTT. Activando modo simulación...", "warning");
+                    startSimulationMode();
+                }
+            }, 10000);
             
-            startDataSimulation();
             setInterval(updateLastUpdateTime, 1000);
+            setInterval(updateUptime, 60000);
+            
+            addLog("Dashboard Siena395 Monitor iniciado", "success");
+            addLog(`Configuración MQTT: ${MQTT_BROKER}:${MQTT_PORT}`, "info");
+            addLog(`Topic prefix: ${MQTT_TOPIC_PREFIX}`, "info");
             
             console.log("Dashboard Siena395 Monitor cargado.");
             console.log(`Para una implementación completa, conectar a MQTT broker: ${MQTT_BROKER}`);
             console.log(`Topic prefix: ${MQTT_TOPIC_PREFIX}`);
         }
         
-        // Configurar tema
         function setupTheme() {
             const themeToggle = document.getElementById('themeToggle');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -1084,46 +1138,27 @@
             });
         }
         
-        // Inicializar datos históricos
         function initHistoricalData() {
             const now = new Date();
-            // Crear 24 horas de datos históricos simulados
             for (let i = 23; i >= 0; i--) {
                 const time = new Date(now.getTime() - i * 3600000);
-                historicalData.soc.push({
-                    time: time,
-                    value: 80 + Math.random() * 20
-                });
-                historicalData.voltage.push({
-                    time: time,
-                    value: 12.5 + Math.random() * 1.5
-                });
-                historicalData.temperature.push({
-                    time: time,
-                    value: 20 + Math.random() * 10
-                });
-                historicalData.solarPower.push({
-                    time: time,
-                    value: Math.random() * 200
-                });
+                historicalData.soc.push({ time: time, value: 80 + Math.random() * 20 });
+                historicalData.voltage.push({ time: time, value: 12.5 + Math.random() * 1.5 });
+                historicalData.temperature.push({ time: time, value: 20 + Math.random() * 10 });
+                historicalData.solarPower.push({ time: time, value: Math.random() * 200 });
             }
-            addLog("Datos históricos inicializados (24h)", "info");
         }
         
-        // Inicializar gráficos
         function initCharts() {
             const ctx = document.getElementById('socChart').getContext('2d');
-            
-            // Preparar datos para el gráfico
             const labels = historicalData.soc.map(d => 
                 d.time.getHours().toString().padStart(2, '0') + ':00'
             );
             const data = historicalData.soc.map(d => d.value);
             
-            // Determinar colores según tema
             const isDark = document.body.classList.contains('dark-mode');
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            const textColor = isDark ? '#edf2f7' : '#2d3748';
+            const textColor = isDark ? '#ffffff' : '#2d3748';
             
             socChart = new Chart(ctx, {
                 type: 'line',
@@ -1133,12 +1168,14 @@
                         label: 'SOC (%)',
                         data: data,
                         borderColor: '#3182ce',
-                        backgroundColor: 'rgba(49, 130, 206, 0.1)',
-                        borderWidth: 2,
+                        backgroundColor: 'rgba(49, 130, 206, 0.15)',
+                        borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 2,
-                        pointBackgroundColor: '#3182ce'
+                        pointRadius: 3,
+                        pointBackgroundColor: '#3182ce',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1
                     }]
                 },
                 options: {
@@ -1146,50 +1183,82 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            labels: { color: textColor }
+                            labels: { 
+                                color: textColor,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? 'rgba(45, 55, 72, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                            titleColor: isDark ? '#ffffff' : '#2d3748',
+                            bodyColor: isDark ? '#e2e8f0' : '#4a5568',
+                            borderColor: '#3182ce',
+                            borderWidth: 1
                         }
                     },
                     scales: {
                         x: {
-                            grid: { color: gridColor },
-                            ticks: { color: textColor, maxTicksLimit: 8 }
+                            grid: { 
+                                color: gridColor,
+                                borderDash: [5, 5]
+                            },
+                            ticks: { 
+                                color: textColor,
+                                maxTicksLimit: 8
+                            }
                         },
                         y: {
                             min: 0,
                             max: 100,
-                            grid: { color: gridColor },
-                            ticks: { color: textColor }
+                            grid: { 
+                                color: gridColor,
+                                borderDash: [5, 5]
+                            },
+                            ticks: { 
+                                color: textColor,
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    animations: {
+                        tension: {
+                            duration: 1000,
+                            easing: 'linear'
                         }
                     }
                 }
             });
             
-            // Configurar selector de rango
             document.getElementById('chartRange').addEventListener('change', function() {
                 updateChartData(this.value);
             });
-            
-            addLog("Gráfico histórico inicializado", "info");
         }
         
-        // Actualizar tema de gráficos
         function updateChartTheme() {
             if (!socChart) return;
             
             const isDark = document.body.classList.contains('dark-mode');
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            const textColor = isDark ? '#edf2f7' : '#2d3748';
+            const textColor = isDark ? '#ffffff' : '#2d3748';
             
             socChart.options.scales.x.grid.color = gridColor;
             socChart.options.scales.x.ticks.color = textColor;
             socChart.options.scales.y.grid.color = gridColor;
             socChart.options.scales.y.ticks.color = textColor;
             socChart.options.plugins.legend.labels.color = textColor;
+            socChart.options.plugins.tooltip.backgroundColor = isDark ? 'rgba(45, 55, 72, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+            socChart.options.plugins.tooltip.titleColor = isDark ? '#ffffff' : '#2d3748';
+            socChart.options.plugins.tooltip.bodyColor = isDark ? '#e2e8f0' : '#4a5568';
             
             socChart.update();
         }
         
-        // Actualizar datos del gráfico
         function updateChartData(range) {
             if (!socChart) return;
             
@@ -1201,11 +1270,9 @@
                 default: hours = 24;
             }
             
-            // Filtrar datos según rango
             const cutoffTime = new Date(new Date().getTime() - hours * 3600000);
             const filteredData = historicalData.soc.filter(d => d.time >= cutoffTime);
             
-            // Actualizar gráfico
             socChart.data.labels = filteredData.map(d => 
                 d.time.getHours().toString().padStart(2, '0') + ':' + 
                 d.time.getMinutes().toString().padStart(2, '0')
@@ -1213,18 +1280,16 @@
             socChart.data.datasets[0].data = filteredData.map(d => d.value);
             socChart.update();
             
-            addLog(`Gráfico actualizado a rango de ${range}`, "info");
+            addLog(`Gráfico actualizado: ${range}`, "info");
         }
         
-        // Inicializar diagrama de flujo
         function initFlowDiagram() {
             flowDiagram = document.getElementById('flowDiagram');
             updateFlowDiagram();
             
-            // Botón de animación
             document.getElementById('toggleFlow').addEventListener('click', function() {
                 const lines = document.querySelectorAll('.flow-line');
-                const isActive = lines[0].classList.contains('active');
+                const isActive = lines[0]?.classList.contains('active') || false;
                 
                 if (isActive) {
                     lines.forEach(line => line.classList.remove('active'));
@@ -1237,17 +1302,10 @@
                 }
             });
             
-            // Zoom
-            document.getElementById('zoomIn').addEventListener('click', () => {
-                flowScale = Math.min(flowScale * 1.2, 2);
+            document.getElementById('resetZoom').addEventListener('click', () => {
+                flowScale = 1;
                 updateFlowDiagramScale();
-                addLog(`Zoom aumentado a ${flowScale.toFixed(1)}x`, "info");
-            });
-            
-            document.getElementById('zoomOut').addEventListener('click', () => {
-                flowScale = Math.max(flowScale / 1.2, 0.5);
-                updateFlowDiagramScale();
-                addLog(`Zoom reducido a ${flowScale.toFixed(1)}x`, "info");
+                addLog("Zoom restablecido", "info");
             });
             
             // Touch gestures para zoom
@@ -1275,8 +1333,6 @@
                     }
                 }
             });
-            
-            addLog("Diagrama de flujo inicializado", "info");
         }
         
         function getTouchDistance(touch1, touch2) {
@@ -1290,42 +1346,40 @@
             flowNodes = [];
             flowLines = [];
             
-            // Tamaños responsivos basados en el ancho del contenedor
             const containerWidth = flowDiagram.offsetWidth;
             const containerHeight = flowDiagram.offsetHeight;
             
-            // Ajustar posiciones según el tamaño
+            // MEJORADO: Posiciones más equilibradas y atractivas
             let nodePositions;
-            if (containerWidth < 400) { // Móvil pequeño
+            if (containerWidth < 400) {
                 nodePositions = [
-                    { id: 'solar', x: containerWidth * 0.15, y: containerHeight * 0.2 },
+                    { id: 'solar', x: containerWidth * 0.15, y: containerHeight * 0.25 },
+                    { id: 'mppt', x: containerWidth * 0.5, y: containerHeight * 0.25 },
+                    { id: 'battery', x: containerWidth * 0.5, y: containerHeight * 0.55 },
+                    { id: 'orion', x: containerWidth * 0.15, y: containerHeight * 0.85 },
+                    { id: 'inverter', x: containerWidth * 0.5, y: containerHeight * 0.85 },
+                    { id: 'load', x: containerWidth * 0.85, y: containerHeight * 0.55 }
+                ];
+            } else if (containerWidth < 600) {
+                nodePositions = [
+                    { id: 'solar', x: containerWidth * 0.2, y: containerHeight * 0.2 },
                     { id: 'mppt', x: containerWidth * 0.5, y: containerHeight * 0.2 },
                     { id: 'battery', x: containerWidth * 0.5, y: containerHeight * 0.5 },
-                    { id: 'orion', x: containerWidth * 0.15, y: containerHeight * 0.8 },
+                    { id: 'orion', x: containerWidth * 0.2, y: containerHeight * 0.8 },
                     { id: 'inverter', x: containerWidth * 0.5, y: containerHeight * 0.8 },
-                    { id: 'load', x: containerWidth * 0.85, y: containerHeight * 0.5 }
-                ];
-            } else if (containerWidth < 600) { // Móvil grande/tablet pequeña
-                nodePositions = [
-                    { id: 'solar', x: containerWidth * 0.2, y: containerHeight * 0.15 },
-                    { id: 'mppt', x: containerWidth * 0.5, y: containerHeight * 0.15 },
-                    { id: 'battery', x: containerWidth * 0.5, y: containerHeight * 0.5 },
-                    { id: 'orion', x: containerWidth * 0.2, y: containerHeight * 0.85 },
-                    { id: 'inverter', x: containerWidth * 0.5, y: containerHeight * 0.85 },
                     { id: 'load', x: containerWidth * 0.8, y: containerHeight * 0.5 }
                 ];
-            } else { // Tablet grande/desktop
+            } else {
                 nodePositions = [
-                    { id: 'solar', x: containerWidth * 0.1, y: containerHeight * 0.3 },
-                    { id: 'mppt', x: containerWidth * 0.3, y: containerHeight * 0.3 },
-                    { id: 'battery', x: containerWidth * 0.5, y: containerHeight * 0.5 },
-                    { id: 'orion', x: containerWidth * 0.1, y: containerHeight * 0.7 },
-                    { id: 'inverter', x: containerWidth * 0.3, y: containerHeight * 0.7 },
-                    { id: 'load', x: containerWidth * 0.7, y: containerHeight * 0.5 }
+                    { id: 'solar', x: containerWidth * 0.15, y: containerHeight * 0.35 },
+                    { id: 'mppt', x: containerWidth * 0.35, y: containerHeight * 0.35 },
+                    { id: 'battery', x: containerWidth * 0.55, y: containerHeight * 0.55 },
+                    { id: 'orion', x: containerWidth * 0.15, y: containerHeight * 0.75 },
+                    { id: 'inverter', x: containerWidth * 0.35, y: containerHeight * 0.75 },
+                    { id: 'load', x: containerWidth * 0.75, y: containerHeight * 0.55 }
                 ];
             }
             
-            // Nodos del sistema
             const nodes = [
                 { id: 'solar', name: 'Solar', icon: 'fa-sun', color: '#f6ad55' },
                 { id: 'mppt', name: 'MPPT', icon: 'fa-bolt', color: '#4299e1' },
@@ -1335,7 +1389,6 @@
                 { id: 'load', name: 'Cargas', icon: 'fa-home', color: '#e53e3e' }
             ];
             
-            // Crear nodos
             nodes.forEach((node, i) => {
                 const pos = nodePositions[i];
                 const nodeEl = document.createElement('div');
@@ -1343,14 +1396,13 @@
                 nodeEl.id = `node-${node.id}`;
                 nodeEl.style.left = `${pos.x}px`;
                 nodeEl.style.top = `${pos.y}px`;
-                nodeEl.style.background = node.color;
+                nodeEl.style.background = `radial-gradient(circle at 30% 30%, ${node.color}, ${darkenColor(node.color, 20)})`;
                 nodeEl.style.transform = `scale(${flowScale})`;
                 nodeEl.innerHTML = `
                     <i class="fas ${node.icon}"></i>
                     <span>${node.name}</span>
                 `;
                 
-                // Tooltip en móvil (click)
                 nodeEl.addEventListener('click', () => {
                     showNodeInfo(node);
                 });
@@ -1359,7 +1411,6 @@
                 flowNodes.push({ element: nodeEl, ...node, ...pos });
             });
             
-            // Conexiones
             const connections = [
                 { from: 'solar', to: 'mppt', active: true },
                 { from: 'mppt', to: 'battery', active: true },
@@ -1369,7 +1420,6 @@
                 { from: 'battery', to: 'load', active: false }
             ];
             
-            // Crear líneas de conexión
             connections.forEach(conn => {
                 const fromNode = flowNodes.find(n => n.id === conn.from);
                 const toNode = flowNodes.find(n => n.id === conn.to);
@@ -1379,11 +1429,10 @@
                     line.className = `flow-line ${conn.active ? 'active' : ''}`;
                     line.id = `line-${conn.from}-${conn.to}`;
                     
-                    // Calcular posición (centro de los nodos)
-                    const fromX = fromNode.x + 30 * flowScale;
-                    const fromY = fromNode.y + 30 * flowScale;
-                    const toX = toNode.x + 30 * flowScale;
-                    const toY = toNode.y + 30 * flowScale;
+                    const fromX = fromNode.x + 35 * flowScale;
+                    const fromY = fromNode.y + 35 * flowScale;
+                    const toX = toNode.x + 35 * flowScale;
+                    const toY = toNode.y + 35 * flowScale;
                     
                     const dx = toX - fromX;
                     const dy = toY - fromY;
@@ -1395,10 +1444,24 @@
                     line.style.top = `${fromY}px`;
                     line.style.transform = `rotate(${angle}deg) scaleX(${flowScale})`;
                     
+                    if (!conn.active) {
+                        line.style.opacity = '0.3';
+                        line.style.background = 'var(--secondary)';
+                    }
+                    
                     flowDiagram.appendChild(line);
                     flowLines.push({ element: line, ...conn });
                 }
             });
+        }
+        
+        function darkenColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) - amt;
+            const G = (num >> 8 & 0x00FF) - amt;
+            const B = (num & 0x0000FF) - amt;
+            return "#" + (0x1000000 + (R < 0 ? 0 : R) * 0x10000 + (G < 0 ? 0 : G) * 0x100 + (B < 0 ? 0 : B)).toString(16).slice(1);
         }
         
         function updateFlowDiagramScale() {
@@ -1413,10 +1476,10 @@
                 const toNode = flowNodes.find(n => n.id === toId);
                 
                 if (fromNode && toNode) {
-                    const fromX = fromNode.x + 30 * flowScale;
-                    const fromY = fromNode.y + 30 * flowScale;
-                    const toX = toNode.x + 30 * flowScale;
-                    const toY = toNode.y + 30 * flowScale;
+                    const fromX = fromNode.x + 35 * flowScale;
+                    const fromY = fromNode.y + 35 * flowScale;
+                    const toX = toNode.x + 35 * flowScale;
+                    const toY = toNode.y + 35 * flowScale;
                     
                     const dx = toX - fromX;
                     const dy = toY - fromY;
@@ -1433,181 +1496,292 @@
         
         function showNodeInfo(node) {
             const info = {
-                solar: "Panel solar: Genera energía del sol",
-                mppt: "Controlador MPPT: Optimiza la carga solar",
-                battery: "Batería Ultimatron 100Ah: Almacena energía",
-                orion: "Orion DC-DC: Carga desde el alternador",
-                inverter: "Inversor Phoenix: Convierte DC 12V a AC 230V",
-                load: "Cargas: Consumo de la autocaravana Siena395"
+                solar: "Panel solar: Genera energía del sol para el sistema",
+                mppt: "Controlador MPPT: Optimiza la carga solar a la batería",
+                battery: "Batería Ultimatron 100Ah: Almacena energía para la autocaravana",
+                orion: "Orion DC-DC: Carga la batería desde el alternador del vehículo",
+                inverter: "Inversor Phoenix: Convierte DC 12V a AC 230V para los enchufes",
+                load: "Cargas: Consumo eléctrico de la autocaravana Siena395"
             };
             
             addLog(`Nodo: ${node.name} - ${info[node.id]}`, "info");
         }
         
-        // Inicializar logs
-        function initLogs() {
-            // Agregar logs iniciales
-            addLog("Sistema de logs inicializado", "success");
-            
-            // Configurar botones de logs
-            document.getElementById('clearLogs').addEventListener('click', () => {
-                systemLogs = [];
-                updateLogsDisplay();
-                addLog("Logs limpiados", "warning");
-            });
-            
-            document.getElementById('toggleAutoScroll').addEventListener('click', function() {
-                autoScrollLogs = !autoScrollLogs;
-                this.innerHTML = autoScrollLogs ? 
-                    '<i class="fas fa-scroll"></i>' : 
-                    '<i class="fas fa-scroll"></i>';
-                this.title = autoScrollLogs ? 'Auto-scroll activado' : 'Auto-scroll desactivado';
-                addLog(`Auto-scroll ${autoScrollLogs ? 'activado' : 'desactivado'}`, "info");
-            });
-            
-            document.getElementById('exportLogs').addEventListener('click', () => {
-                exportLogs();
-            });
-        }
+        // ==================== MQTT FUNCTIONS ====================
         
-        // Agregar log al sistema
-        function addLog(message, type = "info") {
-            const logEntry = {
-                time: new Date(),
-                message: message,
-                type: type
-            };
+        function connectToMQTT() {
+            const brokerUrl = `wss://${MQTT_BROKER}:${MQTT_PORT}/mqtt`;
             
-            systemLogs.unshift(logEntry); // Agregar al principio
+            addLog(`Conectando a MQTT: ${brokerUrl}`, "info");
+            setMQTTStatus("Conectando...", "warning");
             
-            // Mantener máximo 100 logs
-            if (systemLogs.length > 100) {
-                systemLogs.pop();
-            }
-            
-            updateLogsDisplay();
-        }
-        
-        // Actualizar visualización de logs
-        function updateLogsDisplay() {
-            const container = elements.logsContainer;
-            container.innerHTML = '';
-            
-            systemLogs.forEach(log => {
-                const logEl = document.createElement('div');
-                logEl.className = 'log-entry';
-                
-                const timeStr = log.time.toLocaleTimeString('es-ES', { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit' 
+            try {
+                mqttClient = mqtt.connect(brokerUrl, {
+                    clientId: 'siena395_dashboard_' + Math.random().toString(16).substr(2, 8),
+                    clean: true,
+                    reconnectPeriod: 5000,
+                    connectTimeout: 10000
                 });
                 
-                logEl.innerHTML = `
-                    <div class="log-time">${timeStr}</div>
-                    <div class="log-message log-${log.type}">${log.message}</div>
-                `;
+                mqttClient.on('connect', () => {
+                    isMQTTConnected = true;
+                    setMQTTStatus("Conectado", "success");
+                    addLog("✅ CONECTADO al broker MQTT", "success");
+                    
+                    // SUSCRIBIRSE A TODOS LOS TOPICS DEL ESP32
+                    const topics = [
+                        // Batería/SmartShunt
+                        `${MQTT_TOPIC_PREFIX}/sensor/soc_ultimatron/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/tension_smartshunt/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/corriente_smartshunt/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/ah_consumidos/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/tiempo_restante/state`,
+                        
+                        // Solar/MPPT
+                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_bateria_mppt/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/potencia_solar/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/energia_hoy/state`,
+                        
+                        // Inversor Phoenix
+                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_bateria_phoenix/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/potencia_salida_phoenix/state`,
+                        
+                        // Orion DC-DC
+                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_entrada_orion/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_salida_orion/state`,
+                        
+                        // Battery Sense
+                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_battery_sense/state`,
+                        `${MQTT_TOPIC_PREFIX}/sensor/temperatura_bateria/state`,
+                        
+                        // Sistema
+                        `${MQTT_TOPIC_PREFIX}/sensor/uptime_monitor/state`,
+                        `${MQTT_TOPIC_PREFIX}/status`
+                    ];
+                    
+                    topics.forEach(topic => {
+                        mqttClient.subscribe(topic, { qos: 0 }, (err) => {
+                            if (!err) {
+                                addLog(`📡 Suscrito a: ${topic}`, "mqtt");
+                            } else {
+                                addLog(`Error suscribiendo a ${topic}: ${err}`, "error");
+                            }
+                        });
+                    });
+                    
+                    // Detener simulación si estaba activa
+                    if (simulationInterval) {
+                        clearInterval(simulationInterval);
+                        simulationInterval = null;
+                        addLog("Modo simulación desactivado (MQTT activo)", "info");
+                    }
+                });
                 
-                container.appendChild(logEl);
-            });
-            
-            // Auto-scroll si está activado
-            if (autoScrollLogs && systemLogs.length > 0) {
-                container.scrollTop = 0;
+                mqttClient.on('message', (topic, message) => {
+                    handleMQTTMessage(topic, message.toString());
+                });
+                
+                mqttClient.on('error', (error) => {
+                    addLog(`Error MQTT: ${error}`, "error");
+                    setMQTTStatus("Error", "danger");
+                    isMQTTConnected = false;
+                });
+                
+                mqttClient.on('close', () => {
+                    addLog("Desconectado de MQTT", "warning");
+                    setMQTTStatus("Desconectado", "danger");
+                    isMQTTConnected = false;
+                    
+                    // Si se desconecta, activar simulación temporal
+                    if (!simulationInterval) {
+                        startSimulationMode();
+                    }
+                });
+                
+                mqttClient.on('reconnect', () => {
+                    addLog("Reconectando a MQTT...", "info");
+                    setMQTTStatus("Reconectando...", "warning");
+                });
+                
+            } catch (error) {
+                addLog(`Error conectando a MQTT: ${error}`, "error");
+                setMQTTStatus("Error conexión", "danger");
+                isMQTTConnected = false;
+                startSimulationMode();
             }
         }
         
-        // Exportar logs
-        function exportLogs() {
-            const logText = systemLogs.map(log => 
-                `[${log.time.toLocaleString()}] ${log.message}`
-            ).join('\n');
+        function handleMQTTMessage(topic, message) {
+            dataReceivedCount++;
+            lastUpdateTime = new Date();
             
-            const blob = new Blob([logText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `siena395-logs-${new Date().toISOString().slice(0,10)}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const value = parseFloat(message);
             
-            addLog("Logs exportados a archivo", "success");
-        }
-        
-        // Configurar event listeners
-        function setupEventListeners() {
-            // Botón de refresco
-            document.getElementById('refreshBattery').addEventListener('click', function() {
-                this.classList.add('fa-spin');
-                simulateDataUpdate();
-                setTimeout(() => {
-                    this.classList.remove('fa-spin');
-                }, 1000);
-                addLog("Datos actualizados manualmente", "info");
-            });
-            
-            // Redibujar diagrama al cambiar tamaño
-            window.addEventListener('resize', () => {
-                if (flowDiagram) {
-                    updateFlowDiagram();
+            // Mapeo completo de topics a variables del dashboard
+            const topicMap = {
+                // SmartShunt
+                'sensor/soc_ultimatron/state': () => {
+                    dashboardData.battery.soc = value;
+                    addLog(`MQTT: SOC actualizado: ${value}%`, "mqtt");
+                },
+                'sensor/tension_smartshunt/state': () => {
+                    dashboardData.battery.voltage = value;
+                    dashboardData.solar.voltage = value + 0.4;
+                    dashboardData.inverter.voltage = value - 0.2;
+                },
+                'sensor/corriente_smartshunt/state': () => {
+                    dashboardData.battery.current = value;
+                },
+                'sensor/ah_consumidos/state': () => {
+                    dashboardData.battery.consumedAh = value;
+                },
+                'sensor/tiempo_restante/state': () => {
+                    dashboardData.battery.timeToGo = value;
+                },
+                
+                // Solar/MPPT
+                'sensor/voltaje_bateria_mppt/state': () => {
+                    dashboardData.solar.voltage = value;
+                },
+                'sensor/potencia_solar/state': () => {
+                    dashboardData.solar.power = value;
+                },
+                'sensor/energia_hoy/state': () => {
+                    dashboardData.solar.energyToday = value;
+                },
+                
+                // Inversor Phoenix
+                'sensor/voltaje_bateria_phoenix/state': () => {
+                    dashboardData.inverter.voltage = value;
+                },
+                'sensor/potencia_salida_phoenix/state': () => {
+                    dashboardData.inverter.power = value;
+                },
+                
+                // Orion DC-DC
+                'sensor/voltaje_entrada_orion/state': () => {
+                    dashboardData.orion.inputVoltage = value;
+                },
+                'sensor/voltaje_salida_orion/state': () => {
+                    dashboardData.orion.outputVoltage = value;
+                },
+                
+                // Battery Sense
+                'sensor/voltaje_battery_sense/state': () => {
+                    dashboardData.temperature.batterySenseVoltage = value;
+                },
+                'sensor/temperatura_bateria/state': () => {
+                    dashboardData.temperature.batteryTemp = value;
+                },
+                
+                // Sistema
+                'sensor/uptime_monitor/state': () => {
+                    updateUptimeFromValue(value);
+                },
+                'status': () => {
+                    if (message === "online") {
+                        setConnectedStatus(true);
+                    } else if (message === "offline") {
+                        setConnectedStatus(false);
+                    }
                 }
-            });
-        }
-        
-        // Actualizar estado de conexión
-        function setConnectedStatus(connected) {
-            const statusDot = elements.connectionStatus;
-            const statusText = elements.connectionText;
-            const mqttText = elements.mqttStatusText;
+            };
             
-            if (connected) {
-                statusDot.style.backgroundColor = "var(--success)";
-                statusText.textContent = "Conectado a MQTT";
-                statusText.style.color = "var(--success)";
-                mqttText.textContent = "Conectado";
-                mqttText.style.color = "var(--success)";
-                elements.mqttConnectionInfo.textContent = `Conectado a ${MQTT_BROKER}`;
-                elements.wifiStatus.textContent = "Online";
+            const shortTopic = topic.replace(`${MQTT_TOPIC_PREFIX}/`, '');
+            
+            if (topicMap[shortTopic]) {
+                topicMap[shortTopic]();
+                updateHistoricalData();
+                updateDashboardUI();
+                
+                // Solo loguear cada 10 mensajes para no saturar
+                if (dataReceivedCount % 10 === 0) {
+                    addLog(`MQTT: ${shortTopic} = ${value}`, "mqtt");
+                }
             } else {
-                statusDot.style.backgroundColor = "var(--danger)";
-                statusText.textContent = "Desconectado de MQTT";
-                statusText.style.color = "var(--danger)";
-                mqttText.textContent = "Desconectado";
-                mqttText.style.color = "var(--danger)";
-                elements.mqttConnectionInfo.textContent = `Intentando conectar a ${MQTT_BROKER}...`;
-                elements.wifiStatus.textContent = "Offline";
+                addLog(`MQTT: Topic no mapeado: ${shortTopic} = ${message}`, "info");
             }
         }
         
-        // Actualizar tiempo desde última actualización
-        function updateLastUpdateTime() {
-            const now = new Date();
-            const diff = Math.floor((now - lastUpdateTime) / 1000);
+        function setMQTTStatus(status, type) {
+            elements.mqttStatusText.textContent = status;
+            elements.mqttStatus.textContent = `MQTT: ${status}`;
             
-            let text = "Ahora mismo";
-            if (diff > 0) {
-                if (diff < 60) {
-                    text = `Hace ${diff}s`;
-                } else if (diff < 3600) {
-                    text = `Hace ${Math.floor(diff/60)}m`;
-                } else {
-                    text = `Hace ${Math.floor(diff/3600)}h`;
-                }
+            switch(type) {
+                case "success":
+                    elements.mqttStatusText.style.color = "var(--success)";
+                    break;
+                case "warning":
+                    elements.mqttStatusText.style.color = "var(--warning)";
+                    break;
+                case "danger":
+                    elements.mqttStatusText.style.color = "var(--danger)";
+                    break;
+                default:
+                    elements.mqttStatusText.style.color = "var(--secondary)";
             }
-            
-            elements.lastUpdate.textContent = text;
         }
         
-        // Actualizar toda la UI
+        // ==================== SIMULATION FUNCTIONS ====================
+        
+        function startSimulationMode() {
+            addLog("🔧 Activando modo simulación", "warning");
+            setMQTTStatus("Simulación", "warning");
+            
+            // Simular datos cada 3 segundos
+            simulationInterval = setInterval(simulateDataUpdate, 3000);
+            
+            // Primera actualización inmediata
+            setTimeout(simulateDataUpdate, 500);
+        }
+        
+        function simulateDataUpdate() {
+            const randomFactor = (Math.random() - 0.5) * 0.3;
+            
+            // Batería
+            dashboardData.battery.soc = Math.max(0, Math.min(100, dashboardData.battery.soc + randomFactor));
+            dashboardData.battery.voltage = 12.5 + Math.random() * 1.5;
+            dashboardData.battery.current = (Math.random() - 0.5) * 20;
+            dashboardData.battery.consumedAh = -15 + Math.random() * 5;
+            dashboardData.battery.timeToGo = 10 + Math.random() * 20;
+            
+            // Solar (más activo de día)
+            const hour = new Date().getHours();
+            const isDay = hour >= 7 && hour <= 19;
+            dashboardData.solar.voltage = 13.0 + Math.random() * 1.0;
+            dashboardData.solar.power = isDay ? Math.max(0, 50 + Math.random() * 150) : Math.random() * 20;
+            dashboardData.solar.energyToday = 0.8 + Math.random() * 0.3;
+            
+            // Temperatura
+            dashboardData.temperature.batteryTemp = 20 + (Math.random() - 0.5) * 10;
+            dashboardData.temperature.batterySenseVoltage = 12.5 + Math.random() * 1.0;
+            
+            // Otros voltajes
+            dashboardData.inverter.voltage = dashboardData.battery.voltage - 0.2 + Math.random() * 0.4;
+            dashboardData.inverter.power = 100 + Math.random() * 300;
+            dashboardData.orion.inputVoltage = 13.5 + Math.random() * 1.0;
+            dashboardData.orion.outputVoltage = 14.0 + Math.random() * 0.5;
+            
+            lastUpdateTime = new Date();
+            dataReceivedCount++;
+            
+            updateHistoricalData();
+            updateDashboardUI();
+            
+            if (dataReceivedCount % 15 === 0) {
+                addLog(`Simulación: Datos actualizados (${dataReceivedCount})`, "info");
+            }
+        }
+        
+        // ==================== UI UPDATE FUNCTIONS ====================
+        
         function updateDashboardUI() {
             // Batería
             const soc = dashboardData.battery.soc;
             elements.socValue.textContent = `${soc.toFixed(1)}%`;
             elements.batteryLevel.style.width = `${soc}%`;
-            elements.voltageValue.textContent = dashboardData.battery.voltage.toFixed(1);
-            elements.currentValue.textContent = dashboardData.battery.current.toFixed(1);
+            elements.voltageValue.textContent = dashboardData.battery.voltage.toFixed(2);
+            elements.currentValue.textContent = dashboardData.battery.current.toFixed(2);
             elements.consumedAh.textContent = dashboardData.battery.consumedAh.toFixed(1);
             elements.timeToGo.textContent = dashboardData.battery.timeToGo.toFixed(1);
             
@@ -1625,24 +1799,23 @@
             elements.batteryLevel.style.background = batteryColor;
             
             // Solar
-            elements.solarVoltage.textContent = dashboardData.solar.voltage.toFixed(1);
+            elements.solarVoltage.textContent = dashboardData.solar.voltage.toFixed(2);
             elements.solarPower.textContent = Math.round(dashboardData.solar.power);
             elements.energyToday.textContent = dashboardData.solar.energyToday.toFixed(2);
             
             // Inversor
-            elements.inverterVoltage.textContent = dashboardData.inverter.voltage.toFixed(1);
+            elements.inverterVoltage.textContent = dashboardData.inverter.voltage.toFixed(2);
             elements.inverterPower.textContent = Math.round(dashboardData.inverter.power);
             
             // Orion
-            elements.orionInputVoltage.textContent = dashboardData.orion.inputVoltage.toFixed(1);
-            elements.orionOutputVoltage.textContent = dashboardData.orion.outputVoltage.toFixed(1);
+            elements.orionInputVoltage.textContent = dashboardData.orion.inputVoltage.toFixed(2);
+            elements.orionOutputVoltage.textContent = dashboardData.orion.outputVoltage.toFixed(2);
             
             // Temperatura
             const temp = dashboardData.temperature.batteryTemp;
             elements.tempValue.textContent = temp.toFixed(1);
-            elements.batterySenseVoltage.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(1);
+            elements.batterySenseVoltage.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(2);
             
-            // Color de temperatura
             if (temp <= 5 || temp >= 45) {
                 elements.tempValue.style.color = "var(--danger)";
             } else if (temp <= 10 || temp >= 40) {
@@ -1652,51 +1825,29 @@
             }
             
             // Voltajes
-            elements.voltageSmartShunt.textContent = dashboardData.battery.voltage.toFixed(1);
-            elements.voltageMppt.textContent = dashboardData.solar.voltage.toFixed(1);
-            elements.voltagePhoenix.textContent = dashboardData.inverter.voltage.toFixed(1);
-            elements.voltageBatterySense.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(1);
-            
-            // Actualizar datos históricos
-            updateHistoricalData();
+            elements.voltageSmartShunt.textContent = dashboardData.battery.voltage.toFixed(2);
+            elements.voltageMppt.textContent = dashboardData.solar.voltage.toFixed(2);
+            elements.voltagePhoenix.textContent = dashboardData.inverter.voltage.toFixed(2);
+            elements.voltageBatterySense.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(2);
             
             // Actualizar alarmas
             updateAlarms();
             
-            // Actualizar contador de datos
+            // Contador de datos
             elements.dataCount.textContent = `${dataReceivedCount} datos`;
             
-            // Actualizar uptime (simulado)
-            const uptimeHours = dataReceivedCount * 3 / 3600;
-            const days = Math.floor(uptimeHours / 24);
-            const hours = Math.floor(uptimeHours % 24);
-            elements.uptimeValue.textContent = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+            // WiFi status basado en MQTT
+            elements.wifiStatus.textContent = isMQTTConnected ? "Online" : "Offline";
+            elements.wifiStatus.style.color = isMQTTConnected ? "var(--success)" : "var(--danger)";
         }
         
-        // Actualizar datos históricos
         function updateHistoricalData() {
             const now = new Date();
             
-            // Agregar nuevos datos
-            historicalData.soc.push({
-                time: new Date(now),
-                value: dashboardData.battery.soc
-            });
-            
-            historicalData.voltage.push({
-                time: new Date(now),
-                value: dashboardData.battery.voltage
-            });
-            
-            historicalData.temperature.push({
-                time: new Date(now),
-                value: dashboardData.temperature.batteryTemp
-            });
-            
-            historicalData.solarPower.push({
-                time: new Date(now),
-                value: dashboardData.solar.power
-            });
+            historicalData.soc.push({ time: new Date(now), value: dashboardData.battery.soc });
+            historicalData.voltage.push({ time: new Date(now), value: dashboardData.battery.voltage });
+            historicalData.temperature.push({ time: new Date(now), value: dashboardData.temperature.batteryTemp });
+            historicalData.solarPower.push({ time: new Date(now), value: dashboardData.solar.power });
             
             // Mantener máximo 1000 puntos
             Object.keys(historicalData).forEach(key => {
@@ -1705,17 +1856,16 @@
                 }
             });
             
-            // Actualizar gráfico si existe
             if (socChart) {
                 updateChartData(document.getElementById('chartRange').value);
             }
         }
         
-        // Actualizar alarmas
         function updateAlarms() {
             const alarms = [];
             const soc = dashboardData.battery.soc;
             const temp = dashboardData.temperature.batteryTemp;
+            const voltage = dashboardData.battery.voltage;
             
             // Alarma SOC crítico
             if (soc <= 10) {
@@ -1724,18 +1874,18 @@
                     icon: "fa-exclamation-circle",
                     title: "¡BATERÍA CRÍTICA!",
                     message: `SOC al ${soc.toFixed(1)}% - CARGAR INMEDIATAMENTE`,
-                    time: "Ahora"
+                    time: "URGENTE"
                 });
             }
             
             // Alarma SOC bajo
-            if (soc <= 20 && soc > 10) {
+            else if (soc <= 20) {
                 alarms.push({
                     type: "warning",
                     icon: "fa-exclamation-triangle",
                     title: "Batería Baja",
                     message: `SOC al ${soc.toFixed(1)}% - Cargar batería pronto`,
-                    time: "Ahora"
+                    time: "Alerta"
                 });
             }
             
@@ -1745,34 +1895,34 @@
                     type: "danger",
                     icon: "fa-thermometer-full",
                     title: "Temperatura Peligrosa",
-                    message: `Temperatura de batería: ${temp.toFixed(1)}°C`,
-                    time: "Ahora"
+                    message: `Temperatura: ${temp.toFixed(1)}°C - CUIDADO`,
+                    time: "URGENTE"
                 });
             }
             
             // Alarma temperatura extrema
-            if ((temp <= 10 && temp > 5) || (temp >= 40 && temp < 45)) {
+            else if ((temp <= 10 && temp > 5) || (temp >= 40 && temp < 45)) {
                 alarms.push({
                     type: "warning",
                     icon: "fa-thermometer-half",
                     title: "Temperatura Extrema",
-                    message: `Temperatura de batería: ${temp.toFixed(1)}°C`,
-                    time: "Ahora"
+                    message: `Temperatura: ${temp.toFixed(1)}°C - Vigilar`,
+                    time: "Atención"
                 });
             }
             
             // Alarma voltaje bajo
-            if (dashboardData.battery.voltage < 11.5) {
+            if (voltage < 11.5) {
                 alarms.push({
                     type: "warning",
                     icon: "fa-bolt",
                     title: "Voltaje Bajo",
-                    message: `Voltaje de batería: ${dashboardData.battery.voltage.toFixed(1)}V`,
-                    time: "Ahora"
+                    message: `Voltaje: ${voltage.toFixed(2)}V - Posible descarga`,
+                    time: "Atención"
                 });
             }
             
-            // Actualizar contador de alarmas
+            // Actualizar contador
             const alarmCount = elements.alarmCount;
             alarmCount.textContent = alarms.length;
             if (alarms.length > 0) {
@@ -1804,7 +1954,7 @@
                         <div>
                             <div class="info-label">${alarm.title}</div>
                             <div class="info-value">${alarm.message}</div>
-                            <div class="info-label" style="margin-top: 5px; font-size: 0.8rem;">${alarm.time}</div>
+                            <div class="info-label" style="margin-top: 5px; font-size: 0.75rem; opacity: 0.8;">${alarm.time}</div>
                         </div>
                     </div>
                 `;
@@ -1813,73 +1963,177 @@
             container.innerHTML = html;
         }
         
-        // Simular actualización de datos
-        function simulateDataUpdate() {
-            // Simular fluctuaciones aleatorias
-            const randomFactor = (Math.random() - 0.5) * 0.3;
+        function setConnectedStatus(connected) {
+            const statusDot = elements.connectionStatus;
+            const statusText = elements.connectionText;
             
-            // Actualizar datos de batería
-            dashboardData.battery.soc = Math.max(0, Math.min(100, dashboardData.battery.soc + randomFactor));
-            dashboardData.battery.voltage = 12.5 + Math.random() * 1.5;
-            dashboardData.battery.current = (Math.random() - 0.5) * 20;
-            dashboardData.battery.consumedAh = -15 + Math.random() * 5;
-            dashboardData.battery.timeToGo = 10 + Math.random() * 20;
-            
-            // Actualizar datos solares (más activos durante el día)
-            const hour = new Date().getHours();
-            const isDay = hour >= 7 && hour <= 19;
-            dashboardData.solar.voltage = 13.0 + Math.random() * 1.0;
-            dashboardData.solar.power = isDay ? Math.max(0, 50 + Math.random() * 150) : Math.random() * 20;
-            dashboardData.solar.energyToday = 0.8 + Math.random() * 0.3;
-            
-            // Actualizar temperatura de batería
-            dashboardData.temperature.batteryTemp = 20 + (Math.random() - 0.5) * 10;
-            dashboardData.temperature.batterySenseVoltage = 12.5 + Math.random() * 1.0;
-            
-            // Actualizar otros voltajes
-            dashboardData.inverter.voltage = dashboardData.battery.voltage - 0.2 + Math.random() * 0.4;
-            dashboardData.inverter.power = 100 + Math.random() * 300;
-            dashboardData.orion.inputVoltage = 13.5 + Math.random() * 1.0;
-            dashboardData.orion.outputVoltage = 14.0 + Math.random() * 0.5;
-            
-            // Actualizar tiempo
-            lastUpdateTime = new Date();
-            
-            // Incrementar contador
-            dataReceivedCount++;
-            
-            // Actualizar UI
-            updateDashboardUI();
-            
-            // Simular desconexión aleatoria de MQTT
-            if (Math.random() > 0.95) {
-                const wasConnected = true; // En simulación siempre está conectado
-                setConnectedStatus(!wasConnected);
-                
-                if (wasConnected) {
-                    addLog("Desconectado del broker MQTT (simulación)", "warning");
-                } else {
-                    addLog("Reconectado al broker MQTT (simulación)", "success");
-                }
-                
-                // Volver a conectar después de 5 segundos
-                setTimeout(() => {
-                    setConnectedStatus(true);
-                    addLog("Conexión MQTT restablecida", "success");
-                }, 5000);
+            if (connected) {
+                statusDot.style.backgroundColor = "var(--success)";
+                statusText.textContent = "Conectado";
+                statusText.style.color = "var(--success)";
+            } else {
+                statusDot.style.backgroundColor = "var(--danger)";
+                statusText.textContent = "Desconectado";
+                statusText.style.color = "var(--danger)";
             }
         }
         
-        // Iniciar simulación de datos
-        function startDataSimulation() {
-            // Simular datos cada 3 segundos
-            setInterval(simulateDataUpdate, 3000);
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const diff = Math.floor((now - lastUpdateTime) / 1000);
             
-            // Simular primera actualización
-            setTimeout(simulateDataUpdate, 500);
+            let text = "Ahora mismo";
+            if (diff > 0) {
+                if (diff < 60) {
+                    text = `Hace ${diff}s`;
+                } else if (diff < 3600) {
+                    const minutes = Math.floor(diff / 60);
+                    text = `Hace ${minutes}m`;
+                } else {
+                    const hours = Math.floor(diff / 3600);
+                    text = `Hace ${hours}h`;
+                }
+            }
+            
+            elements.lastUpdate.textContent = text;
+            
+            // Si han pasado más de 30 segundos sin actualizaciones MQTT
+            if (isMQTTConnected && diff > 30) {
+                setMQTTStatus("Sin datos", "warning");
+            }
         }
         
-        // Inicializar dashboard cuando se carga la página
+        function updateUptime() {
+            const hours = dataReceivedCount * 3 / 3600;
+            const days = Math.floor(hours / 24);
+            const remainingHours = Math.floor(hours % 24);
+            elements.uptimeValue.textContent = days > 0 ? `${days}d ${remainingHours}h` : `${remainingHours}h`;
+        }
+        
+        function updateUptimeFromValue(value) {
+            // value está en segundos según tu ESP32
+            const days = Math.floor(value / 86400);
+            const hours = Math.floor((value % 86400) / 3600);
+            elements.uptimeValue.textContent = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+        }
+        
+        // ==================== LOGS FUNCTIONS ====================
+        
+        function initLogs() {
+            addLog("Sistema de logs inicializado", "success");
+            
+            document.getElementById('clearLogs').addEventListener('click', () => {
+                systemLogs = [];
+                updateLogsDisplay();
+                addLog("Logs limpiados", "warning");
+            });
+            
+            document.getElementById('toggleAutoScroll').addEventListener('click', function() {
+                autoScrollLogs = !autoScrollLogs;
+                this.innerHTML = autoScrollLogs ? 
+                    '<i class="fas fa-scroll"></i>' : 
+                    '<i class="fas fa-scroll"></i>';
+                this.title = autoScrollLogs ? 'Auto-scroll: ON' : 'Auto-scroll: OFF';
+                addLog(`Auto-scroll ${autoScrollLogs ? 'activado' : 'desactivado'}`, "info");
+            });
+            
+            document.getElementById('exportLogs').addEventListener('click', () => {
+                exportLogs();
+            });
+            
+            document.getElementById('toggleMQTT').addEventListener('click', () => {
+                if (isMQTTConnected && mqttClient) {
+                    mqttClient.end();
+                    addLog("Desconectado manualmente de MQTT", "warning");
+                } else {
+                    connectToMQTT();
+                    addLog("Intentando reconexión manual a MQTT", "info");
+                }
+            });
+        }
+        
+        function addLog(message, type = "info") {
+            const logEntry = {
+                time: new Date(),
+                message: message,
+                type: type
+            };
+            
+            systemLogs.unshift(logEntry);
+            
+            if (systemLogs.length > 100) {
+                systemLogs.pop();
+            }
+            
+            updateLogsDisplay();
+        }
+        
+        function updateLogsDisplay() {
+            const container = elements.logsContainer;
+            container.innerHTML = '';
+            
+            systemLogs.forEach(log => {
+                const logEl = document.createElement('div');
+                logEl.className = 'log-entry';
+                
+                const timeStr = log.time.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit' 
+                });
+                
+                logEl.innerHTML = `
+                    <div class="log-time">${timeStr}</div>
+                    <div class="log-message log-${log.type}">${log.message}</div>
+                `;
+                
+                container.appendChild(logEl);
+            });
+            
+            if (autoScrollLogs && systemLogs.length > 0) {
+                container.scrollTop = 0;
+            }
+        }
+        
+        function exportLogs() {
+            const logText = systemLogs.map(log => 
+                `[${log.time.toLocaleString()}] ${log.message}`
+            ).join('\n');
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `siena395-logs-${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog("Logs exportados a archivo", "success");
+        }
+        
+        // ==================== EVENT LISTENERS ====================
+        
+        function setupEventListeners() {
+            document.getElementById('refreshBattery').addEventListener('click', function() {
+                this.classList.add('fa-spin');
+                simulateDataUpdate();
+                setTimeout(() => {
+                    this.classList.remove('fa-spin');
+                }, 1000);
+                addLog("Datos actualizados manualmente", "info");
+            });
+            
+            window.addEventListener('resize', () => {
+                if (flowDiagram) {
+                    updateFlowDiagram();
+                }
+            });
+        }
+        
+        // ==================== INICIALIZACIÓN ====================
+        
         document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
