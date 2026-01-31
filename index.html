@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GIOTTILINE SIENA 395 - SISTEMA VICTRON v1.0.1 DPSK</title>
+    <title>GIOTTILINE SIENA 395 - SISTEMA VICTRON v1.0.1 DSPK</title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -856,6 +856,9 @@
                     <button class="action-button" id="toggleMQTT" title="Conectar/Desconectar MQTT">
                         <i class="fas fa-plug"></i> MQTT
                     </button>
+                    <button class="action-button" id="checkMQTT" title="Verificar suscripción MQTT">
+                        <i class="fas fa-search"></i> Verificar
+                    </button>
                 </div>
             </div>
             
@@ -1029,60 +1032,17 @@
         let mqttClient = null;
         let isMQTTConnected = false;
         let simulationInterval = null;
+        let subscribedTopics = new Set();
         
-        // ==================== ELEMENTOS DOM ====================
-        const elements = {
-            // Batería
-            socValue: document.getElementById('socValue'),
-            batteryLevel: document.getElementById('batteryLevel'),
-            voltageValue: document.getElementById('voltageValue'),
-            currentValue: document.getElementById('currentValue'),
-            consumedAh: document.getElementById('consumedAh'),
-            timeToGo: document.getElementById('timeToGo'),
-            
-            // Solar
-            solarVoltage: document.getElementById('solarVoltage'),
-            solarPower: document.getElementById('solarPower'),
-            energyToday: document.getElementById('energyToday'),
-            
-            // Inversor
-            inverterVoltage: document.getElementById('inverterVoltage'),
-            inverterPower: document.getElementById('inverterPower'),
-            
-            // Orion
-            orionInputVoltage: document.getElementById('orionInputVoltage'),
-            orionOutputVoltage: document.getElementById('orionOutputVoltage'),
-            
-            // Temperatura
-            tempValue: document.getElementById('tempValue'),
-            batterySenseVoltage: document.getElementById('batterySenseVoltage'),
-            
-            // Sistema
-            uptimeValue: document.getElementById('uptimeValue'),
-            mqttStatusText: document.getElementById('mqttStatusText'),
-            lastUpdate: document.getElementById('lastUpdate'),
-            mqttStatus: document.getElementById('mqttStatus'),
-            
-            // Estado
-            connectionStatus: document.getElementById('connectionStatus'),
-            connectionText: document.getElementById('connectionText'),
-            
-            // Información
-            mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
-            dataCount: document.getElementById('dataCount'),
-            wifiStatus: document.getElementById('wifiStatus'),
-            
-            // Alarmas
-            alarmsContainer: document.getElementById('alarmsContainer'),
-            alarmCount: document.getElementById('alarmCount'),
-            
-            // Logs
-            logsContainer: document.getElementById('logsContainer')
-        };
+        // ==================== ELEMENTOS DOM - CORREGIDOS ====================
+        // Los elementos se inicializarán después de que el DOM esté listo
         
         // ==================== FUNCIONES PRINCIPALES ====================
         
         function initDashboard() {
+            // Inicializar elementos DOM primero
+            initDOMElements();
+            
             setupTheme();
             initHistoricalData();
             initCharts();
@@ -1111,6 +1071,77 @@
             console.log("Dashboard Siena395 Monitor cargado.");
             console.log(`Para una implementación completa, conectar a MQTT broker: ${MQTT_BROKER}`);
             console.log(`Topic prefix: ${MQTT_TOPIC_PREFIX}`);
+            
+            // Mostrar en consola cómo verificar MQTT
+            console.log("\n=== HERRAMIENTAS PARA VERIFICAR MQTT ===");
+            console.log("1. Para verificar conexión MQTT:");
+            console.log("   - Abre http://www.emqx.io/online-mqtt-client");
+            console.log("   - Conéctate a broker.emqx.io");
+            console.log("   - Suscríbete a siena395_monitor_mikel_2026/#");
+            console.log("\n2. Para ver estado actual desde consola:");
+            console.log("   - Ejecuta: checkMQTTStatus()");
+            console.log("   - Ejecuta: listSubscribedTopics()");
+            console.log("\n3. Para forzar reconexión:");
+            console.log("   - Ejecuta: reconnectMQTT()");
+        }
+        
+        function initDOMElements() {
+            // CORREGIDO: Inicializar todos los elementos DOM aquí
+            window.elements = {
+                // Batería
+                socValue: document.getElementById('socValue'),
+                batteryLevel: document.getElementById('batteryLevel'),
+                voltageValue: document.getElementById('voltageValue'),
+                currentValue: document.getElementById('currentValue'),
+                consumedAh: document.getElementById('consumedAh'),
+                timeToGo: document.getElementById('timeToGo'),
+                
+                // Solar
+                solarVoltage: document.getElementById('solarVoltage'),
+                solarPower: document.getElementById('solarPower'),
+                energyToday: document.getElementById('energyToday'),
+                
+                // Inversor
+                inverterVoltage: document.getElementById('inverterVoltage'),
+                inverterPower: document.getElementById('inverterPower'),
+                
+                // Orion
+                orionInputVoltage: document.getElementById('orionInputVoltage'),
+                orionOutputVoltage: document.getElementById('orionOutputVoltage'),
+                
+                // Temperatura
+                tempValue: document.getElementById('tempValue'),
+                batterySenseVoltage: document.getElementById('batterySenseVoltage'),
+                
+                // Sistema
+                uptimeValue: document.getElementById('uptimeValue'),
+                mqttStatusText: document.getElementById('mqttStatusText'),
+                lastUpdate: document.getElementById('lastUpdate'),
+                mqttStatus: document.getElementById('mqttStatus'),
+                
+                // Estado
+                connectionStatus: document.getElementById('connectionStatus'),
+                connectionText: document.getElementById('connectionText'),
+                
+                // Información
+                mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
+                dataCount: document.getElementById('dataCount'),
+                wifiStatus: document.getElementById('wifiStatus'),
+                
+                // Alarmas
+                alarmsContainer: document.getElementById('alarmsContainer'),
+                alarmCount: document.getElementById('alarmCount'),
+                
+                // Logs
+                logsContainer: document.getElementById('logsContainer')
+            };
+            
+            // Verificar que todos los elementos existan
+            Object.entries(window.elements).forEach(([key, element]) => {
+                if (!element) {
+                    console.error(`Elemento no encontrado: ${key}`);
+                }
+            });
         }
         
         function setupTheme() {
@@ -1150,7 +1181,13 @@
         }
         
         function initCharts() {
-            const ctx = document.getElementById('socChart').getContext('2d');
+            const ctx = document.getElementById('socChart');
+            if (!ctx) {
+                console.error("Canvas no encontrado para gráfico");
+                return;
+            }
+            
+            const chartCtx = ctx.getContext('2d');
             const labels = historicalData.soc.map(d => 
                 d.time.getHours().toString().padStart(2, '0') + ':00'
             );
@@ -1160,7 +1197,7 @@
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
             const textColor = isDark ? '#ffffff' : '#2d3748';
             
-            socChart = new Chart(ctx, {
+            socChart = new Chart(chartCtx, {
                 type: 'line',
                 data: {
                     labels: labels,
@@ -1283,230 +1320,6 @@
             addLog(`Gráfico actualizado: ${range}`, "info");
         }
         
-        function initFlowDiagram() {
-            flowDiagram = document.getElementById('flowDiagram');
-            updateFlowDiagram();
-            
-            document.getElementById('toggleFlow').addEventListener('click', function() {
-                const lines = document.querySelectorAll('.flow-line');
-                const isActive = lines[0]?.classList.contains('active') || false;
-                
-                if (isActive) {
-                    lines.forEach(line => line.classList.remove('active'));
-                    this.innerHTML = '<i class="fas fa-play"></i> Animación';
-                    addLog("Animación de flujo desactivada", "info");
-                } else {
-                    lines.forEach(line => line.classList.add('active'));
-                    this.innerHTML = '<i class="fas fa-pause"></i> Animación';
-                    addLog("Animación de flujo activada", "info");
-                }
-            });
-            
-            document.getElementById('resetZoom').addEventListener('click', () => {
-                flowScale = 1;
-                updateFlowDiagramScale();
-                addLog("Zoom restablecido", "info");
-            });
-            
-            // Touch gestures para zoom
-            let touchStartDistance = 0;
-            flowDiagram.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 2) {
-                    touchStartDistance = getTouchDistance(e.touches[0], e.touches[1]);
-                }
-            });
-            
-            flowDiagram.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 2) {
-                    e.preventDefault();
-                    const touchDistance = getTouchDistance(e.touches[0], e.touches[1]);
-                    const scaleChange = touchDistance / touchStartDistance;
-                    
-                    if (scaleChange > 1.1) {
-                        flowScale = Math.min(flowScale * 1.1, 2);
-                        updateFlowDiagramScale();
-                        touchStartDistance = touchDistance;
-                    } else if (scaleChange < 0.9) {
-                        flowScale = Math.max(flowScale * 0.9, 0.5);
-                        updateFlowDiagramScale();
-                        touchStartDistance = touchDistance;
-                    }
-                }
-            });
-        }
-        
-        function getTouchDistance(touch1, touch2) {
-            const dx = touch1.clientX - touch2.clientX;
-            const dy = touch1.clientY - touch2.clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-        
-        function updateFlowDiagram() {
-            flowDiagram.innerHTML = '';
-            flowNodes = [];
-            flowLines = [];
-            
-            const containerWidth = flowDiagram.offsetWidth;
-            const containerHeight = flowDiagram.offsetHeight;
-            
-            // MEJORADO: Posiciones más equilibradas y atractivas
-            let nodePositions;
-            if (containerWidth < 400) {
-                nodePositions = [
-                    { id: 'solar', x: containerWidth * 0.15, y: containerHeight * 0.25 },
-                    { id: 'mppt', x: containerWidth * 0.5, y: containerHeight * 0.25 },
-                    { id: 'battery', x: containerWidth * 0.5, y: containerHeight * 0.55 },
-                    { id: 'orion', x: containerWidth * 0.15, y: containerHeight * 0.85 },
-                    { id: 'inverter', x: containerWidth * 0.5, y: containerHeight * 0.85 },
-                    { id: 'load', x: containerWidth * 0.85, y: containerHeight * 0.55 }
-                ];
-            } else if (containerWidth < 600) {
-                nodePositions = [
-                    { id: 'solar', x: containerWidth * 0.2, y: containerHeight * 0.2 },
-                    { id: 'mppt', x: containerWidth * 0.5, y: containerHeight * 0.2 },
-                    { id: 'battery', x: containerWidth * 0.5, y: containerHeight * 0.5 },
-                    { id: 'orion', x: containerWidth * 0.2, y: containerHeight * 0.8 },
-                    { id: 'inverter', x: containerWidth * 0.5, y: containerHeight * 0.8 },
-                    { id: 'load', x: containerWidth * 0.8, y: containerHeight * 0.5 }
-                ];
-            } else {
-                nodePositions = [
-                    { id: 'solar', x: containerWidth * 0.15, y: containerHeight * 0.35 },
-                    { id: 'mppt', x: containerWidth * 0.35, y: containerHeight * 0.35 },
-                    { id: 'battery', x: containerWidth * 0.55, y: containerHeight * 0.55 },
-                    { id: 'orion', x: containerWidth * 0.15, y: containerHeight * 0.75 },
-                    { id: 'inverter', x: containerWidth * 0.35, y: containerHeight * 0.75 },
-                    { id: 'load', x: containerWidth * 0.75, y: containerHeight * 0.55 }
-                ];
-            }
-            
-            const nodes = [
-                { id: 'solar', name: 'Solar', icon: 'fa-sun', color: '#f6ad55' },
-                { id: 'mppt', name: 'MPPT', icon: 'fa-bolt', color: '#4299e1' },
-                { id: 'battery', name: 'Batería', icon: 'fa-battery-full', color: '#38a169' },
-                { id: 'orion', name: 'Orion', icon: 'fa-exchange-alt', color: '#9f7aea' },
-                { id: 'inverter', name: 'Inversor', icon: 'fa-plug', color: '#ed8936' },
-                { id: 'load', name: 'Cargas', icon: 'fa-home', color: '#e53e3e' }
-            ];
-            
-            nodes.forEach((node, i) => {
-                const pos = nodePositions[i];
-                const nodeEl = document.createElement('div');
-                nodeEl.className = 'flow-node';
-                nodeEl.id = `node-${node.id}`;
-                nodeEl.style.left = `${pos.x}px`;
-                nodeEl.style.top = `${pos.y}px`;
-                nodeEl.style.background = `radial-gradient(circle at 30% 30%, ${node.color}, ${darkenColor(node.color, 20)})`;
-                nodeEl.style.transform = `scale(${flowScale})`;
-                nodeEl.innerHTML = `
-                    <i class="fas ${node.icon}"></i>
-                    <span>${node.name}</span>
-                `;
-                
-                nodeEl.addEventListener('click', () => {
-                    showNodeInfo(node);
-                });
-                
-                flowDiagram.appendChild(nodeEl);
-                flowNodes.push({ element: nodeEl, ...node, ...pos });
-            });
-            
-            const connections = [
-                { from: 'solar', to: 'mppt', active: true },
-                { from: 'mppt', to: 'battery', active: true },
-                { from: 'orion', to: 'battery', active: true },
-                { from: 'battery', to: 'inverter', active: true },
-                { from: 'inverter', to: 'load', active: true },
-                { from: 'battery', to: 'load', active: false }
-            ];
-            
-            connections.forEach(conn => {
-                const fromNode = flowNodes.find(n => n.id === conn.from);
-                const toNode = flowNodes.find(n => n.id === conn.to);
-                
-                if (fromNode && toNode) {
-                    const line = document.createElement('div');
-                    line.className = `flow-line ${conn.active ? 'active' : ''}`;
-                    line.id = `line-${conn.from}-${conn.to}`;
-                    
-                    const fromX = fromNode.x + 35 * flowScale;
-                    const fromY = fromNode.y + 35 * flowScale;
-                    const toX = toNode.x + 35 * flowScale;
-                    const toY = toNode.y + 35 * flowScale;
-                    
-                    const dx = toX - fromX;
-                    const dy = toY - fromY;
-                    const length = Math.sqrt(dx * dx + dy * dy);
-                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                    
-                    line.style.width = `${length}px`;
-                    line.style.left = `${fromX}px`;
-                    line.style.top = `${fromY}px`;
-                    line.style.transform = `rotate(${angle}deg) scaleX(${flowScale})`;
-                    
-                    if (!conn.active) {
-                        line.style.opacity = '0.3';
-                        line.style.background = 'var(--secondary)';
-                    }
-                    
-                    flowDiagram.appendChild(line);
-                    flowLines.push({ element: line, ...conn });
-                }
-            });
-        }
-        
-        function darkenColor(color, percent) {
-            const num = parseInt(color.replace("#", ""), 16);
-            const amt = Math.round(2.55 * percent);
-            const R = (num >> 16) - amt;
-            const G = (num >> 8 & 0x00FF) - amt;
-            const B = (num & 0x0000FF) - amt;
-            return "#" + (0x1000000 + (R < 0 ? 0 : R) * 0x10000 + (G < 0 ? 0 : G) * 0x100 + (B < 0 ? 0 : B)).toString(16).slice(1);
-        }
-        
-        function updateFlowDiagramScale() {
-            flowNodes.forEach(node => {
-                node.element.style.transform = `scale(${flowScale})`;
-            });
-            
-            flowLines.forEach(line => {
-                const fromId = line.from;
-                const toId = line.to;
-                const fromNode = flowNodes.find(n => n.id === fromId);
-                const toNode = flowNodes.find(n => n.id === toId);
-                
-                if (fromNode && toNode) {
-                    const fromX = fromNode.x + 35 * flowScale;
-                    const fromY = fromNode.y + 35 * flowScale;
-                    const toX = toNode.x + 35 * flowScale;
-                    const toY = toNode.y + 35 * flowScale;
-                    
-                    const dx = toX - fromX;
-                    const dy = toY - fromY;
-                    const length = Math.sqrt(dx * dx + dy * dy);
-                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                    
-                    line.element.style.width = `${length}px`;
-                    line.element.style.left = `${fromX}px`;
-                    line.element.style.top = `${fromY}px`;
-                    line.element.style.transform = `rotate(${angle}deg) scaleX(${flowScale})`;
-                }
-            });
-        }
-        
-        function showNodeInfo(node) {
-            const info = {
-                solar: "Panel solar: Genera energía del sol para el sistema",
-                mppt: "Controlador MPPT: Optimiza la carga solar a la batería",
-                battery: "Batería Ultimatron 100Ah: Almacena energía para la autocaravana",
-                orion: "Orion DC-DC: Carga la batería desde el alternador del vehículo",
-                inverter: "Inversor Phoenix: Convierte DC 12V a AC 230V para los enchufes",
-                load: "Cargas: Consumo eléctrico de la autocaravana Siena395"
-            };
-            
-            addLog(`Nodo: ${node.name} - ${info[node.id]}`, "info");
-        }
-        
         // ==================== MQTT FUNCTIONS ====================
         
         function connectToMQTT() {
@@ -1562,6 +1375,7 @@
                     topics.forEach(topic => {
                         mqttClient.subscribe(topic, { qos: 0 }, (err) => {
                             if (!err) {
+                                subscribedTopics.add(topic);
                                 addLog(`📡 Suscrito a: ${topic}`, "mqtt");
                             } else {
                                 addLog(`Error suscribiendo a ${topic}: ${err}`, "error");
@@ -1626,8 +1440,6 @@
                 },
                 'sensor/tension_smartshunt/state': () => {
                     dashboardData.battery.voltage = value;
-                    dashboardData.solar.voltage = value + 0.4;
-                    dashboardData.inverter.voltage = value - 0.2;
                 },
                 'sensor/corriente_smartshunt/state': () => {
                     dashboardData.battery.current = value;
@@ -1704,22 +1516,101 @@
         }
         
         function setMQTTStatus(status, type) {
-            elements.mqttStatusText.textContent = status;
-            elements.mqttStatus.textContent = `MQTT: ${status}`;
-            
-            switch(type) {
-                case "success":
-                    elements.mqttStatusText.style.color = "var(--success)";
-                    break;
-                case "warning":
-                    elements.mqttStatusText.style.color = "var(--warning)";
-                    break;
-                case "danger":
-                    elements.mqttStatusText.style.color = "var(--danger)";
-                    break;
-                default:
-                    elements.mqttStatusText.style.color = "var(--secondary)";
+            if (window.elements && window.elements.mqttStatusText && window.elements.mqttStatus) {
+                window.elements.mqttStatusText.textContent = status;
+                window.elements.mqttStatus.textContent = `MQTT: ${status}`;
+                
+                switch(type) {
+                    case "success":
+                        window.elements.mqttStatusText.style.color = "var(--success)";
+                        break;
+                    case "warning":
+                        window.elements.mqttStatusText.style.color = "var(--warning)";
+                        break;
+                    case "danger":
+                        window.elements.mqttStatusText.style.color = "var(--danger)";
+                        break;
+                    default:
+                        window.elements.mqttStatusText.style.color = "var(--secondary)";
+                }
             }
+        }
+        
+        // ==================== HERRAMIENTAS DE VERIFICACIÓN MQTT ====================
+        
+        // Función para verificar estado MQTT (disponible en consola)
+        function checkMQTTStatus() {
+            console.log("=== ESTADO MQTT ===");
+            console.log(`Conectado: ${isMQTTConnected}`);
+            console.log(`Cliente MQTT: ${mqttClient ? "Creado" : "No creado"}`);
+            console.log(`Topics suscritos: ${subscribedTopics.size}`);
+            
+            if (mqttClient) {
+                console.log(`Estado conexión: ${mqttClient.connected ? "Conectado" : "Desconectado"}`);
+                console.log(`URL: ${mqttClient.options ? mqttClient.options.href : "N/A"}`);
+            }
+            
+            console.log("=== ÚLTIMOS LOGS MQTT ===");
+            const mqttLogs = systemLogs.filter(log => log.type === 'mqtt').slice(0, 5);
+            mqttLogs.forEach(log => {
+                console.log(`[${log.time.toLocaleTimeString()}] ${log.message}`);
+            });
+            
+            return {
+                connected: isMQTTConnected,
+                clientExists: !!mqttClient,
+                subscribedTopics: Array.from(subscribedTopics),
+                lastUpdate: lastUpdateTime
+            };
+        }
+        
+        // Función para listar topics suscritos
+        function listSubscribedTopics() {
+            console.log("=== TOPICS SUSCRITOS ===");
+            if (subscribedTopics.size === 0) {
+                console.log("No hay topics suscritos");
+            } else {
+                Array.from(subscribedTopics).forEach(topic => {
+                    console.log(`- ${topic}`);
+                });
+            }
+            return Array.from(subscribedTopics);
+        }
+        
+        // Función para forzar reconexión
+        function reconnectMQTT() {
+            console.log("Forzando reconexión MQTT...");
+            if (mqttClient) {
+                mqttClient.end();
+            }
+            setTimeout(() => {
+                connectToMQTT();
+            }, 1000);
+            return "Reconexión forzada iniciada";
+        }
+        
+        // Función para probar publicación MQTT (desde consola)
+        function testMQTTPublish() {
+            if (!mqttClient || !mqttClient.connected) {
+                console.error("No hay conexión MQTT activa");
+                return false;
+            }
+            
+            const testTopic = `${MQTT_TOPIC_PREFIX}/test`;
+            const testMessage = JSON.stringify({
+                timestamp: new Date().toISOString(),
+                test: "Prueba desde dashboard"
+            });
+            
+            mqttClient.publish(testTopic, testMessage, { qos: 0 }, (err) => {
+                if (err) {
+                    console.error("Error en publicación de prueba:", err);
+                } else {
+                    console.log("✅ Mensaje de prueba publicado en:", testTopic);
+                }
+            });
+            
+            return true;
         }
         
         // ==================== SIMULATION FUNCTIONS ====================
@@ -1776,69 +1667,74 @@
         // ==================== UI UPDATE FUNCTIONS ====================
         
         function updateDashboardUI() {
+            // Verificar que los elementos existan antes de usarlos
+            if (!window.elements) {
+                console.error("Elementos DOM no inicializados");
+                return;
+            }
+            
             // Batería
             const soc = dashboardData.battery.soc;
-            elements.socValue.textContent = `${soc.toFixed(1)}%`;
-            elements.batteryLevel.style.width = `${soc}%`;
-            elements.voltageValue.textContent = dashboardData.battery.voltage.toFixed(2);
-            elements.currentValue.textContent = dashboardData.battery.current.toFixed(2);
-            elements.consumedAh.textContent = dashboardData.battery.consumedAh.toFixed(1);
-            elements.timeToGo.textContent = dashboardData.battery.timeToGo.toFixed(1);
+            if (window.elements.socValue) window.elements.socValue.textContent = `${soc.toFixed(1)}%`;
+            if (window.elements.batteryLevel) window.elements.batteryLevel.style.width = `${soc}%`;
+            if (window.elements.voltageValue) window.elements.voltageValue.textContent = dashboardData.battery.voltage.toFixed(2);
+            if (window.elements.currentValue) window.elements.currentValue.textContent = dashboardData.battery.current.toFixed(2);
+            if (window.elements.consumedAh) window.elements.consumedAh.textContent = dashboardData.battery.consumedAh.toFixed(1);
+            if (window.elements.timeToGo) window.elements.timeToGo.textContent = dashboardData.battery.timeToGo.toFixed(1);
             
             // Color de batería según SOC
-            let batteryColor;
-            if (soc <= 10) {
-                batteryColor = "linear-gradient(90deg, var(--danger), #c53030)";
-            } else if (soc <= 20) {
-                batteryColor = "linear-gradient(90deg, var(--warning), #dd6b20)";
-            } else if (soc <= 50) {
-                batteryColor = "linear-gradient(90deg, #ecc94b, #d69e2e)";
-            } else {
-                batteryColor = "linear-gradient(90deg, var(--success), #38a169)";
+            if (window.elements.batteryLevel) {
+                let batteryColor;
+                if (soc <= 10) {
+                    batteryColor = "linear-gradient(90deg, var(--danger), #c53030)";
+                } else if (soc <= 20) {
+                    batteryColor = "linear-gradient(90deg, var(--warning), #dd6b20)";
+                } else if (soc <= 50) {
+                    batteryColor = "linear-gradient(90deg, #ecc94b, #d69e2e)";
+                } else {
+                    batteryColor = "linear-gradient(90deg, var(--success), #38a169)";
+                }
+                window.elements.batteryLevel.style.background = batteryColor;
             }
-            elements.batteryLevel.style.background = batteryColor;
             
             // Solar
-            elements.solarVoltage.textContent = dashboardData.solar.voltage.toFixed(2);
-            elements.solarPower.textContent = Math.round(dashboardData.solar.power);
-            elements.energyToday.textContent = dashboardData.solar.energyToday.toFixed(2);
+            if (window.elements.solarVoltage) window.elements.solarVoltage.textContent = dashboardData.solar.voltage.toFixed(2);
+            if (window.elements.solarPower) window.elements.solarPower.textContent = Math.round(dashboardData.solar.power);
+            if (window.elements.energyToday) window.elements.energyToday.textContent = dashboardData.solar.energyToday.toFixed(2);
             
             // Inversor
-            elements.inverterVoltage.textContent = dashboardData.inverter.voltage.toFixed(2);
-            elements.inverterPower.textContent = Math.round(dashboardData.inverter.power);
+            if (window.elements.inverterVoltage) window.elements.inverterVoltage.textContent = dashboardData.inverter.voltage.toFixed(2);
+            if (window.elements.inverterPower) window.elements.inverterPower.textContent = Math.round(dashboardData.inverter.power);
             
             // Orion
-            elements.orionInputVoltage.textContent = dashboardData.orion.inputVoltage.toFixed(2);
-            elements.orionOutputVoltage.textContent = dashboardData.orion.outputVoltage.toFixed(2);
+            if (window.elements.orionInputVoltage) window.elements.orionInputVoltage.textContent = dashboardData.orion.inputVoltage.toFixed(2);
+            if (window.elements.orionOutputVoltage) window.elements.orionOutputVoltage.textContent = dashboardData.orion.outputVoltage.toFixed(2);
             
             // Temperatura
             const temp = dashboardData.temperature.batteryTemp;
-            elements.tempValue.textContent = temp.toFixed(1);
-            elements.batterySenseVoltage.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(2);
-            
-            if (temp <= 5 || temp >= 45) {
-                elements.tempValue.style.color = "var(--danger)";
-            } else if (temp <= 10 || temp >= 40) {
-                elements.tempValue.style.color = "var(--warning)";
-            } else {
-                elements.tempValue.style.color = "var(--primary)";
+            if (window.elements.tempValue) {
+                window.elements.tempValue.textContent = temp.toFixed(1);
+                if (temp <= 5 || temp >= 45) {
+                    window.elements.tempValue.style.color = "var(--danger)";
+                } else if (temp <= 10 || temp >= 40) {
+                    window.elements.tempValue.style.color = "var(--warning)";
+                } else {
+                    window.elements.tempValue.style.color = "var(--primary)";
+                }
             }
-            
-            // Voltajes
-            elements.voltageSmartShunt.textContent = dashboardData.battery.voltage.toFixed(2);
-            elements.voltageMppt.textContent = dashboardData.solar.voltage.toFixed(2);
-            elements.voltagePhoenix.textContent = dashboardData.inverter.voltage.toFixed(2);
-            elements.voltageBatterySense.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(2);
+            if (window.elements.batterySenseVoltage) window.elements.batterySenseVoltage.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(2);
             
             // Actualizar alarmas
             updateAlarms();
             
             // Contador de datos
-            elements.dataCount.textContent = `${dataReceivedCount} datos`;
+            if (window.elements.dataCount) window.elements.dataCount.textContent = `${dataReceivedCount} datos`;
             
             // WiFi status basado en MQTT
-            elements.wifiStatus.textContent = isMQTTConnected ? "Online" : "Offline";
-            elements.wifiStatus.style.color = isMQTTConnected ? "var(--success)" : "var(--danger)";
+            if (window.elements.wifiStatus) {
+                window.elements.wifiStatus.textContent = isMQTTConnected ? "Online" : "Offline";
+                window.elements.wifiStatus.style.color = isMQTTConnected ? "var(--success)" : "var(--danger)";
+            }
         }
         
         function updateHistoricalData() {
@@ -1923,58 +1819,64 @@
             }
             
             // Actualizar contador
-            const alarmCount = elements.alarmCount;
-            alarmCount.textContent = alarms.length;
-            if (alarms.length > 0) {
-                alarmCount.style.display = "block";
-            } else {
-                alarmCount.style.display = "none";
+            if (window.elements && window.elements.alarmCount) {
+                const alarmCount = window.elements.alarmCount;
+                alarmCount.textContent = alarms.length;
+                if (alarms.length > 0) {
+                    alarmCount.style.display = "block";
+                } else {
+                    alarmCount.style.display = "none";
+                }
             }
             
             // Mostrar alarmas
-            const container = elements.alarmsContainer;
-            if (alarms.length === 0) {
-                container.innerHTML = `
-                    <div class="alarm alarm-success">
-                        <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
-                        <div>
-                            <div class="info-label">Sistema estable</div>
-                            <div class="info-value">Todas las alarmas desactivadas</div>
+            if (window.elements && window.elements.alarmsContainer) {
+                const container = window.elements.alarmsContainer;
+                if (alarms.length === 0) {
+                    container.innerHTML = `
+                        <div class="alarm alarm-success">
+                            <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
+                            <div>
+                                <div class="info-label">Sistema estable</div>
+                                <div class="info-value">Todas las alarmas desactivadas</div>
+                            </div>
                         </div>
-                    </div>
-                `;
-                return;
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                alarms.forEach(alarm => {
+                    html += `
+                        <div class="alarm alarm-${alarm.type}">
+                            <div class="alarm-icon"><i class="fas ${alarm.icon}"></i></div>
+                            <div>
+                                <div class="info-label">${alarm.title}</div>
+                                <div class="info-value">${alarm.message}</div>
+                                <div class="info-label" style="margin-top: 5px; font-size: 0.75rem; opacity: 0.8;">${alarm.time}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
             }
-            
-            let html = '';
-            alarms.forEach(alarm => {
-                html += `
-                    <div class="alarm alarm-${alarm.type}">
-                        <div class="alarm-icon"><i class="fas ${alarm.icon}"></i></div>
-                        <div>
-                            <div class="info-label">${alarm.title}</div>
-                            <div class="info-value">${alarm.message}</div>
-                            <div class="info-label" style="margin-top: 5px; font-size: 0.75rem; opacity: 0.8;">${alarm.time}</div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
         }
         
         function setConnectedStatus(connected) {
-            const statusDot = elements.connectionStatus;
-            const statusText = elements.connectionText;
-            
-            if (connected) {
-                statusDot.style.backgroundColor = "var(--success)";
-                statusText.textContent = "Conectado";
-                statusText.style.color = "var(--success)";
-            } else {
-                statusDot.style.backgroundColor = "var(--danger)";
-                statusText.textContent = "Desconectado";
-                statusText.style.color = "var(--danger)";
+            if (window.elements && window.elements.connectionStatus && window.elements.connectionText) {
+                const statusDot = window.elements.connectionStatus;
+                const statusText = window.elements.connectionText;
+                
+                if (connected) {
+                    statusDot.style.backgroundColor = "var(--success)";
+                    statusText.textContent = "Conectado";
+                    statusText.style.color = "var(--success)";
+                } else {
+                    statusDot.style.backgroundColor = "var(--danger)";
+                    statusText.textContent = "Desconectado";
+                    statusText.style.color = "var(--danger)";
+                }
             }
         }
         
@@ -1995,7 +1897,9 @@
                 }
             }
             
-            elements.lastUpdate.textContent = text;
+            if (window.elements && window.elements.lastUpdate) {
+                window.elements.lastUpdate.textContent = text;
+            }
             
             // Si han pasado más de 30 segundos sin actualizaciones MQTT
             if (isMQTTConnected && diff > 30) {
@@ -2007,14 +1911,18 @@
             const hours = dataReceivedCount * 3 / 3600;
             const days = Math.floor(hours / 24);
             const remainingHours = Math.floor(hours % 24);
-            elements.uptimeValue.textContent = days > 0 ? `${days}d ${remainingHours}h` : `${remainingHours}h`;
+            if (window.elements && window.elements.uptimeValue) {
+                window.elements.uptimeValue.textContent = days > 0 ? `${days}d ${remainingHours}h` : `${remainingHours}h`;
+            }
         }
         
         function updateUptimeFromValue(value) {
             // value está en segundos según tu ESP32
             const days = Math.floor(value / 86400);
             const hours = Math.floor((value % 86400) / 3600);
-            elements.uptimeValue.textContent = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+            if (window.elements && window.elements.uptimeValue) {
+                window.elements.uptimeValue.textContent = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+            }
         }
         
         // ==================== LOGS FUNCTIONS ====================
@@ -2050,6 +1958,24 @@
                     addLog("Intentando reconexión manual a MQTT", "info");
                 }
             });
+            
+            document.getElementById('checkMQTT').addEventListener('click', () => {
+                checkAndDisplayMQTTStatus();
+            });
+        }
+        
+        function checkAndDisplayMQTTStatus() {
+            const status = checkMQTTStatus();
+            addLog(`Verificación MQTT: ${status.connected ? 'Conectado' : 'Desconectado'}`, "info");
+            addLog(`Topics suscritos: ${status.subscribedTopics.length}`, "info");
+            
+            // Mostrar en un alert para fácil visualización
+            alert(`Estado MQTT:\n\n` +
+                  `Conectado: ${status.connected ? '✅ Sí' : '❌ No'}\n` +
+                  `Cliente: ${status.clientExists ? '✅ Creado' : '❌ No creado'}\n` +
+                  `Topics suscritos: ${status.subscribedTopics.length}\n` +
+                  `Última actualización: ${lastUpdateTime.toLocaleTimeString()}\n\n` +
+                  `Para más detalles, mira la consola (F12)`);
         }
         
         function addLog(message, type = "info") {
@@ -2069,7 +1995,9 @@
         }
         
         function updateLogsDisplay() {
-            const container = elements.logsContainer;
+            const container = elements?.logsContainer;
+            if (!container) return;
+            
             container.innerHTML = '';
             
             systemLogs.forEach(log => {
@@ -2116,14 +2044,17 @@
         // ==================== EVENT LISTENERS ====================
         
         function setupEventListeners() {
-            document.getElementById('refreshBattery').addEventListener('click', function() {
-                this.classList.add('fa-spin');
-                simulateDataUpdate();
-                setTimeout(() => {
-                    this.classList.remove('fa-spin');
-                }, 1000);
-                addLog("Datos actualizados manualmente", "info");
-            });
+            const refreshBtn = document.getElementById('refreshBattery');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    this.classList.add('fa-spin');
+                    simulateDataUpdate();
+                    setTimeout(() => {
+                        this.classList.remove('fa-spin');
+                    }, 1000);
+                    addLog("Datos actualizados manualmente", "info");
+                });
+            }
             
             window.addEventListener('resize', () => {
                 if (flowDiagram) {
@@ -2135,6 +2066,12 @@
         // ==================== INICIALIZACIÓN ====================
         
         document.addEventListener('DOMContentLoaded', initDashboard);
+        
+        // Hacer funciones disponibles globalmente para la consola
+        window.checkMQTTStatus = checkMQTTStatus;
+        window.listSubscribedTopics = listSubscribedTopics;
+        window.reconnectMQTT = reconnectMQTT;
+        window.testMQTTPublish = testMQTTPublish;
     </script>
 </body>
 </html>
