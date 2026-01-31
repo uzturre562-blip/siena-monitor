@@ -2371,6 +2371,40 @@
             setTimeout(connectToMQTT, 1000);
             return 'Reconexión iniciada';
         };
+        // ==================== DIAGNÓSTICO TELEGRAM ====================
+setTimeout(() => {
+    console.log("🔍 Activando diagnóstico Telegram...");
+    
+    // Suscribirse a Telegram topics
+    if (state.mqttClient && state.isConnected) {
+        state.mqttClient.subscribe('siena395_monitor_mikel_2026/telegram/#');
+        console.log("✅ Suscrito a telegram/");
+        
+        // Publicar mensaje de prueba
+        const testMsg = JSON.stringify({
+            test: "diagnóstico",
+            time: new Date().toISOString()
+        });
+        state.mqttClient.publish('siena395_monitor_mikel_2026/telegram/test', testMsg);
+        console.log("📤 Publicado mensaje prueba");
+    } else {
+        console.log("❌ MQTT no conectado para diagnóstico");
+    }
+}, 5000);
+
+// Interceptar mensajes Telegram
+const originalHandle = state.mqttClient.onMessageArrived;
+state.mqttClient.onMessageArrived = function(topic, message) {
+    // Llamar al handler original
+    if (originalHandle) originalHandle(topic, message);
+    
+    // Mostrar logs de Telegram
+    const topicStr = topic.toString();
+    if (topicStr.includes('telegram')) {
+        console.log("📨 TELEGRAM RAW:", topicStr, "=", message.toString());
+        addLog(`Telegram: ${message.toString().slice(0, 50)}`, 'mqtt');
+    }
+};
     </script>
 </body>
 </html>
