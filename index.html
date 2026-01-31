@@ -113,6 +113,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .dark-mode .header-left h1 {
@@ -128,6 +129,21 @@
 
         .dark-mode .header-left p {
             color: #e2e8f0;
+        }
+
+        .mode-badge {
+            font-size: 0.7rem;
+            background: var(--warning);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .mode-badge.online {
+            background: var(--success);
         }
 
         .header-right {
@@ -514,7 +530,8 @@
 
         /* Secciones más pequeñas */
         .solar-section, .inverter-section, .orion-section, 
-        .temp-section, .voltage-section, .energy-section {
+        .temp-section, .voltage-section, .energy-section,
+        .system-status-section {
             min-height: 160px;
         }
 
@@ -744,6 +761,27 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Estado offline */
+        .offline-data {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .offline-icon {
+            font-size: 3rem;
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+
+        .offline-message {
+            color: var(--secondary);
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -752,13 +790,15 @@
         <header>
             <div class="header-top">
                 <div class="header-left">
-                    <h1><i class="fas fa-caravan"></i> Siena395 Monitor</h1>
-                    <p>Sistema de monitorización Victron - Autocaravana Siena395</p>
+                    <h1><i class="fas fa-caravan"></i> Siena395 Monitor 
+                        <span class="mode-badge" id="modeBadge">🔧 CONFIGURACIÓN</span>
+                    </h1>
+                    <p>ESP32 online | <span id="statusMessage">Esperando dispositivos Victron</span></p>
                 </div>
                 <div class="header-right">
                     <div class="status-indicator">
                         <div class="status-dot disconnected" id="connectionStatus"></div>
-                        <span id="connectionText">Esperando conexión...</span>
+                        <span id="connectionText">Conectando...</span>
                     </div>
                     <button class="theme-toggle" id="themeToggle" title="Cambiar tema">
                         <i class="fas fa-moon"></i>
@@ -767,18 +807,21 @@
             </div>
             
             <!-- Información rápida del sistema -->
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.9;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.9; flex-wrap: wrap;">
                 <div>
-                    <i class="fas fa-microchip"></i> ESP32
+                    <i class="fas fa-microchip"></i> <span id="heapStatus">-- bytes</span>
                 </div>
                 <div>
-                    <i class="fas fa-wifi"></i> <span id="wifiStatus">--</span>
+                    <i class="fas fa-wifi"></i> <span id="wifiStatus">RSSI: -- dBm</span>
                 </div>
                 <div>
                     <i class="fas fa-database"></i> <span id="dataCount">0 datos</span>
                 </div>
                 <div>
                     <i class="fas fa-broadcast-tower"></i> <span id="mqttStatus">MQTT: --</span>
+                </div>
+                <div>
+                    <i class="fas fa-bluetooth"></i> <span id="bleStatusInfo">BLE: 0/5</span>
                 </div>
             </div>
         </header>
@@ -794,7 +837,9 @@
             
             <div class="battery-container">
                 <div class="battery">
-                    <div class="battery-level" id="batteryLevel" style="width: 0%"></div>
+                    <div class="battery-level" id="batteryLevel" style="width: 0%">
+                        <span id="batteryLevelText">--%</span>
+                    </div>
                 </div>
                 
                 <div class="soc-display">
@@ -948,26 +993,30 @@
             </div>
         </section>
 
-        <section class="card voltage-section">
+        <!-- Estado del Sistema -->
+        <section class="card system-status-section">
             <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-tachometer-alt card-icon"></i> Voltajes del Sistema</h2>
+                <h2 class="card-title"><i class="fas fa-microchip card-icon"></i> Estado ESP32</h2>
+                <div class="status-indicator" style="margin: 0;">
+                    <div class="status-dot" id="systemStatusDot"></div>
+                </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="info-item">
-                    <div class="info-label">SmartShunt</div>
-                    <div class="info-value"><span id="voltageSmartShunt">--</span><span class="info-unit">V</span></div>
+                    <div class="info-label">Heap Libre</div>
+                    <div class="info-value"><span id="freeHeap">--</span><span class="info-unit">bytes</span></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">MPPT Solar</div>
-                    <div class="info-value"><span id="voltageMppt">--</span><span class="info-unit">V</span></div>
+                    <div class="info-label">WiFi RSSI</div>
+                    <div class="info-value"><span id="wifiRSSI">--</span><span class="info-unit">dBm</span></div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Phoenix</div>
-                    <div class="info-value"><span id="voltagePhoenix">--</span><span class="info-unit">V</span></div>
+                    <div class="info-label">Dispositivos BLE</div>
+                    <div class="info-value" id="victronDevices">0/5</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Battery Sense</div>
-                    <div class="info-value"><span id="voltageBatterySense">--</span><span class="info-unit">V</span></div>
+                    <div class="info-label">BLE Estado</div>
+                    <div class="info-value" id="bleStatus">❌</div>
                 </div>
             </div>
         </section>
@@ -981,8 +1030,8 @@
                 <div class="info-value" id="uptimeValue">--</div>
             </div>
             <div class="info-item" style="margin-bottom: 10px;">
-                <div class="info-label">MQTT Status</div>
-                <div class="info-value" id="mqttStatusText" style="color: var(--danger);">Desconectado</div>
+                <div class="info-label">IP Address</div>
+                <div class="info-value" id="ipAddress">--</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Última Actualización</div>
@@ -1001,8 +1050,15 @@
                 <div class="alarm alarm-info">
                     <div class="alarm-icon"><i class="fas fa-info-circle"></i></div>
                     <div>
-                        <div class="info-label">Esperando datos</div>
-                        <div class="info-value">Conectando al sistema Victron...</div>
+                        <div class="info-label">Sistema en espera</div>
+                        <div class="info-value">ESP32 conectado, esperando dispositivos Victron...</div>
+                    </div>
+                </div>
+                <div class="alarm alarm-warning">
+                    <div class="alarm-icon"><i class="fas fa-caravan"></i></div>
+                    <div>
+                        <div class="info-label">Ubicación actual</div>
+                        <div class="info-value">Dispositivos Victron no detectados (en autocaravana)</div>
                     </div>
                 </div>
             </div>
@@ -1019,7 +1075,7 @@
                 <span id="mqttConnectionInfo">Broker: broker.emqx.io | Topic: siena395_monitor_mikel_2026</span>
             </p>
             <p style="margin-top: 4px; font-size: 0.7rem; opacity: 0.7;">
-                Sin simulación - Solo datos reales MQTT
+                Modo: ESP32 Online | BLE Offline
             </p>
         </footer>
     </div>
@@ -1032,7 +1088,8 @@
             MQTT_TOPIC_PREFIX: "siena395_monitor_mikel_2026",
             RECONNECT_INTERVAL: 5000, // 5 segundos
             UPDATE_INTERVAL: 1000, // 1 segundo para actualizar tiempo
-            CHART_HISTORY_HOURS: 24
+            CHART_HISTORY_HOURS: 24,
+            VICTRON_DEVICES: 5
         };
 
         // ==================== ESTADO GLOBAL ====================
@@ -1045,6 +1102,7 @@
             temperature: { batteryTemp: null, batterySenseVoltage: null },
             
             // Sistema
+            system: { freeHeap: null, wifiRSSI: null, ipAddress: null },
             historicalData: { soc: [], voltage: [], temperature: [], solarPower: [] },
             systemLogs: [],
             alarms: [],
@@ -1055,6 +1113,7 @@
             lastUpdate: null,
             dataReceived: 0,
             subscribedTopics: new Set(),
+            victronDevicesConnected: 0,
             
             // UI
             autoScrollLogs: true,
@@ -1091,6 +1150,7 @@
             addLog('Dashboard Siena395 Monitor inicializado', 'success');
             addLog(`Conectando a MQTT: ${CONFIG.MQTT_BROKER}:${CONFIG.MQTT_PORT}`, 'info');
             addLog(`Topic prefix: ${CONFIG.MQTT_TOPIC_PREFIX}`, 'info');
+            addLog('ESP32 funcionando, esperando dispositivos Victron BLE...', 'warning');
             
             console.log('Dashboard completamente inicializado');
             console.log('Para verificar MQTT, ejecuta en consola: window.checkMQTTStatus()');
@@ -1119,6 +1179,19 @@
                     localStorage.setItem('theme', 'light');
                     addLog('Modo claro activado', 'info');
                 }
+                
+                // Actualizar gráfico
+                if (state.chart) {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    const textColor = isDark ? '#ffffff' : '#2d3748';
+                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                    
+                    state.chart.options.scales.x.ticks.color = textColor;
+                    state.chart.options.scales.y.ticks.color = textColor;
+                    state.chart.options.scales.x.grid.color = gridColor;
+                    state.chart.options.scales.y.grid.color = gridColor;
+                    state.chart.update();
+                }
             });
         }
 
@@ -1129,6 +1202,7 @@
                 // Batería
                 socValue: document.getElementById('socValue'),
                 batteryLevel: document.getElementById('batteryLevel'),
+                batteryLevelText: document.getElementById('batteryLevelText'),
                 voltageValue: document.getElementById('voltageValue'),
                 currentValue: document.getElementById('currentValue'),
                 consumedAh: document.getElementById('consumedAh'),
@@ -1152,36 +1226,63 @@
                 batterySenseVoltage: document.getElementById('batterySenseVoltage'),
                 
                 // Sistema
+                freeHeap: document.getElementById('freeHeap'),
+                wifiRSSI: document.getElementById('wifiRSSI'),
                 uptimeValue: document.getElementById('uptimeValue'),
-                mqttStatusText: document.getElementById('mqttStatusText'),
+                ipAddress: document.getElementById('ipAddress'),
                 lastUpdate: document.getElementById('lastUpdate'),
-                wifiStatus: document.getElementById('wifiStatus'),
                 dataCount: document.getElementById('dataCount'),
-                mqttStatus: document.getElementById('mqttStatus'),
-                mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
+                heapStatus: document.getElementById('heapStatus'),
+                bleStatusInfo: document.getElementById('bleStatusInfo'),
+                statusMessage: document.getElementById('statusMessage'),
+                modeBadge: document.getElementById('modeBadge'),
                 
                 // Estado
                 connectionStatus: document.getElementById('connectionStatus'),
                 connectionText: document.getElementById('connectionText'),
+                
+                // Sistema ESP32
+                victronDevices: document.getElementById('victronDevices'),
+                bleStatus: document.getElementById('bleStatus'),
+                systemStatusDot: document.getElementById('systemStatusDot'),
                 
                 // Logs
                 logsContainer: document.getElementById('logsContainer'),
                 
                 // Alarmas
                 alarmsContainer: document.getElementById('alarmsContainer'),
-                alarmCount: document.getElementById('alarmCount')
+                alarmCount: document.getElementById('alarmCount'),
+                
+                // MQTT
+                mqttConnectionInfo: document.getElementById('mqttConnectionInfo')
             };
-            
-            // Verificar que todos los elementos existan
-            Object.entries(window.ui).forEach(([name, element]) => {
-                if (!element) {
-                    console.error(`Elemento UI no encontrado: ${name}`);
-                }
-            });
             
             // Actualizar información de conexión
             window.ui.mqttConnectionInfo.textContent = 
                 `Broker: ${CONFIG.MQTT_BROKER} | Topic: ${CONFIG.MQTT_TOPIC_PREFIX}`;
+                
+            // Actualizar modo
+            updateModeBadge();
+        }
+
+        function updateModeBadge() {
+            const connected = state.victronDevicesConnected;
+            const badge = window.ui.modeBadge;
+            
+            if (connected === 0) {
+                badge.textContent = '🔧 CONFIGURACIÓN';
+                badge.style.background = 'var(--warning)';
+                window.ui.statusMessage.textContent = 'ESP32 online, esperando BLE';
+            } else if (connected < CONFIG.VICTRON_DEVICES) {
+                badge.textContent = `⚠️ ${connected}/${CONFIG.VICTRON_DEVICES}`;
+                badge.style.background = 'var(--warning)';
+                window.ui.statusMessage.textContent = `${connected} dispositivo(s) BLE conectado(s)`;
+            } else {
+                badge.textContent = '✅ OPERATIVO';
+                badge.style.background = 'var(--success)';
+                badge.classList.add('online');
+                window.ui.statusMessage.textContent = 'Todos los dispositivos BLE conectados';
+            }
         }
 
         // ==================== GRÁFICO HISTÓRICO ====================
@@ -1194,10 +1295,10 @@
             state.chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    labels: [],
                     datasets: [{
                         label: 'SOC (%)',
-                        data: Array(24).fill(null),
+                        data: [],
                         borderColor: '#3182ce',
                         backgroundColor: 'rgba(49, 130, 206, 0.15)',
                         borderWidth: 2,
@@ -1210,12 +1311,25 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { labels: { color: textColor } }
+                        legend: { 
+                            labels: { 
+                                color: textColor,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
                     },
                     scales: {
                         x: { 
                             grid: { color: gridColor },
-                            ticks: { color: textColor, maxTicksLimit: 8 }
+                            ticks: { 
+                                color: textColor, 
+                                maxTicksLimit: 8,
+                                font: { size: 10 }
+                            }
                         },
                         y: {
                             min: 0,
@@ -1223,7 +1337,8 @@
                             grid: { color: gridColor },
                             ticks: { 
                                 color: textColor,
-                                callback: value => value + '%'
+                                callback: value => value + '%',
+                                font: { size: 10 }
                             }
                         }
                     }
@@ -1240,8 +1355,6 @@
             if (!state.chart) return;
             
             const now = new Date();
-            const hour = now.getHours();
-            const minute = now.getMinutes();
             
             // Agregar dato histórico
             state.historicalData.soc.push({
@@ -1267,7 +1380,7 @@
         function updateChartRange(range) {
             if (!state.chart) return;
             
-            const hours = parseInt(range);
+            const hours = parseInt(range) || 24;
             const now = new Date();
             const cutoff = new Date(now.getTime() - (hours * 3600000));
             
@@ -1423,18 +1536,21 @@
             state.dataReceived++;
             state.lastUpdate = new Date();
             
-            const value = parseFloat(message.toString());
-            const shortTopic = topic.replace(`${CONFIG.MQTT_TOPIC_PREFIX}/`, '');
+            const messageStr = message.toString();
+            const value = parseFloat(messageStr);
+            
+            console.log(`📩 MQTT Message RECIBIDO: ${topic} = ${value} (${messageStr})`);
             
             // Actualizar datos según el topic
-            updateDataFromMQTT(shortTopic, value);
+            updateDataFromMQTT(topic, value, messageStr);
             
             // Actualizar UI
             updateUI();
             
-            // Log cada 10 mensajes para no saturar
-            if (state.dataReceived % 10 === 0) {
-                addLog(`MQTT: ${shortTopic} = ${value}`, 'mqtt');
+            // Log cada mensaje (para debug)
+            if (state.dataReceived <= 10 || state.dataReceived % 20 === 0) {
+                const shortTopic = topic.replace(`${CONFIG.MQTT_TOPIC_PREFIX}/`, '');
+                addLog(`MQTT: ${shortTopic} = ${messageStr}`, 'mqtt');
             }
         }
 
@@ -1456,80 +1572,151 @@
             updateConnectionStatus('connecting', 'Reconectando...');
         }
 
-        // En tu archivo HTML, reemplaza la función getMQTTTopics() con esto:
         function getMQTTTopics() {
-    return [
-        // SmartShunt (Batería Ultimatron 100Ah)
-        'siena395_monitor_mikel_2026/sensor/soc_ultimatron/state',
-        'siena395_monitor_mikel_2026/sensor/tension_smartshunt/state',
-        'siena395_monitor_mikel_2026/sensor/corriente_smartshunt/state',
-        'siena395_monitor_mikel_2026/sensor/ah_consumidos/state',
-        'siena395_monitor_mikel_2026/sensor/tiempo_restante/state',
-        
-        // MPPT Solar
-        'siena395_monitor_mikel_2026/sensor/voltaje_bateria_mppt/state',
-        'siena395_monitor_mikel_2026/sensor/potencia_solar/state',
-        'siena395_monitor_mikel_2026/sensor/energia_hoy/state',
-        
-        // Phoenix Inverter
-        'siena395_monitor_mikel_2026/sensor/voltaje_bateria_phoenix/state',
-        'siena395_monitor_mikel_2026/sensor/potencia_salida_phoenix/state',
-        
-        // Orion DC-DC
-        'siena395_monitor_mikel_2026/sensor/voltaje_entrada_orion/state',
-        'siena395_monitor_mikel_2026/sensor/voltaje_salida_orion/state',
-        
-        // Battery Sense
-        'siena395_monitor_mikel_2026/sensor/voltaje_battery_sense/state',
-        'siena395_monitor_mikel_2026/sensor/temperatura_bateria/state',
-        
-        // Sistema
-        'siena395_monitor_mikel_2026/sensor/uptime_monitor/state',
-        'siena395_monitor_mikel_2026/status'
-    ];
-}
+            return [
+                // SmartShunt
+                'siena395_monitor_mikel_2026/sensor/soc_ultimatron/state',
+                'siena395_monitor_mikel_2026/sensor/tension_smartshunt/state',
+                'siena395_monitor_mikel_2026/sensor/corriente_smartshunt/state',
+                'siena395_monitor_mikel_2026/sensor/ah_consumidos/state',
+                'siena395_monitor_mikel_2026/sensor/tiempo_restante/state',
+                
+                // Solar
+                'siena395_monitor_mikel_2026/sensor/voltaje_bateria_mppt/state',
+                'siena395_monitor_mikel_2026/sensor/potencia_solar/state',
+                'siena395_monitor_mikel_2026/sensor/energia_hoy/state',
+                
+                // Inversor
+                'siena395_monitor_mikel_2026/sensor/voltaje_bateria_phoenix/state',
+                'siena395_monitor_mikel_2026/sensor/potencia_salida_phoenix/state',
+                
+                // Orion
+                'siena395_monitor_mikel_2026/sensor/voltaje_entrada_orion/state',
+                'siena395_monitor_mikel_2026/sensor/voltaje_salida_orion/state',
+                
+                // Temperatura
+                'siena395_monitor_mikel_2026/sensor/voltaje_battery_sense/state',
+                'siena395_monitor_mikel_2026/sensor/temperatura_bateria/state',
+                
+                // Sistema
+                'siena395_monitor_mikel_2026/sensor/uptime_monitor/state',
+                'siena395_monitor_mikel_2026/system/heap',
+                'siena395_monitor_mikel_2026/system/wifi_rssi',
+                'siena395_monitor_mikel_2026/system/uptime',
+                'siena395_monitor_mikel_2026/status'
+            ];
+        }
 
-        function updateDataFromMQTT(topic, value) {
+        function updateDataFromMQTT(topic, value, rawValue) {
+            console.log(`Processing MQTT: ${topic} = ${value}`);
+            
+            // Eliminar el prefix del topic
+            const cleanTopic = topic.replace(`${CONFIG.MQTT_TOPIC_PREFIX}/`, '');
+            
             const topicMap = {
-                // Batería
+                // Batería - SmartShunt
                 'sensor/soc_ultimatron/state': () => {
                     state.battery.soc = value;
                     updateChartData(value);
+                    console.log('SOC actualizado:', value);
                 },
-                'sensor/tension_smartshunt/state': () => state.battery.voltage = value,
-                'sensor/corriente_smartshunt/state': () => state.battery.current = value,
-                'sensor/ah_consumidos/state': () => state.battery.consumedAh = value,
-                'sensor/tiempo_restante/state': () => state.battery.timeToGo = value,
+                'sensor/tension_smartshunt/state': () => {
+                    state.battery.voltage = value;
+                    console.log('Voltaje SmartShunt:', value);
+                },
+                'sensor/corriente_smartshunt/state': () => {
+                    state.battery.current = value;
+                    console.log('Corriente SmartShunt:', value);
+                },
+                'sensor/ah_consumidos/state': () => {
+                    state.battery.consumedAh = value;
+                    console.log('Ah consumidos:', value);
+                },
+                'sensor/tiempo_restante/state': () => {
+                    state.battery.timeToGo = value;
+                    console.log('Tiempo restante:', value);
+                },
                 
-                // Solar
-                'sensor/voltaje_bateria_mppt/state': () => state.solar.voltage = value,
-                'sensor/potencia_solar/state': () => state.solar.power = value,
-                'sensor/energia_hoy/state': () => state.solar.energyToday = value,
+                // Solar - MPPT
+                'sensor/voltaje_bateria_mppt/state': () => {
+                    state.solar.voltage = value;
+                    console.log('Voltaje MPPT:', value);
+                },
+                'sensor/potencia_solar/state': () => {
+                    state.solar.power = value;
+                    console.log('Potencia solar:', value);
+                },
+                'sensor/energia_hoy/state': () => {
+                    state.solar.energyToday = value;
+                    console.log('Energía hoy:', value);
+                },
                 
-                // Inversor
-                'sensor/voltaje_bateria_phoenix/state': () => state.inverter.voltage = value,
-                'sensor/potencia_salida_phoenix/state': () => state.inverter.power = value,
+                // Inversor - Phoenix
+                'sensor/voltaje_bateria_phoenix/state': () => {
+                    state.inverter.voltage = value;
+                    console.log('Voltaje Phoenix:', value);
+                },
+                'sensor/potencia_salida_phoenix/state': () => {
+                    state.inverter.power = value;
+                    console.log('Potencia Phoenix:', value);
+                },
                 
-                // Orion
-                'sensor/voltaje_entrada_orion/state': () => state.orion.inputVoltage = value,
-                'sensor/voltaje_salida_orion/state': () => state.orion.outputVoltage = value,
+                // Orion DC-DC
+                'sensor/voltaje_entrada_orion/state': () => {
+                    state.orion.inputVoltage = value;
+                    console.log('Voltaje entrada Orion:', value);
+                },
+                'sensor/voltaje_salida_orion/state': () => {
+                    state.orion.outputVoltage = value;
+                    console.log('Voltaje salida Orion:', value);
+                },
                 
-                // Temperatura
-                'sensor/voltaje_battery_sense/state': () => state.temperature.batterySenseVoltage = value,
-                'sensor/temperatura_bateria/state': () => state.temperature.batteryTemp = value,
+                // Temperatura - Battery Sense
+                'sensor/voltaje_battery_sense/state': () => {
+                    state.temperature.batterySenseVoltage = value;
+                    console.log('Voltaje Battery Sense:', value);
+                },
+                'sensor/temperatura_bateria/state': () => {
+                    state.temperature.batteryTemp = value;
+                    console.log('Temperatura batería:', value);
+                },
                 
                 // Sistema
-                'sensor/uptime_monitor/state': () => updateUptimeDisplay(value),
+                'sensor/uptime_monitor/state': () => {
+                    console.log('Uptime monitor:', value);
+                    updateUptimeDisplay(value);
+                },
+                'system/heap': () => {
+                    console.log('Heap libre:', value, 'bytes');
+                    state.system.freeHeap = value;
+                },
+                'system/wifi_rssi': () => {
+                    console.log('WiFi RSSI:', value, 'dBm');
+                    state.system.wifiRSSI = value;
+                },
+                'system/uptime': () => {
+                    console.log('Uptime sistema:', value, 's');
+                    updateUptimeDisplay(value);
+                },
                 'status': () => {
-                    if (value === 1 || value === 'online') {
+                    console.log('Status ESP32:', rawValue);
+                    if (rawValue === 'online' || rawValue === '1') {
                         updateConnectionStatus('connected', 'ESP32 Online');
+                    } else if (rawValue === 'offline') {
+                        updateConnectionStatus('disconnected', 'ESP32 Offline');
                     }
                 }
             };
             
-            if (topicMap[topic]) {
-                topicMap[topic]();
+            if (topicMap[cleanTopic]) {
+                console.log('Ejecutando handler para:', cleanTopic);
+                topicMap[cleanTopic]();
+            } else {
+                console.warn('Topic no reconocido:', cleanTopic);
             }
+            
+            // Actualizar conteo de dispositivos BLE
+            updateVictronDevicesCount();
         }
 
         // ==================== ACTUALIZACIÓN UI ====================
@@ -1545,18 +1732,22 @@
             
             // Nivel de batería
             if (state.battery.soc !== null && window.ui.batteryLevel) {
-                window.ui.batteryLevel.style.width = `${state.battery.soc}%`;
+                const soc = state.battery.soc;
+                window.ui.batteryLevel.style.width = `${soc}%`;
+                window.ui.batteryLevelText.textContent = `${soc.toFixed(0)}%`;
                 
                 // Color según SOC
-                if (state.battery.soc <= 10) {
+                if (soc <= 10) {
                     window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--danger), #c53030)';
-                } else if (state.battery.soc <= 20) {
+                } else if (soc <= 20) {
                     window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--warning), #dd6b20)';
-                } else if (state.battery.soc <= 50) {
+                } else if (soc <= 50) {
                     window.ui.batteryLevel.style.background = 'linear-gradient(90deg, #ecc94b, #d69e2e)';
                 } else {
                     window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--success), #38a169)';
                 }
+            } else {
+                window.ui.batteryLevelText.textContent = '--%';
             }
             
             // Solar
@@ -1588,10 +1779,24 @@
                 }
             }
             
+            // Sistema ESP32
+            updateElement(window.ui.freeHeap, state.system.freeHeap, 'bytes');
+            updateElement(window.ui.wifiRSSI, state.system.wifiRSSI, 'dBm');
+            
             // Actualizar contadores
             window.ui.dataCount.textContent = `${state.dataReceived} datos`;
-            window.ui.wifiStatus.textContent = state.isConnected ? 'Online' : 'Offline';
-            window.ui.wifiStatus.style.color = state.isConnected ? 'var(--success)' : 'var(--danger)';
+            window.ui.heapStatus.textContent = state.system.freeHeap ? `${state.system.freeHeap} bytes` : '-- bytes';
+            
+            // WiFi RSSI
+            if (state.system.wifiRSSI !== null) {
+                const rssi = state.system.wifiRSSI;
+                window.ui.wifiStatus.textContent = `RSSI: ${rssi} dBm`;
+                window.ui.wifiStatus.style.color = rssi > -60 ? 'var(--success)' : rssi > -70 ? 'var(--warning)' : 'var(--danger)';
+            }
+            
+            // BLE Status
+            updateVictronDevicesCount();
+            updateModeBadge();
             
             // Actualizar alarmas
             updateAlarms();
@@ -1600,28 +1805,39 @@
         function updateElement(element, value, unit = '') {
             if (!element) return;
             
-            if (value === null || value === undefined) {
+            if (value === null || value === undefined || isNaN(value)) {
                 element.textContent = '--';
-                if (unit) {
-                    const unitSpan = element.nextElementSibling;
-                    if (unitSpan && unitSpan.classList.contains('info-unit')) {
-                        unitSpan.textContent = unit;
-                    }
+                if (unit && element.nextElementSibling && element.nextElementSibling.classList.contains('info-unit')) {
+                    element.nextElementSibling.textContent = unit;
                 }
             } else {
                 // Formatear según el tipo de dato
+                let formattedValue;
+                
                 if (unit === '%') {
-                    element.textContent = `${value.toFixed(1)}${unit}`;
+                    formattedValue = value.toFixed(1);
+                    element.textContent = `${formattedValue}${unit}`;
                 } else if (unit === 'V' || unit === 'A') {
-                    element.textContent = value.toFixed(2);
+                    formattedValue = value.toFixed(2);
+                    element.textContent = formattedValue;
                 } else if (unit === 'W' || unit === 'VA' || unit === 'Ah') {
-                    element.textContent = Math.round(value);
+                    formattedValue = Math.round(value);
+                    element.textContent = formattedValue;
                 } else if (unit === 'kWh') {
-                    element.textContent = value.toFixed(2);
+                    formattedValue = value.toFixed(2);
+                    element.textContent = formattedValue;
                 } else if (unit === 'h') {
-                    element.textContent = value.toFixed(1);
+                    formattedValue = value.toFixed(1);
+                    element.textContent = formattedValue;
                 } else if (unit === '°C') {
-                    element.textContent = value.toFixed(1);
+                    formattedValue = value.toFixed(1);
+                    element.textContent = formattedValue;
+                } else if (unit === 'bytes') {
+                    formattedValue = Math.round(value);
+                    element.textContent = formattedValue.toLocaleString();
+                } else if (unit === 'dBm') {
+                    formattedValue = Math.round(value);
+                    element.textContent = formattedValue;
                 } else {
                     element.textContent = value;
                 }
@@ -1633,13 +1849,9 @@
             
             const dot = window.ui.connectionStatus;
             const text = window.ui.connectionText;
-            const mqttText = window.ui.mqttStatusText;
-            const mqttStatus = window.ui.mqttStatus;
             
             // Actualizar texto
             text.textContent = message;
-            mqttText.textContent = message;
-            mqttStatus.textContent = `MQTT: ${message.split(' ')[0]}`;
             
             // Actualizar color y estado del dot
             dot.className = 'status-dot';
@@ -1647,22 +1859,18 @@
                 case 'connected':
                     dot.classList.add('connected');
                     text.style.color = 'var(--success)';
-                    mqttText.style.color = 'var(--success)';
                     break;
                 case 'connecting':
                     dot.classList.add('connecting');
                     text.style.color = 'var(--warning)';
-                    mqttText.style.color = 'var(--warning)';
                     break;
                 case 'error':
                     dot.classList.add('error');
                     text.style.color = 'var(--danger)';
-                    mqttText.style.color = 'var(--danger)';
                     break;
                 case 'disconnected':
                     dot.classList.add('disconnected');
                     text.style.color = 'var(--secondary)';
-                    mqttText.style.color = 'var(--secondary)';
                     break;
             }
         }
@@ -1692,12 +1900,49 @@
             
             const days = Math.floor(seconds / 86400);
             const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
             
             if (days > 0) {
                 window.ui.uptimeValue.textContent = `${days}d ${hours}h`;
+            } else if (hours > 0) {
+                window.ui.uptimeValue.textContent = `${hours}h ${minutes}m`;
             } else {
-                window.ui.uptimeValue.textContent = `${hours}h`;
+                window.ui.uptimeValue.textContent = `${minutes}m`;
             }
+        }
+
+        function updateVictronDevicesCount() {
+            const devices = [
+                { name: 'SmartShunt', hasData: state.battery.soc !== null },
+                { name: 'MPPT Solar', hasData: state.solar.voltage !== null },
+                { name: 'Phoenix', hasData: state.inverter.voltage !== null },
+                { name: 'Orion', hasData: state.orion.inputVoltage !== null },
+                { name: 'Battery Sense', hasData: state.temperature.batteryTemp !== null }
+            ];
+            
+            const connected = devices.filter(d => d.hasData).length;
+            state.victronDevicesConnected = connected;
+            
+            // Actualizar UI
+            if (window.ui) {
+                window.ui.victronDevices.textContent = `${connected}/${CONFIG.VICTRON_DEVICES}`;
+                window.ui.bleStatusInfo.textContent = `BLE: ${connected}/${CONFIG.VICTRON_DEVICES}`;
+                window.ui.bleStatus.textContent = connected > 0 ? '✅' : '❌';
+                window.ui.bleStatus.style.color = connected > 0 ? 'var(--success)' : 'var(--danger)';
+                
+                // Actualizar dot del sistema
+                const systemDot = window.ui.systemStatusDot;
+                systemDot.className = 'status-dot';
+                if (connected === CONFIG.VICTRON_DEVICES) {
+                    systemDot.classList.add('connected');
+                } else if (connected > 0) {
+                    systemDot.classList.add('connecting');
+                } else {
+                    systemDot.classList.add('disconnected');
+                }
+            }
+            
+            return { connected, total: CONFIG.VICTRON_DEVICES, devices };
         }
 
         // ==================== ALARMAS ====================
@@ -1706,14 +1951,23 @@
             
             const alarms = [];
             
-            // Alarma SOC bajo
-            if (state.battery.soc !== null && state.battery.soc <= 20) {
-                alarms.push({
-                    type: state.battery.soc <= 10 ? 'danger' : 'warning',
-                    icon: state.battery.soc <= 10 ? 'fa-exclamation-circle' : 'fa-exclamation-triangle',
-                    title: state.battery.soc <= 10 ? '¡BATERÍA CRÍTICA!' : 'Batería Baja',
-                    message: `SOC: ${state.battery.soc.toFixed(1)}% - ${state.battery.soc <= 10 ? 'CARGAR INMEDIATAMENTE' : 'Cargar pronto'}`
-                });
+            // Alarma SOC bajo (solo si hay datos)
+            if (state.battery.soc !== null) {
+                if (state.battery.soc <= 10) {
+                    alarms.push({
+                        type: 'danger',
+                        icon: 'fa-exclamation-circle',
+                        title: '¡BATERÍA CRÍTICA!',
+                        message: `SOC: ${state.battery.soc.toFixed(1)}% - CARGAR INMEDIATAMENTE`
+                    });
+                } else if (state.battery.soc <= 20) {
+                    alarms.push({
+                        type: 'warning',
+                        icon: 'fa-exclamation-triangle',
+                        title: 'Batería Baja',
+                        message: `SOC: ${state.battery.soc.toFixed(1)}% - Cargar pronto`
+                    });
+                }
             }
             
             // Alarma temperatura
@@ -1746,19 +2000,42 @@
                 });
             }
             
+            // Si no hay alarmas y no hay datos BLE, mostrar info
+            if (alarms.length === 0 && state.victronDevicesConnected === 0) {
+                const container = window.ui.alarmsContainer;
+                container.innerHTML = `
+                    <div class="alarm alarm-info">
+                        <div class="alarm-icon"><i class="fas fa-info-circle"></i></div>
+                        <div>
+                            <div class="info-label">Sistema en espera</div>
+                            <div class="info-value">ESP32 conectado, esperando dispositivos Victron...</div>
+                        </div>
+                    </div>
+                    <div class="alarm alarm-warning">
+                        <div class="alarm-icon"><i class="fas fa-caravan"></i></div>
+                        <div>
+                            <div class="info-label">Ubicación actual</div>
+                            <div class="info-value">Dispositivos Victron no detectados (en autocaravana)</div>
+                        </div>
+                    </div>
+                `;
+                window.ui.alarmCount.style.display = 'none';
+                return;
+            }
+            
             // Actualizar contador
             window.ui.alarmCount.textContent = alarms.length;
             window.ui.alarmCount.style.display = alarms.length > 0 ? 'block' : 'none';
             
             // Mostrar alarmas
             const container = window.ui.alarmsContainer;
-            if (alarms.length === 0) {
+            if (alarms.length === 0 && state.victronDevicesConnected > 0) {
                 container.innerHTML = `
                     <div class="alarm alarm-success">
                         <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
                         <div>
                             <div class="info-label">Sistema estable</div>
-                            <div class="info-value">Sin alarmas activas</div>
+                            <div class="info-value">Sin alarmas activas - ${state.victronDevicesConnected} dispositivo(s) BLE conectado(s)</div>
                         </div>
                     </div>
                 `;
@@ -1835,6 +2112,7 @@
                 btn.classList.add('loading');
                 
                 addLog('Actualización manual solicitada', 'info');
+                updateUI();
                 
                 setTimeout(() => {
                     btn.classList.remove('loading');
@@ -1952,6 +2230,8 @@
             console.log('Inversor:', state.inverter);
             console.log('Orion:', state.orion);
             console.log('Temperatura:', state.temperature);
+            console.log('Sistema:', state.system);
+            console.log('Dispositivos BLE conectados:', state.victronDevicesConnected);
             console.log('Logs:', state.systemLogs.length);
             console.log('Alarmas:', state.alarms.length);
             
