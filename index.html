@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GIOTTILINE SIENA 395 - SISTEMA VICTRON v1.0.1 DSPK</title>
+    <title>Dashboard Siena395 Monitor</title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -150,6 +150,10 @@
             background-color: var(--success);
             animation: pulse 2s infinite;
         }
+
+        .status-dot.connecting { background-color: var(--warning); }
+        .status-dot.error { background-color: var(--danger); }
+        .status-dot.disconnected { background-color: var(--secondary); }
 
         @keyframes pulse {
             0% { opacity: 1; }
@@ -323,7 +327,7 @@
             margin-left: 2px;
         }
 
-        /* Diagrama de Flujo - MEJORADO DISEÑO */
+        /* Diagrama de Flujo - DISEÑO REAL Y FUNCIONAL */
         .flow-section {
             grid-column: 1 / -1;
             min-height: 320px;
@@ -393,7 +397,7 @@
             100% { background-position: 300% 50%; }
         }
 
-        /* Botones de acción */
+        /* Botones de acción - MEJOR VISUALIZACIÓN */
         .action-button {
             background: var(--accent);
             color: white;
@@ -408,11 +412,28 @@
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
             font-weight: 500;
+            min-height: 32px;
         }
 
         .action-button:active {
             transform: scale(0.95);
             opacity: 0.9;
+        }
+
+        .action-button.secondary {
+            background: var(--secondary);
+        }
+
+        .action-button.warning {
+            background: var(--warning);
+        }
+
+        .action-button.danger {
+            background: var(--danger);
+        }
+
+        .action-button.success {
+            background: var(--success);
         }
 
         /* Gráficos históricos */
@@ -427,13 +448,26 @@
             position: relative;
         }
 
-        /* Logs del sistema */
+        /* Logs del sistema - CON BOTONES FUNCIONALES */
         .logs-section {
             grid-column: 1 / -1;
             max-height: 320px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .logs-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .logs-container {
@@ -684,48 +718,37 @@
             }
         }
 
-        /* Orientación horizontal en móviles */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .container {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .battery-section {
-                grid-column: span 1;
-            }
-            
-            .flow-section {
-                grid-column: span 2;
-                min-height: 220px;
-            }
-            
-            .flow-diagram {
-                height: 200px;
-            }
-            
-            .chart-section, .logs-section {
-                grid-column: span 3;
-                min-height: 220px;
-            }
-            
-            .chart-container {
-                height: 180px;
-            }
-            
-            .logs-container {
-                max-height: 180px;
-            }
-        }
-
         /* Mejoras táctiles */
         button, .action-button, .theme-toggle {
             touch-action: manipulation;
+        }
+
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 5px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header con MEJOR CONTRASTE en modo oscuro -->
+        <!-- Header -->
         <header>
             <div class="header-top">
                 <div class="header-left">
@@ -734,8 +757,8 @@
                 </div>
                 <div class="header-right">
                     <div class="status-indicator">
-                        <div class="status-dot" id="connectionStatus"></div>
-                        <span id="connectionText">Conectando...</span>
+                        <div class="status-dot disconnected" id="connectionStatus"></div>
+                        <span id="connectionText">Esperando conexión...</span>
                     </div>
                     <button class="theme-toggle" id="themeToggle" title="Cambiar tema">
                         <i class="fas fa-moon"></i>
@@ -749,7 +772,7 @@
                     <i class="fas fa-microchip"></i> ESP32
                 </div>
                 <div>
-                    <i class="fas fa-wifi"></i> <span id="wifiStatus">Conectando...</span>
+                    <i class="fas fa-wifi"></i> <span id="wifiStatus">--</span>
                 </div>
                 <div>
                     <i class="fas fa-database"></i> <span id="dataCount">0 datos</span>
@@ -764,43 +787,43 @@
         <section class="card battery-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-battery-full card-icon"></i> Ultimatron 100Ah</h2>
-                <button class="action-button" id="refreshBattery">
+                <button class="action-button" id="manualRefresh">
                     <i class="fas fa-sync-alt"></i> Actualizar
                 </button>
             </div>
             
             <div class="battery-container">
                 <div class="battery">
-                    <div class="battery-level" id="batteryLevel" style="width: 85%"></div>
+                    <div class="battery-level" id="batteryLevel" style="width: 0%"></div>
                 </div>
                 
                 <div class="soc-display">
-                    <div class="soc-value" id="socValue">85%</div>
+                    <div class="soc-value" id="socValue">--%</div>
                     <div class="soc-label">Estado de Carga (SOC)</div>
                 </div>
                 
                 <div class="battery-info-grid">
                     <div class="info-item">
                         <div class="info-label">Voltaje</div>
-                        <div class="info-value"><span id="voltageValue">12.8</span><span class="info-unit">V</span></div>
+                        <div class="info-value"><span id="voltageValue">--</span><span class="info-unit">V</span></div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Corriente</div>
-                        <div class="info-value"><span id="currentValue">5.3</span><span class="info-unit">A</span></div>
+                        <div class="info-value"><span id="currentValue">--</span><span class="info-unit">A</span></div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Ah Consumidos</div>
-                        <div class="info-value"><span id="consumedAh">-12.5</span><span class="info-unit">Ah</span></div>
+                        <div class="info-value"><span id="consumedAh">--</span><span class="info-unit">Ah</span></div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Tiempo Restante</div>
-                        <div class="info-value"><span id="timeToGo">15.2</span><span class="info-unit">h</span></div>
+                        <div class="info-value"><span id="timeToGo">--</span><span class="info-unit">h</span></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Diagrama de Flujo - DISEÑO MEJORADO -->
+        <!-- Diagrama de Flujo - REAL Y VISIBLE -->
         <section class="card flow-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-project-diagram card-icon"></i> Flujo de Energía</h2>
@@ -808,12 +831,9 @@
                     <button class="action-button" id="toggleFlow">
                         <i class="fas fa-play"></i> Animación
                     </button>
-                    <button class="action-button" id="resetZoom" title="Restablecer zoom">
-                        <i class="fas fa-expand-arrows-alt"></i> Reset
+                    <button class="action-button" id="resetView">
+                        <i class="fas fa-expand-arrows-alt"></i> Vista Normal
                     </button>
-                    <div style="display: flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--secondary);">
-                        <i class="fas fa-hand-point-up"></i> Toca los nodos
-                    </div>
                 </div>
             </div>
             
@@ -825,7 +845,7 @@
         <!-- Gráfico histórico SOC -->
         <section class="card chart-section">
             <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-chart-line card-icon"></i> Histórico SOC (Últimas 24h)</h2>
+                <h2 class="card-title"><i class="fas fa-chart-line card-icon"></i> Histórico SOC</h2>
                 <select id="chartRange" class="action-button" style="padding: 6px 12px; background: var(--light); color: var(--text-color); min-width: 100px;">
                     <option value="24h">24 horas</option>
                     <option value="12h">12 horas</option>
@@ -839,31 +859,31 @@
             </div>
         </section>
 
-        <!-- Logs del Sistema -->
+        <!-- Logs del Sistema - CON BOTONES QUE FUNCIONAN -->
         <section class="card logs-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-terminal card-icon"></i> Logs del Sistema</h2>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="action-button" id="clearLogs" title="Limpiar logs">
-                        <i class="fas fa-trash"></i>
+                <div class="logs-buttons">
+                    <button class="action-button secondary" id="clearLogs" title="Limpiar todos los logs">
+                        <i class="fas fa-trash"></i> Limpiar
                     </button>
-                    <button class="action-button" id="toggleAutoScroll" title="Auto-scroll">
-                        <i class="fas fa-scroll"></i>
+                    <button class="action-button" id="toggleAutoScroll" title="Activar/Desactivar auto-scroll">
+                        <i class="fas fa-scroll"></i> Auto-scroll
                     </button>
-                    <button class="action-button" id="exportLogs" title="Exportar logs">
-                        <i class="fas fa-download"></i>
+                    <button class="action-button success" id="exportLogs" title="Exportar logs a archivo">
+                        <i class="fas fa-download"></i> Exportar
                     </button>
-                    <button class="action-button" id="toggleMQTT" title="Conectar/Desconectar MQTT">
-                        <i class="fas fa-plug"></i> MQTT
-                    </button>
-                    <button class="action-button" id="checkMQTT" title="Verificar suscripción MQTT">
-                        <i class="fas fa-search"></i> Verificar
+                    <button class="action-button warning" id="reconnectMQTT" title="Reconectar a MQTT">
+                        <i class="fas fa-plug"></i> Reconectar
                     </button>
                 </div>
             </div>
             
             <div class="logs-container" id="logsContainer">
-                <!-- Los logs se generan dinámicamente -->
+                <div class="log-entry">
+                    <div class="log-time">--:--:--</div>
+                    <div class="log-message log-info">Sistema inicializado. Conectando a MQTT...</div>
+                </div>
             </div>
         </section>
 
@@ -874,15 +894,15 @@
             </div>
             <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Voltaje Batería</div>
-                <div class="info-value"><span id="solarVoltage">13.2</span><span class="info-unit">V</span></div>
+                <div class="info-value"><span id="solarVoltage">--</span><span class="info-unit">V</span></div>
             </div>
             <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Potencia Solar</div>
-                <div class="info-value"><span id="solarPower">125</span><span class="info-unit">W</span></div>
+                <div class="info-value"><span id="solarPower">--</span><span class="info-unit">W</span></div>
             </div>
             <div class="info-item">
                 <div class="info-label">Energía Hoy</div>
-                <div class="info-value"><span id="energyToday">0.85</span><span class="info-unit">kWh</span></div>
+                <div class="info-value"><span id="energyToday">--</span><span class="info-unit">kWh</span></div>
             </div>
         </section>
 
@@ -892,11 +912,11 @@
             </div>
             <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Voltaje Batería</div>
-                <div class="info-value"><span id="inverterVoltage">12.6</span><span class="info-unit">V</span></div>
+                <div class="info-value"><span id="inverterVoltage">--</span><span class="info-unit">V</span></div>
             </div>
             <div class="info-item">
                 <div class="info-label">Potencia Salida</div>
-                <div class="info-value"><span id="inverterPower">350</span><span class="info-unit">VA</span></div>
+                <div class="info-value"><span id="inverterPower">--</span><span class="info-unit">VA</span></div>
             </div>
         </section>
 
@@ -906,11 +926,11 @@
             </div>
             <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Voltaje Entrada</div>
-                <div class="info-value"><span id="orionInputVoltage">13.8</span><span class="info-unit">V</span></div>
+                <div class="info-value"><span id="orionInputVoltage">--</span><span class="info-unit">V</span></div>
             </div>
             <div class="info-item">
                 <div class="info-label">Voltaje Salida</div>
-                <div class="info-value"><span id="orionOutputVoltage">14.2</span><span class="info-unit">V</span></div>
+                <div class="info-value"><span id="orionOutputVoltage">--</span><span class="info-unit">V</span></div>
             </div>
         </section>
 
@@ -919,12 +939,12 @@
                 <h2 class="card-title"><i class="fas fa-thermometer-half card-icon"></i> Temperatura</h2>
             </div>
             <div class="soc-display" style="margin: 0 0 12px 0;">
-                <div class="soc-value" id="tempValue" style="font-size: 2.2rem;">22.5</div>
+                <div class="soc-value" id="tempValue" style="font-size: 2.2rem;">--</div>
                 <div class="soc-label">°C Batería Ultimatron</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Voltaje Battery Sense</div>
-                <div class="info-value"><span id="batterySenseVoltage">12.7</span><span class="info-unit">V</span></div>
+                <div class="info-value"><span id="batterySenseVoltage">--</span><span class="info-unit">V</span></div>
             </div>
         </section>
 
@@ -935,19 +955,19 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="info-item">
                     <div class="info-label">SmartShunt</div>
-                    <div class="info-value"><span id="voltageSmartShunt">12.8</span><span class="info-unit">V</span></div>
+                    <div class="info-value"><span id="voltageSmartShunt">--</span><span class="info-unit">V</span></div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">MPPT Solar</div>
-                    <div class="info-value"><span id="voltageMppt">13.2</span><span class="info-unit">V</span></div>
+                    <div class="info-value"><span id="voltageMppt">--</span><span class="info-unit">V</span></div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Phoenix</div>
-                    <div class="info-value"><span id="voltagePhoenix">12.6</span><span class="info-unit">V</span></div>
+                    <div class="info-value"><span id="voltagePhoenix">--</span><span class="info-unit">V</span></div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Battery Sense</div>
-                    <div class="info-value"><span id="voltageBatterySense">12.7</span><span class="info-unit">V</span></div>
+                    <div class="info-value"><span id="voltageBatterySense">--</span><span class="info-unit">V</span></div>
                 </div>
             </div>
         </section>
@@ -958,11 +978,11 @@
             </div>
             <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">Uptime Monitor</div>
-                <div class="info-value" id="uptimeValue">0d 0h</div>
+                <div class="info-value" id="uptimeValue">--</div>
             </div>
             <div class="info-item" style="margin-bottom: 10px;">
                 <div class="info-label">MQTT Status</div>
-                <div class="info-value" style="color: var(--success);" id="mqttStatusText">Desconectado</div>
+                <div class="info-value" id="mqttStatusText" style="color: var(--danger);">Desconectado</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Última Actualización</div>
@@ -978,11 +998,11 @@
             </div>
             
             <div class="alarms-container" id="alarmsContainer">
-                <div class="alarm alarm-success">
-                    <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="alarm alarm-info">
+                    <div class="alarm-icon"><i class="fas fa-info-circle"></i></div>
                     <div>
-                        <div class="info-label">Sistema inicializado</div>
-                        <div class="info-value">Esperando datos del sistema Victron...</div>
+                        <div class="info-label">Esperando datos</div>
+                        <div class="info-value">Conectando al sistema Victron...</div>
                     </div>
                 </div>
             </div>
@@ -992,102 +1012,120 @@
         <footer>
             <p>
                 <a href="https://github.com/uzturre562-blip/siena-monitor" class="github-link" target="_blank">
-                    <i class="fab fa-github"></i> Siena395 Monitor &copy; 2026 - Autocaravana Siena395
+                    <i class="fab fa-github"></i> Siena395 Monitor &copy; 2026
                 </a>
             </p>
             <p style="margin-top: 8px; font-size: 0.75rem;">
-                <span id="mqttConnectionInfo">Broker: broker.emqx.io | Topic: siena395_monitor_mikel_2026/#</span>
+                <span id="mqttConnectionInfo">Broker: broker.emqx.io | Topic: siena395_monitor_mikel_2026</span>
             </p>
             <p style="margin-top: 4px; font-size: 0.7rem; opacity: 0.7;">
-                Optimizado para Xiaomi 14 y Lenovo TAB M10 Plus | Conectado vía MQTT
+                Sin simulación - Solo datos reales MQTT
             </p>
         </footer>
     </div>
 
     <script>
         // ==================== CONFIGURACIÓN ====================
-        const MQTT_BROKER = "broker.emqx.io";
-        const MQTT_PORT = 8084; // Puerto WebSocket seguro
-        const MQTT_TOPIC_PREFIX = "siena395_monitor_mikel_2026";
-        
-        // ==================== VARIABLES GLOBALES ====================
-        let dashboardData = {
-            battery: { soc: 85, voltage: 12.8, current: 5.3, consumedAh: -12.5, timeToGo: 15.2 },
-            solar: { voltage: 13.2, power: 125, energyToday: 0.85 },
-            inverter: { voltage: 12.6, power: 350 },
-            orion: { inputVoltage: 13.8, outputVoltage: 14.2 },
-            temperature: { batteryTemp: 22.5, batterySenseVoltage: 12.7 }
+        const CONFIG = {
+            MQTT_BROKER: "broker.emqx.io",
+            MQTT_PORT: 8084,
+            MQTT_TOPIC_PREFIX: "siena395_monitor_mikel_2026",
+            RECONNECT_INTERVAL: 5000, // 5 segundos
+            UPDATE_INTERVAL: 1000, // 1 segundo para actualizar tiempo
+            CHART_HISTORY_HOURS: 24
         };
-        
-        let socChart = null;
-        let historicalData = { soc: [], voltage: [], temperature: [], solarPower: [] };
-        let systemLogs = [];
-        let autoScrollLogs = true;
-        let flowDiagram = null;
-        let flowNodes = [];
-        let flowLines = [];
-        let flowScale = 1;
-        let dataReceivedCount = 0;
-        let lastUpdateTime = new Date();
-        let mqttClient = null;
-        let isMQTTConnected = false;
-        let simulationInterval = null;
-        let subscribedTopics = new Set();
-        
-        // ==================== ELEMENTOS DOM - CORREGIDOS ====================
-        // Los elementos se inicializarán después de que el DOM esté listo
-        
-        // ==================== FUNCIONES PRINCIPALES ====================
-        
-        function initDashboard() {
-            // Inicializar elementos DOM primero
-            initDOMElements();
+
+        // ==================== ESTADO GLOBAL ====================
+        const state = {
+            // Datos del sistema
+            battery: { soc: null, voltage: null, current: null, consumedAh: null, timeToGo: null },
+            solar: { voltage: null, power: null, energyToday: null },
+            inverter: { voltage: null, power: null },
+            orion: { inputVoltage: null, outputVoltage: null },
+            temperature: { batteryTemp: null, batterySenseVoltage: null },
             
+            // Sistema
+            historicalData: { soc: [], voltage: [], temperature: [], solarPower: [] },
+            systemLogs: [],
+            alarms: [],
+            
+            // Conexión
+            mqttClient: null,
+            isConnected: false,
+            lastUpdate: null,
+            dataReceived: 0,
+            subscribedTopics: new Set(),
+            
+            // UI
+            autoScrollLogs: true,
+            flowAnimationActive: false,
+            chart: null
+        };
+
+        // ==================== INICIALIZACIÓN ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Dashboard Siena395 Monitor iniciando...');
+            
+            // 1. Configurar tema
             setupTheme();
-            initHistoricalData();
-            initCharts();
-            initFlowDiagram();
-            initLogs();
+            
+            // 2. Inicializar elementos UI
+            initializeUI();
+            
+            // 3. Inicializar gráfico (vacío)
+            initializeChart();
+            
+            // 4. Inicializar diagrama de flujo (VISIBLE)
+            initializeFlowDiagram();
+            
+            // 5. Configurar event listeners
             setupEventListeners();
             
-            // Intentar conectar a MQTT inmediatamente
+            // 6. Conectar a MQTT
             connectToMQTT();
             
-            // Si no hay conexión MQTT en 10 segundos, activar simulación
-            setTimeout(() => {
-                if (!isMQTTConnected) {
-                    addLog("⚠️ No se pudo conectar a MQTT. Activando modo simulación...", "warning");
-                    startSimulationMode();
+            // 7. Actualizar tiempo periódicamente
+            setInterval(updateLastUpdateTime, CONFIG.UPDATE_INTERVAL);
+            
+            // 8. Primer log
+            addLog('Dashboard Siena395 Monitor inicializado', 'success');
+            addLog(`Conectando a MQTT: ${CONFIG.MQTT_BROKER}:${CONFIG.MQTT_PORT}`, 'info');
+            addLog(`Topic prefix: ${CONFIG.MQTT_TOPIC_PREFIX}`, 'info');
+            
+            console.log('Dashboard completamente inicializado');
+            console.log('Para verificar MQTT, ejecuta en consola: window.checkMQTTStatus()');
+        });
+
+        // ==================== TEMA CLARO/OSCURO ====================
+        function setupTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedTheme = localStorage.getItem('theme');
+            
+            // Aplicar tema guardado o preferencia del sistema
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                    localStorage.setItem('theme', 'dark');
+                    addLog('Modo oscuro activado', 'info');
+                } else {
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                    localStorage.setItem('theme', 'light');
+                    addLog('Modo claro activado', 'info');
                 }
-            }, 10000);
-            
-            setInterval(updateLastUpdateTime, 1000);
-            setInterval(updateUptime, 60000);
-            
-            addLog("Dashboard Siena395 Monitor iniciado", "success");
-            addLog(`Configuración MQTT: ${MQTT_BROKER}:${MQTT_PORT}`, "info");
-            addLog(`Topic prefix: ${MQTT_TOPIC_PREFIX}`, "info");
-            
-            console.log("Dashboard Siena395 Monitor cargado.");
-            console.log(`Para una implementación completa, conectar a MQTT broker: ${MQTT_BROKER}`);
-            console.log(`Topic prefix: ${MQTT_TOPIC_PREFIX}`);
-            
-            // Mostrar en consola cómo verificar MQTT
-            console.log("\n=== HERRAMIENTAS PARA VERIFICAR MQTT ===");
-            console.log("1. Para verificar conexión MQTT:");
-            console.log("   - Abre http://www.emqx.io/online-mqtt-client");
-            console.log("   - Conéctate a broker.emqx.io");
-            console.log("   - Suscríbete a siena395_monitor_mikel_2026/#");
-            console.log("\n2. Para ver estado actual desde consola:");
-            console.log("   - Ejecuta: checkMQTTStatus()");
-            console.log("   - Ejecuta: listSubscribedTopics()");
-            console.log("\n3. Para forzar reconexión:");
-            console.log("   - Ejecuta: reconnectMQTT()");
+            });
         }
-        
-        function initDOMElements() {
-            // CORREGIDO: Inicializar todos los elementos DOM aquí
-            window.elements = {
+
+        // ==================== INICIALIZACIÓN UI ====================
+        function initializeUI() {
+            // Elementos de batería
+            window.ui = {
                 // Batería
                 socValue: document.getElementById('socValue'),
                 batteryLevel: document.getElementById('batteryLevel'),
@@ -1117,734 +1155,613 @@
                 uptimeValue: document.getElementById('uptimeValue'),
                 mqttStatusText: document.getElementById('mqttStatusText'),
                 lastUpdate: document.getElementById('lastUpdate'),
+                wifiStatus: document.getElementById('wifiStatus'),
+                dataCount: document.getElementById('dataCount'),
                 mqttStatus: document.getElementById('mqttStatus'),
+                mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
                 
                 // Estado
                 connectionStatus: document.getElementById('connectionStatus'),
                 connectionText: document.getElementById('connectionText'),
                 
-                // Información
-                mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
-                dataCount: document.getElementById('dataCount'),
-                wifiStatus: document.getElementById('wifiStatus'),
+                // Logs
+                logsContainer: document.getElementById('logsContainer'),
                 
                 // Alarmas
                 alarmsContainer: document.getElementById('alarmsContainer'),
-                alarmCount: document.getElementById('alarmCount'),
-                
-                // Logs
-                logsContainer: document.getElementById('logsContainer')
+                alarmCount: document.getElementById('alarmCount')
             };
             
             // Verificar que todos los elementos existan
-            Object.entries(window.elements).forEach(([key, element]) => {
+            Object.entries(window.ui).forEach(([name, element]) => {
                 if (!element) {
-                    console.error(`Elemento no encontrado: ${key}`);
+                    console.error(`Elemento UI no encontrado: ${name}`);
                 }
             });
+            
+            // Actualizar información de conexión
+            window.ui.mqttConnectionInfo.textContent = 
+                `Broker: ${CONFIG.MQTT_BROKER} | Topic: ${CONFIG.MQTT_TOPIC_PREFIX}`;
         }
-        
-        function setupTheme() {
-            const themeToggle = document.getElementById('themeToggle');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const savedTheme = localStorage.getItem('theme');
-            
-            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-                document.body.classList.add('dark-mode');
-                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-            }
-            
-            themeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                if (document.body.classList.contains('dark-mode')) {
-                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-                    localStorage.setItem('theme', 'dark');
-                    addLog("Modo oscuro activado", "info");
-                } else {
-                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-                    localStorage.setItem('theme', 'light');
-                    addLog("Modo claro activado", "info");
-                }
-                updateChartTheme();
-            });
-        }
-        
-        function initHistoricalData() {
-            const now = new Date();
-            for (let i = 23; i >= 0; i--) {
-                const time = new Date(now.getTime() - i * 3600000);
-                historicalData.soc.push({ time: time, value: 80 + Math.random() * 20 });
-                historicalData.voltage.push({ time: time, value: 12.5 + Math.random() * 1.5 });
-                historicalData.temperature.push({ time: time, value: 20 + Math.random() * 10 });
-                historicalData.solarPower.push({ time: time, value: Math.random() * 200 });
-            }
-        }
-        
-        function initCharts() {
-            const ctx = document.getElementById('socChart');
-            if (!ctx) {
-                console.error("Canvas no encontrado para gráfico");
-                return;
-            }
-            
-            const chartCtx = ctx.getContext('2d');
-            const labels = historicalData.soc.map(d => 
-                d.time.getHours().toString().padStart(2, '0') + ':00'
-            );
-            const data = historicalData.soc.map(d => d.value);
-            
+
+        // ==================== GRÁFICO HISTÓRICO ====================
+        function initializeChart() {
+            const ctx = document.getElementById('socChart').getContext('2d');
             const isDark = document.body.classList.contains('dark-mode');
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
             const textColor = isDark ? '#ffffff' : '#2d3748';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
             
-            socChart = new Chart(chartCtx, {
+            state.chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
                     datasets: [{
                         label: 'SOC (%)',
-                        data: data,
+                        data: Array(24).fill(null),
                         borderColor: '#3182ce',
                         backgroundColor: 'rgba(49, 130, 206, 0.15)',
-                        borderWidth: 3,
+                        borderWidth: 2,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#3182ce',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 1
+                        pointRadius: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            labels: { 
-                                color: textColor,
-                                font: { size: 12 }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: isDark ? 'rgba(45, 55, 72, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                            titleColor: isDark ? '#ffffff' : '#2d3748',
-                            bodyColor: isDark ? '#e2e8f0' : '#4a5568',
-                            borderColor: '#3182ce',
-                            borderWidth: 1
-                        }
+                        legend: { labels: { color: textColor } }
                     },
                     scales: {
-                        x: {
-                            grid: { 
-                                color: gridColor,
-                                borderDash: [5, 5]
-                            },
-                            ticks: { 
-                                color: textColor,
-                                maxTicksLimit: 8
-                            }
+                        x: { 
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, maxTicksLimit: 8 }
                         },
                         y: {
                             min: 0,
                             max: 100,
-                            grid: { 
-                                color: gridColor,
-                                borderDash: [5, 5]
-                            },
+                            grid: { color: gridColor },
                             ticks: { 
                                 color: textColor,
-                                callback: function(value) {
-                                    return value + '%';
-                                }
+                                callback: value => value + '%'
                             }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    animations: {
-                        tension: {
-                            duration: 1000,
-                            easing: 'linear'
                         }
                     }
                 }
             });
             
+            // Selector de rango
             document.getElementById('chartRange').addEventListener('change', function() {
-                updateChartData(this.value);
+                updateChartRange(this.value);
             });
         }
-        
-        function updateChartTheme() {
-            if (!socChart) return;
+
+        function updateChartData(soc) {
+            if (!state.chart) return;
             
-            const isDark = document.body.classList.contains('dark-mode');
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            const textColor = isDark ? '#ffffff' : '#2d3748';
+            const now = new Date();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
             
-            socChart.options.scales.x.grid.color = gridColor;
-            socChart.options.scales.x.ticks.color = textColor;
-            socChart.options.scales.y.grid.color = gridColor;
-            socChart.options.scales.y.ticks.color = textColor;
-            socChart.options.plugins.legend.labels.color = textColor;
-            socChart.options.plugins.tooltip.backgroundColor = isDark ? 'rgba(45, 55, 72, 0.9)' : 'rgba(255, 255, 255, 0.9)';
-            socChart.options.plugins.tooltip.titleColor = isDark ? '#ffffff' : '#2d3748';
-            socChart.options.plugins.tooltip.bodyColor = isDark ? '#e2e8f0' : '#4a5568';
+            // Agregar dato histórico
+            state.historicalData.soc.push({
+                time: now,
+                value: soc
+            });
             
-            socChart.update();
-        }
-        
-        function updateChartData(range) {
-            if (!socChart) return;
+            // Mantener solo últimas 24 horas
+            const cutoff = new Date(now.getTime() - (CONFIG.CHART_HISTORY_HOURS * 3600000));
+            state.historicalData.soc = state.historicalData.soc.filter(d => d.time > cutoff);
             
-            let hours;
-            switch(range) {
-                case '12h': hours = 12; break;
-                case '6h': hours = 6; break;
-                case '1h': hours = 1; break;
-                default: hours = 24;
-            }
-            
-            const cutoffTime = new Date(new Date().getTime() - hours * 3600000);
-            const filteredData = historicalData.soc.filter(d => d.time >= cutoffTime);
-            
-            socChart.data.labels = filteredData.map(d => 
-                d.time.getHours().toString().padStart(2, '0') + ':' + 
-                d.time.getMinutes().toString().padStart(2, '0')
+            // Actualizar gráfico
+            const labels = state.historicalData.soc.map(d => 
+                `${d.time.getHours().toString().padStart(2, '0')}:${d.time.getMinutes().toString().padStart(2, '0')}`
             );
-            socChart.data.datasets[0].data = filteredData.map(d => d.value);
-            socChart.update();
+            const data = state.historicalData.soc.map(d => d.value);
             
-            addLog(`Gráfico actualizado: ${range}`, "info");
+            state.chart.data.labels = labels;
+            state.chart.data.datasets[0].data = data;
+            state.chart.update('none');
         }
-        
-        // ==================== MQTT FUNCTIONS ====================
-        
-        function connectToMQTT() {
-            const brokerUrl = `wss://${MQTT_BROKER}:${MQTT_PORT}/mqtt`;
+
+        function updateChartRange(range) {
+            if (!state.chart) return;
             
-            addLog(`Conectando a MQTT: ${brokerUrl}`, "info");
-            setMQTTStatus("Conectando...", "warning");
+            const hours = parseInt(range);
+            const now = new Date();
+            const cutoff = new Date(now.getTime() - (hours * 3600000));
+            
+            const filteredData = state.historicalData.soc.filter(d => d.time > cutoff);
+            const labels = filteredData.map(d => 
+                `${d.time.getHours().toString().padStart(2, '0')}:${d.time.getMinutes().toString().padStart(2, '0')}`
+            );
+            const data = filteredData.map(d => d.value);
+            
+            state.chart.data.labels = labels;
+            state.chart.data.datasets[0].data = data;
+            state.chart.update();
+            
+            addLog(`Gráfico actualizado: últimas ${hours}h`, 'info');
+        }
+
+        // ==================== DIAGRAMA DE FLUJO (VISIBLE) ====================
+        function initializeFlowDiagram() {
+            const diagram = document.getElementById('flowDiagram');
+            diagram.innerHTML = '';
+            
+            // Configuración basada en tamaño
+            const width = diagram.offsetWidth;
+            const height = diagram.offsetHeight;
+            
+            // Posiciones de los nodos (optimizadas para visualización)
+            const nodes = [
+                { id: 'solar', name: 'Solar', icon: 'fa-sun', color: '#f6ad55', x: width * 0.2, y: height * 0.3 },
+                { id: 'mppt', name: 'MPPT', icon: 'fa-bolt', color: '#4299e1', x: width * 0.5, y: height * 0.3 },
+                { id: 'battery', name: 'Batería', icon: 'fa-battery-full', color: '#38a169', x: width * 0.5, y: height * 0.6 },
+                { id: 'orion', name: 'Orion', icon: 'fa-exchange-alt', color: '#9f7aea', x: width * 0.2, y: height * 0.6 },
+                { id: 'inverter', name: 'Inversor', icon: 'fa-plug', color: '#ed8936', x: width * 0.8, y: height * 0.3 },
+                { id: 'load', name: 'Cargas', icon: 'fa-home', color: '#e53e3e', x: width * 0.8, y: height * 0.6 }
+            ];
+            
+            // Crear nodos
+            nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'flow-node';
+                nodeEl.style.left = `${node.x}px`;
+                nodeEl.style.top = `${node.y}px`;
+                nodeEl.style.background = node.color;
+                nodeEl.innerHTML = `
+                    <i class="fas ${node.icon}"></i>
+                    <span>${node.name}</span>
+                `;
+                
+                // Evento para mostrar info
+                nodeEl.addEventListener('click', () => {
+                    showNodeInfo(node);
+                });
+                
+                diagram.appendChild(nodeEl);
+            });
+            
+            // Conexiones entre nodos
+            const connections = [
+                { from: 'solar', to: 'mppt', active: true },
+                { from: 'mppt', to: 'battery', active: true },
+                { from: 'orion', to: 'battery', active: true },
+                { from: 'battery', to: 'inverter', active: true },
+                { from: 'inverter', to: 'load', active: true }
+            ];
+            
+            // Crear líneas de conexión
+            connections.forEach(conn => {
+                const fromNode = nodes.find(n => n.id === conn.from);
+                const toNode = nodes.find(n => n.id === conn.to);
+                
+                if (fromNode && toNode) {
+                    const line = document.createElement('div');
+                    line.className = `flow-line ${state.flowAnimationActive ? 'active' : ''}`;
+                    
+                    // Calcular posición y ángulo
+                    const dx = toNode.x - fromNode.x;
+                    const dy = toNode.y - fromNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    line.style.width = `${length}px`;
+                    line.style.left = `${fromNode.x + 35}px`;
+                    line.style.top = `${fromNode.y + 35}px`;
+                    line.style.transform = `rotate(${angle}deg)`;
+                    
+                    diagram.appendChild(line);
+                }
+            });
+            
+            addLog('Diagrama de flujo inicializado', 'info');
+        }
+
+        function showNodeInfo(node) {
+            const info = {
+                solar: 'Panel solar: Genera energía renovable para el sistema',
+                mppt: 'Controlador MPPT: Optimiza la carga de los paneles solares',
+                battery: 'Batería Ultimatron 100Ah: Almacena energía para uso nocturno',
+                orion: 'Orion DC-DC: Carga la batería desde el alternador del vehículo',
+                inverter: 'Inversor Phoenix: Convierte 12V DC a 230V AC para electrodomésticos',
+                load: 'Cargas: Consumo eléctrico total de la autocaravana'
+            };
+            
+            addLog(`💡 ${node.name}: ${info[node.id]}`, 'info');
+        }
+
+        // ==================== MQTT - CONEXIÓN REAL ====================
+        function connectToMQTT() {
+            updateConnectionStatus('connecting', 'Conectando a MQTT...');
+            
+            const brokerUrl = `wss://${CONFIG.MQTT_BROKER}:${CONFIG.MQTT_PORT}/mqtt`;
             
             try {
-                mqttClient = mqtt.connect(brokerUrl, {
+                state.mqttClient = mqtt.connect(brokerUrl, {
                     clientId: 'siena395_dashboard_' + Math.random().toString(16).substr(2, 8),
                     clean: true,
-                    reconnectPeriod: 5000,
+                    reconnectPeriod: CONFIG.RECONNECT_INTERVAL,
                     connectTimeout: 10000
                 });
                 
-                mqttClient.on('connect', () => {
-                    isMQTTConnected = true;
-                    setMQTTStatus("Conectado", "success");
-                    addLog("✅ CONECTADO al broker MQTT", "success");
-                    
-                    // SUSCRIBIRSE A TODOS LOS TOPICS DEL ESP32
-                    const topics = [
-                        // Batería/SmartShunt
-                        `${MQTT_TOPIC_PREFIX}/sensor/soc_ultimatron/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/tension_smartshunt/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/corriente_smartshunt/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/ah_consumidos/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/tiempo_restante/state`,
-                        
-                        // Solar/MPPT
-                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_bateria_mppt/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/potencia_solar/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/energia_hoy/state`,
-                        
-                        // Inversor Phoenix
-                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_bateria_phoenix/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/potencia_salida_phoenix/state`,
-                        
-                        // Orion DC-DC
-                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_entrada_orion/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_salida_orion/state`,
-                        
-                        // Battery Sense
-                        `${MQTT_TOPIC_PREFIX}/sensor/voltaje_battery_sense/state`,
-                        `${MQTT_TOPIC_PREFIX}/sensor/temperatura_bateria/state`,
-                        
-                        // Sistema
-                        `${MQTT_TOPIC_PREFIX}/sensor/uptime_monitor/state`,
-                        `${MQTT_TOPIC_PREFIX}/status`
-                    ];
-                    
-                    topics.forEach(topic => {
-                        mqttClient.subscribe(topic, { qos: 0 }, (err) => {
-                            if (!err) {
-                                subscribedTopics.add(topic);
-                                addLog(`📡 Suscrito a: ${topic}`, "mqtt");
-                            } else {
-                                addLog(`Error suscribiendo a ${topic}: ${err}`, "error");
-                            }
-                        });
-                    });
-                    
-                    // Detener simulación si estaba activa
-                    if (simulationInterval) {
-                        clearInterval(simulationInterval);
-                        simulationInterval = null;
-                        addLog("Modo simulación desactivado (MQTT activo)", "info");
-                    }
-                });
-                
-                mqttClient.on('message', (topic, message) => {
-                    handleMQTTMessage(topic, message.toString());
-                });
-                
-                mqttClient.on('error', (error) => {
-                    addLog(`Error MQTT: ${error}`, "error");
-                    setMQTTStatus("Error", "danger");
-                    isMQTTConnected = false;
-                });
-                
-                mqttClient.on('close', () => {
-                    addLog("Desconectado de MQTT", "warning");
-                    setMQTTStatus("Desconectado", "danger");
-                    isMQTTConnected = false;
-                    
-                    // Si se desconecta, activar simulación temporal
-                    if (!simulationInterval) {
-                        startSimulationMode();
-                    }
-                });
-                
-                mqttClient.on('reconnect', () => {
-                    addLog("Reconectando a MQTT...", "info");
-                    setMQTTStatus("Reconectando...", "warning");
-                });
+                // Eventos MQTT
+                state.mqttClient.on('connect', handleMQTTConnect);
+                state.mqttClient.on('message', handleMQTTMessage);
+                state.mqttClient.on('error', handleMQTTError);
+                state.mqttClient.on('close', handleMQTTClose);
+                state.mqttClient.on('reconnect', handleMQTTReconnect);
                 
             } catch (error) {
-                addLog(`Error conectando a MQTT: ${error}`, "error");
-                setMQTTStatus("Error conexión", "danger");
-                isMQTTConnected = false;
-                startSimulationMode();
+                addLog(`❌ Error al conectar: ${error.message}`, 'error');
+                updateConnectionStatus('error', 'Error de conexión');
+                
+                // Reintentar después de 10 segundos
+                setTimeout(connectToMQTT, 10000);
             }
         }
-        
+
+        function handleMQTTConnect() {
+            state.isConnected = true;
+            updateConnectionStatus('connected', 'Conectado a MQTT');
+            addLog('✅ Conectado al broker MQTT', 'success');
+            
+            // Suscribirse a TODOS los topics
+            const topics = getMQTTTopics();
+            topics.forEach(topic => {
+                state.mqttClient.subscribe(topic, { qos: 0 }, (err) => {
+                    if (!err) {
+                        state.subscribedTopics.add(topic);
+                        addLog(`📡 Suscrito a: ${topic}`, 'mqtt');
+                    }
+                });
+            });
+        }
+
         function handleMQTTMessage(topic, message) {
-            dataReceivedCount++;
-            lastUpdateTime = new Date();
+            state.dataReceived++;
+            state.lastUpdate = new Date();
             
-            const value = parseFloat(message);
+            const value = parseFloat(message.toString());
+            const shortTopic = topic.replace(`${CONFIG.MQTT_TOPIC_PREFIX}/`, '');
             
-            // Mapeo completo de topics a variables del dashboard
-            const topicMap = {
+            // Actualizar datos según el topic
+            updateDataFromMQTT(shortTopic, value);
+            
+            // Actualizar UI
+            updateUI();
+            
+            // Log cada 10 mensajes para no saturar
+            if (state.dataReceived % 10 === 0) {
+                addLog(`MQTT: ${shortTopic} = ${value}`, 'mqtt');
+            }
+        }
+
+        function handleMQTTError(error) {
+            addLog(`❌ Error MQTT: ${error.message}`, 'error');
+            updateConnectionStatus('error', 'Error MQTT');
+            state.isConnected = false;
+        }
+
+        function handleMQTTClose() {
+            addLog('⚠️ Desconectado de MQTT', 'warning');
+            updateConnectionStatus('disconnected', 'Desconectado');
+            state.isConnected = false;
+            state.subscribedTopics.clear();
+        }
+
+        function handleMQTTReconnect() {
+            addLog('🔄 Reconectando a MQTT...', 'info');
+            updateConnectionStatus('connecting', 'Reconectando...');
+        }
+
+        function getMQTTTopics() {
+            return [
                 // SmartShunt
-                'sensor/soc_ultimatron/state': () => {
-                    dashboardData.battery.soc = value;
-                    addLog(`MQTT: SOC actualizado: ${value}%`, "mqtt");
-                },
-                'sensor/tension_smartshunt/state': () => {
-                    dashboardData.battery.voltage = value;
-                },
-                'sensor/corriente_smartshunt/state': () => {
-                    dashboardData.battery.current = value;
-                },
-                'sensor/ah_consumidos/state': () => {
-                    dashboardData.battery.consumedAh = value;
-                },
-                'sensor/tiempo_restante/state': () => {
-                    dashboardData.battery.timeToGo = value;
-                },
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/soc_ultimatron/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/tension_smartshunt/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/corriente_smartshunt/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/ah_consumidos/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/tiempo_restante/state`,
                 
-                // Solar/MPPT
-                'sensor/voltaje_bateria_mppt/state': () => {
-                    dashboardData.solar.voltage = value;
-                },
-                'sensor/potencia_solar/state': () => {
-                    dashboardData.solar.power = value;
-                },
-                'sensor/energia_hoy/state': () => {
-                    dashboardData.solar.energyToday = value;
-                },
+                // Solar
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_bateria_mppt/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/potencia_solar/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/energia_hoy/state`,
                 
-                // Inversor Phoenix
-                'sensor/voltaje_bateria_phoenix/state': () => {
-                    dashboardData.inverter.voltage = value;
-                },
-                'sensor/potencia_salida_phoenix/state': () => {
-                    dashboardData.inverter.power = value;
-                },
+                // Inversor
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_bateria_phoenix/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/potencia_salida_phoenix/state`,
                 
-                // Orion DC-DC
-                'sensor/voltaje_entrada_orion/state': () => {
-                    dashboardData.orion.inputVoltage = value;
-                },
-                'sensor/voltaje_salida_orion/state': () => {
-                    dashboardData.orion.outputVoltage = value;
-                },
+                // Orion
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_entrada_orion/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_salida_orion/state`,
                 
-                // Battery Sense
-                'sensor/voltaje_battery_sense/state': () => {
-                    dashboardData.temperature.batterySenseVoltage = value;
-                },
-                'sensor/temperatura_bateria/state': () => {
-                    dashboardData.temperature.batteryTemp = value;
-                },
+                // Temperatura
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_battery_sense/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/temperatura_bateria/state`,
                 
                 // Sistema
-                'sensor/uptime_monitor/state': () => {
-                    updateUptimeFromValue(value);
+                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/uptime_monitor/state`,
+                `${CONFIG.MQTT_TOPIC_PREFIX}/status`
+            ];
+        }
+
+        function updateDataFromMQTT(topic, value) {
+            const topicMap = {
+                // Batería
+                'sensor/soc_ultimatron/state': () => {
+                    state.battery.soc = value;
+                    updateChartData(value);
                 },
+                'sensor/tension_smartshunt/state': () => state.battery.voltage = value,
+                'sensor/corriente_smartshunt/state': () => state.battery.current = value,
+                'sensor/ah_consumidos/state': () => state.battery.consumedAh = value,
+                'sensor/tiempo_restante/state': () => state.battery.timeToGo = value,
+                
+                // Solar
+                'sensor/voltaje_bateria_mppt/state': () => state.solar.voltage = value,
+                'sensor/potencia_solar/state': () => state.solar.power = value,
+                'sensor/energia_hoy/state': () => state.solar.energyToday = value,
+                
+                // Inversor
+                'sensor/voltaje_bateria_phoenix/state': () => state.inverter.voltage = value,
+                'sensor/potencia_salida_phoenix/state': () => state.inverter.power = value,
+                
+                // Orion
+                'sensor/voltaje_entrada_orion/state': () => state.orion.inputVoltage = value,
+                'sensor/voltaje_salida_orion/state': () => state.orion.outputVoltage = value,
+                
+                // Temperatura
+                'sensor/voltaje_battery_sense/state': () => state.temperature.batterySenseVoltage = value,
+                'sensor/temperatura_bateria/state': () => state.temperature.batteryTemp = value,
+                
+                // Sistema
+                'sensor/uptime_monitor/state': () => updateUptimeDisplay(value),
                 'status': () => {
-                    if (message === "online") {
-                        setConnectedStatus(true);
-                    } else if (message === "offline") {
-                        setConnectedStatus(false);
+                    if (value === 1 || value === 'online') {
+                        updateConnectionStatus('connected', 'ESP32 Online');
                     }
                 }
             };
             
-            const shortTopic = topic.replace(`${MQTT_TOPIC_PREFIX}/`, '');
-            
-            if (topicMap[shortTopic]) {
-                topicMap[shortTopic]();
-                updateHistoricalData();
-                updateDashboardUI();
-                
-                // Solo loguear cada 10 mensajes para no saturar
-                if (dataReceivedCount % 10 === 0) {
-                    addLog(`MQTT: ${shortTopic} = ${value}`, "mqtt");
-                }
-            } else {
-                addLog(`MQTT: Topic no mapeado: ${shortTopic} = ${message}`, "info");
+            if (topicMap[topic]) {
+                topicMap[topic]();
             }
         }
-        
-        function setMQTTStatus(status, type) {
-            if (window.elements && window.elements.mqttStatusText && window.elements.mqttStatus) {
-                window.elements.mqttStatusText.textContent = status;
-                window.elements.mqttStatus.textContent = `MQTT: ${status}`;
-                
-                switch(type) {
-                    case "success":
-                        window.elements.mqttStatusText.style.color = "var(--success)";
-                        break;
-                    case "warning":
-                        window.elements.mqttStatusText.style.color = "var(--warning)";
-                        break;
-                    case "danger":
-                        window.elements.mqttStatusText.style.color = "var(--danger)";
-                        break;
-                    default:
-                        window.elements.mqttStatusText.style.color = "var(--secondary)";
-                }
-            }
-        }
-        
-        // ==================== HERRAMIENTAS DE VERIFICACIÓN MQTT ====================
-        
-        // Función para verificar estado MQTT (disponible en consola)
-        function checkMQTTStatus() {
-            console.log("=== ESTADO MQTT ===");
-            console.log(`Conectado: ${isMQTTConnected}`);
-            console.log(`Cliente MQTT: ${mqttClient ? "Creado" : "No creado"}`);
-            console.log(`Topics suscritos: ${subscribedTopics.size}`);
-            
-            if (mqttClient) {
-                console.log(`Estado conexión: ${mqttClient.connected ? "Conectado" : "Desconectado"}`);
-                console.log(`URL: ${mqttClient.options ? mqttClient.options.href : "N/A"}`);
-            }
-            
-            console.log("=== ÚLTIMOS LOGS MQTT ===");
-            const mqttLogs = systemLogs.filter(log => log.type === 'mqtt').slice(0, 5);
-            mqttLogs.forEach(log => {
-                console.log(`[${log.time.toLocaleTimeString()}] ${log.message}`);
-            });
-            
-            return {
-                connected: isMQTTConnected,
-                clientExists: !!mqttClient,
-                subscribedTopics: Array.from(subscribedTopics),
-                lastUpdate: lastUpdateTime
-            };
-        }
-        
-        // Función para listar topics suscritos
-        function listSubscribedTopics() {
-            console.log("=== TOPICS SUSCRITOS ===");
-            if (subscribedTopics.size === 0) {
-                console.log("No hay topics suscritos");
-            } else {
-                Array.from(subscribedTopics).forEach(topic => {
-                    console.log(`- ${topic}`);
-                });
-            }
-            return Array.from(subscribedTopics);
-        }
-        
-        // Función para forzar reconexión
-        function reconnectMQTT() {
-            console.log("Forzando reconexión MQTT...");
-            if (mqttClient) {
-                mqttClient.end();
-            }
-            setTimeout(() => {
-                connectToMQTT();
-            }, 1000);
-            return "Reconexión forzada iniciada";
-        }
-        
-        // Función para probar publicación MQTT (desde consola)
-        function testMQTTPublish() {
-            if (!mqttClient || !mqttClient.connected) {
-                console.error("No hay conexión MQTT activa");
-                return false;
-            }
-            
-            const testTopic = `${MQTT_TOPIC_PREFIX}/test`;
-            const testMessage = JSON.stringify({
-                timestamp: new Date().toISOString(),
-                test: "Prueba desde dashboard"
-            });
-            
-            mqttClient.publish(testTopic, testMessage, { qos: 0 }, (err) => {
-                if (err) {
-                    console.error("Error en publicación de prueba:", err);
-                } else {
-                    console.log("✅ Mensaje de prueba publicado en:", testTopic);
-                }
-            });
-            
-            return true;
-        }
-        
-        // ==================== SIMULATION FUNCTIONS ====================
-        
-        function startSimulationMode() {
-            addLog("🔧 Activando modo simulación", "warning");
-            setMQTTStatus("Simulación", "warning");
-            
-            // Simular datos cada 3 segundos
-            simulationInterval = setInterval(simulateDataUpdate, 3000);
-            
-            // Primera actualización inmediata
-            setTimeout(simulateDataUpdate, 500);
-        }
-        
-        function simulateDataUpdate() {
-            const randomFactor = (Math.random() - 0.5) * 0.3;
+
+        // ==================== ACTUALIZACIÓN UI ====================
+        function updateUI() {
+            if (!window.ui) return;
             
             // Batería
-            dashboardData.battery.soc = Math.max(0, Math.min(100, dashboardData.battery.soc + randomFactor));
-            dashboardData.battery.voltage = 12.5 + Math.random() * 1.5;
-            dashboardData.battery.current = (Math.random() - 0.5) * 20;
-            dashboardData.battery.consumedAh = -15 + Math.random() * 5;
-            dashboardData.battery.timeToGo = 10 + Math.random() * 20;
+            updateElement(window.ui.socValue, state.battery.soc, '%');
+            updateElement(window.ui.voltageValue, state.battery.voltage, 'V');
+            updateElement(window.ui.currentValue, state.battery.current, 'A');
+            updateElement(window.ui.consumedAh, state.battery.consumedAh, 'Ah');
+            updateElement(window.ui.timeToGo, state.battery.timeToGo, 'h');
             
-            // Solar (más activo de día)
-            const hour = new Date().getHours();
-            const isDay = hour >= 7 && hour <= 19;
-            dashboardData.solar.voltage = 13.0 + Math.random() * 1.0;
-            dashboardData.solar.power = isDay ? Math.max(0, 50 + Math.random() * 150) : Math.random() * 20;
-            dashboardData.solar.energyToday = 0.8 + Math.random() * 0.3;
-            
-            // Temperatura
-            dashboardData.temperature.batteryTemp = 20 + (Math.random() - 0.5) * 10;
-            dashboardData.temperature.batterySenseVoltage = 12.5 + Math.random() * 1.0;
-            
-            // Otros voltajes
-            dashboardData.inverter.voltage = dashboardData.battery.voltage - 0.2 + Math.random() * 0.4;
-            dashboardData.inverter.power = 100 + Math.random() * 300;
-            dashboardData.orion.inputVoltage = 13.5 + Math.random() * 1.0;
-            dashboardData.orion.outputVoltage = 14.0 + Math.random() * 0.5;
-            
-            lastUpdateTime = new Date();
-            dataReceivedCount++;
-            
-            updateHistoricalData();
-            updateDashboardUI();
-            
-            if (dataReceivedCount % 15 === 0) {
-                addLog(`Simulación: Datos actualizados (${dataReceivedCount})`, "info");
-            }
-        }
-        
-        // ==================== UI UPDATE FUNCTIONS ====================
-        
-        function updateDashboardUI() {
-            // Verificar que los elementos existan antes de usarlos
-            if (!window.elements) {
-                console.error("Elementos DOM no inicializados");
-                return;
-            }
-            
-            // Batería
-            const soc = dashboardData.battery.soc;
-            if (window.elements.socValue) window.elements.socValue.textContent = `${soc.toFixed(1)}%`;
-            if (window.elements.batteryLevel) window.elements.batteryLevel.style.width = `${soc}%`;
-            if (window.elements.voltageValue) window.elements.voltageValue.textContent = dashboardData.battery.voltage.toFixed(2);
-            if (window.elements.currentValue) window.elements.currentValue.textContent = dashboardData.battery.current.toFixed(2);
-            if (window.elements.consumedAh) window.elements.consumedAh.textContent = dashboardData.battery.consumedAh.toFixed(1);
-            if (window.elements.timeToGo) window.elements.timeToGo.textContent = dashboardData.battery.timeToGo.toFixed(1);
-            
-            // Color de batería según SOC
-            if (window.elements.batteryLevel) {
-                let batteryColor;
-                if (soc <= 10) {
-                    batteryColor = "linear-gradient(90deg, var(--danger), #c53030)";
-                } else if (soc <= 20) {
-                    batteryColor = "linear-gradient(90deg, var(--warning), #dd6b20)";
-                } else if (soc <= 50) {
-                    batteryColor = "linear-gradient(90deg, #ecc94b, #d69e2e)";
+            // Nivel de batería
+            if (state.battery.soc !== null && window.ui.batteryLevel) {
+                window.ui.batteryLevel.style.width = `${state.battery.soc}%`;
+                
+                // Color según SOC
+                if (state.battery.soc <= 10) {
+                    window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--danger), #c53030)';
+                } else if (state.battery.soc <= 20) {
+                    window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--warning), #dd6b20)';
+                } else if (state.battery.soc <= 50) {
+                    window.ui.batteryLevel.style.background = 'linear-gradient(90deg, #ecc94b, #d69e2e)';
                 } else {
-                    batteryColor = "linear-gradient(90deg, var(--success), #38a169)";
+                    window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--success), #38a169)';
                 }
-                window.elements.batteryLevel.style.background = batteryColor;
             }
             
             // Solar
-            if (window.elements.solarVoltage) window.elements.solarVoltage.textContent = dashboardData.solar.voltage.toFixed(2);
-            if (window.elements.solarPower) window.elements.solarPower.textContent = Math.round(dashboardData.solar.power);
-            if (window.elements.energyToday) window.elements.energyToday.textContent = dashboardData.solar.energyToday.toFixed(2);
+            updateElement(window.ui.solarVoltage, state.solar.voltage, 'V');
+            updateElement(window.ui.solarPower, state.solar.power, 'W');
+            updateElement(window.ui.energyToday, state.solar.energyToday, 'kWh');
             
             // Inversor
-            if (window.elements.inverterVoltage) window.elements.inverterVoltage.textContent = dashboardData.inverter.voltage.toFixed(2);
-            if (window.elements.inverterPower) window.elements.inverterPower.textContent = Math.round(dashboardData.inverter.power);
+            updateElement(window.ui.inverterVoltage, state.inverter.voltage, 'V');
+            updateElement(window.ui.inverterPower, state.inverter.power, 'VA');
             
             // Orion
-            if (window.elements.orionInputVoltage) window.elements.orionInputVoltage.textContent = dashboardData.orion.inputVoltage.toFixed(2);
-            if (window.elements.orionOutputVoltage) window.elements.orionOutputVoltage.textContent = dashboardData.orion.outputVoltage.toFixed(2);
+            updateElement(window.ui.orionInputVoltage, state.orion.inputVoltage, 'V');
+            updateElement(window.ui.orionOutputVoltage, state.orion.outputVoltage, 'V');
             
             // Temperatura
-            const temp = dashboardData.temperature.batteryTemp;
-            if (window.elements.tempValue) {
-                window.elements.tempValue.textContent = temp.toFixed(1);
+            updateElement(window.ui.tempValue, state.temperature.batteryTemp, '°C');
+            updateElement(window.ui.batterySenseVoltage, state.temperature.batterySenseVoltage, 'V');
+            
+            // Color de temperatura
+            if (state.temperature.batteryTemp !== null && window.ui.tempValue) {
+                const temp = state.temperature.batteryTemp;
                 if (temp <= 5 || temp >= 45) {
-                    window.elements.tempValue.style.color = "var(--danger)";
+                    window.ui.tempValue.style.color = 'var(--danger)';
                 } else if (temp <= 10 || temp >= 40) {
-                    window.elements.tempValue.style.color = "var(--warning)";
+                    window.ui.tempValue.style.color = 'var(--warning)';
                 } else {
-                    window.elements.tempValue.style.color = "var(--primary)";
+                    window.ui.tempValue.style.color = 'var(--primary)';
                 }
             }
-            if (window.elements.batterySenseVoltage) window.elements.batterySenseVoltage.textContent = dashboardData.temperature.batterySenseVoltage.toFixed(2);
+            
+            // Actualizar contadores
+            window.ui.dataCount.textContent = `${state.dataReceived} datos`;
+            window.ui.wifiStatus.textContent = state.isConnected ? 'Online' : 'Offline';
+            window.ui.wifiStatus.style.color = state.isConnected ? 'var(--success)' : 'var(--danger)';
             
             // Actualizar alarmas
             updateAlarms();
-            
-            // Contador de datos
-            if (window.elements.dataCount) window.elements.dataCount.textContent = `${dataReceivedCount} datos`;
-            
-            // WiFi status basado en MQTT
-            if (window.elements.wifiStatus) {
-                window.elements.wifiStatus.textContent = isMQTTConnected ? "Online" : "Offline";
-                window.elements.wifiStatus.style.color = isMQTTConnected ? "var(--success)" : "var(--danger)";
-            }
         }
-        
-        function updateHistoricalData() {
-            const now = new Date();
+
+        function updateElement(element, value, unit = '') {
+            if (!element) return;
             
-            historicalData.soc.push({ time: new Date(now), value: dashboardData.battery.soc });
-            historicalData.voltage.push({ time: new Date(now), value: dashboardData.battery.voltage });
-            historicalData.temperature.push({ time: new Date(now), value: dashboardData.temperature.batteryTemp });
-            historicalData.solarPower.push({ time: new Date(now), value: dashboardData.solar.power });
-            
-            // Mantener máximo 1000 puntos
-            Object.keys(historicalData).forEach(key => {
-                if (historicalData[key].length > 1000) {
-                    historicalData[key] = historicalData[key].slice(-1000);
+            if (value === null || value === undefined) {
+                element.textContent = '--';
+                if (unit) {
+                    const unitSpan = element.nextElementSibling;
+                    if (unitSpan && unitSpan.classList.contains('info-unit')) {
+                        unitSpan.textContent = unit;
+                    }
                 }
-            });
-            
-            if (socChart) {
-                updateChartData(document.getElementById('chartRange').value);
+            } else {
+                // Formatear según el tipo de dato
+                if (unit === '%') {
+                    element.textContent = `${value.toFixed(1)}${unit}`;
+                } else if (unit === 'V' || unit === 'A') {
+                    element.textContent = value.toFixed(2);
+                } else if (unit === 'W' || unit === 'VA' || unit === 'Ah') {
+                    element.textContent = Math.round(value);
+                } else if (unit === 'kWh') {
+                    element.textContent = value.toFixed(2);
+                } else if (unit === 'h') {
+                    element.textContent = value.toFixed(1);
+                } else if (unit === '°C') {
+                    element.textContent = value.toFixed(1);
+                } else {
+                    element.textContent = value;
+                }
             }
         }
-        
-        function updateAlarms() {
-            const alarms = [];
-            const soc = dashboardData.battery.soc;
-            const temp = dashboardData.temperature.batteryTemp;
-            const voltage = dashboardData.battery.voltage;
+
+        function updateConnectionStatus(status, message) {
+            if (!window.ui) return;
             
-            // Alarma SOC crítico
-            if (soc <= 10) {
-                alarms.push({
-                    type: "danger",
-                    icon: "fa-exclamation-circle",
-                    title: "¡BATERÍA CRÍTICA!",
-                    message: `SOC al ${soc.toFixed(1)}% - CARGAR INMEDIATAMENTE`,
-                    time: "URGENTE"
-                });
+            const dot = window.ui.connectionStatus;
+            const text = window.ui.connectionText;
+            const mqttText = window.ui.mqttStatusText;
+            const mqttStatus = window.ui.mqttStatus;
+            
+            // Actualizar texto
+            text.textContent = message;
+            mqttText.textContent = message;
+            mqttStatus.textContent = `MQTT: ${message.split(' ')[0]}`;
+            
+            // Actualizar color y estado del dot
+            dot.className = 'status-dot';
+            switch(status) {
+                case 'connected':
+                    dot.classList.add('connected');
+                    text.style.color = 'var(--success)';
+                    mqttText.style.color = 'var(--success)';
+                    break;
+                case 'connecting':
+                    dot.classList.add('connecting');
+                    text.style.color = 'var(--warning)';
+                    mqttText.style.color = 'var(--warning)';
+                    break;
+                case 'error':
+                    dot.classList.add('error');
+                    text.style.color = 'var(--danger)';
+                    mqttText.style.color = 'var(--danger)';
+                    break;
+                case 'disconnected':
+                    dot.classList.add('disconnected');
+                    text.style.color = 'var(--secondary)';
+                    mqttText.style.color = 'var(--secondary)';
+                    break;
             }
+        }
+
+        function updateLastUpdateTime() {
+            if (!window.ui || !state.lastUpdate) return;
+            
+            const now = new Date();
+            const diff = Math.floor((now - state.lastUpdate) / 1000);
+            
+            let text = 'Ahora mismo';
+            if (diff > 0) {
+                if (diff < 60) {
+                    text = `Hace ${diff}s`;
+                } else if (diff < 3600) {
+                    text = `Hace ${Math.floor(diff/60)}m`;
+                } else {
+                    text = `Hace ${Math.floor(diff/3600)}h`;
+                }
+            }
+            
+            window.ui.lastUpdate.textContent = text;
+        }
+
+        function updateUptimeDisplay(seconds) {
+            if (!window.ui || !seconds) return;
+            
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            
+            if (days > 0) {
+                window.ui.uptimeValue.textContent = `${days}d ${hours}h`;
+            } else {
+                window.ui.uptimeValue.textContent = `${hours}h`;
+            }
+        }
+
+        // ==================== ALARMAS ====================
+        function updateAlarms() {
+            if (!window.ui) return;
+            
+            const alarms = [];
             
             // Alarma SOC bajo
-            else if (soc <= 20) {
+            if (state.battery.soc !== null && state.battery.soc <= 20) {
                 alarms.push({
-                    type: "warning",
-                    icon: "fa-exclamation-triangle",
-                    title: "Batería Baja",
-                    message: `SOC al ${soc.toFixed(1)}% - Cargar batería pronto`,
-                    time: "Alerta"
+                    type: state.battery.soc <= 10 ? 'danger' : 'warning',
+                    icon: state.battery.soc <= 10 ? 'fa-exclamation-circle' : 'fa-exclamation-triangle',
+                    title: state.battery.soc <= 10 ? '¡BATERÍA CRÍTICA!' : 'Batería Baja',
+                    message: `SOC: ${state.battery.soc.toFixed(1)}% - ${state.battery.soc <= 10 ? 'CARGAR INMEDIATAMENTE' : 'Cargar pronto'}`
                 });
             }
             
-            // Alarma temperatura peligrosa
-            if (temp <= 5 || temp >= 45) {
-                alarms.push({
-                    type: "danger",
-                    icon: "fa-thermometer-full",
-                    title: "Temperatura Peligrosa",
-                    message: `Temperatura: ${temp.toFixed(1)}°C - CUIDADO`,
-                    time: "URGENTE"
-                });
-            }
-            
-            // Alarma temperatura extrema
-            else if ((temp <= 10 && temp > 5) || (temp >= 40 && temp < 45)) {
-                alarms.push({
-                    type: "warning",
-                    icon: "fa-thermometer-half",
-                    title: "Temperatura Extrema",
-                    message: `Temperatura: ${temp.toFixed(1)}°C - Vigilar`,
-                    time: "Atención"
-                });
+            // Alarma temperatura
+            if (state.temperature.batteryTemp !== null) {
+                const temp = state.temperature.batteryTemp;
+                if (temp <= 5 || temp >= 45) {
+                    alarms.push({
+                        type: 'danger',
+                        icon: 'fa-thermometer-full',
+                        title: 'Temperatura Peligrosa',
+                        message: `Temp: ${temp.toFixed(1)}°C - CUIDADO`
+                    });
+                } else if (temp <= 10 || temp >= 40) {
+                    alarms.push({
+                        type: 'warning',
+                        icon: 'fa-thermometer-half',
+                        title: 'Temperatura Extrema',
+                        message: `Temp: ${temp.toFixed(1)}°C - Vigilar`
+                    });
+                }
             }
             
             // Alarma voltaje bajo
-            if (voltage < 11.5) {
+            if (state.battery.voltage !== null && state.battery.voltage < 11.5) {
                 alarms.push({
-                    type: "warning",
-                    icon: "fa-bolt",
-                    title: "Voltaje Bajo",
-                    message: `Voltaje: ${voltage.toFixed(2)}V - Posible descarga`,
-                    time: "Atención"
+                    type: 'warning',
+                    icon: 'fa-bolt',
+                    title: 'Voltaje Bajo',
+                    message: `Voltaje: ${state.battery.voltage.toFixed(2)}V`
                 });
             }
             
             // Actualizar contador
-            if (window.elements && window.elements.alarmCount) {
-                const alarmCount = window.elements.alarmCount;
-                alarmCount.textContent = alarms.length;
-                if (alarms.length > 0) {
-                    alarmCount.style.display = "block";
-                } else {
-                    alarmCount.style.display = "none";
-                }
-            }
+            window.ui.alarmCount.textContent = alarms.length;
+            window.ui.alarmCount.style.display = alarms.length > 0 ? 'block' : 'none';
             
             // Mostrar alarmas
-            if (window.elements && window.elements.alarmsContainer) {
-                const container = window.elements.alarmsContainer;
-                if (alarms.length === 0) {
-                    container.innerHTML = `
-                        <div class="alarm alarm-success">
-                            <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
-                            <div>
-                                <div class="info-label">Sistema estable</div>
-                                <div class="info-value">Todas las alarmas desactivadas</div>
-                            </div>
+            const container = window.ui.alarmsContainer;
+            if (alarms.length === 0) {
+                container.innerHTML = `
+                    <div class="alarm alarm-success">
+                        <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <div class="info-label">Sistema estable</div>
+                            <div class="info-value">Sin alarmas activas</div>
                         </div>
-                    `;
-                    return;
-                }
-                
+                    </div>
+                `;
+            } else {
                 let html = '';
                 alarms.forEach(alarm => {
                     html += `
@@ -1853,154 +1770,39 @@
                             <div>
                                 <div class="info-label">${alarm.title}</div>
                                 <div class="info-value">${alarm.message}</div>
-                                <div class="info-label" style="margin-top: 5px; font-size: 0.75rem; opacity: 0.8;">${alarm.time}</div>
                             </div>
                         </div>
                     `;
                 });
-                
                 container.innerHTML = html;
             }
         }
-        
-        function setConnectedStatus(connected) {
-            if (window.elements && window.elements.connectionStatus && window.elements.connectionText) {
-                const statusDot = window.elements.connectionStatus;
-                const statusText = window.elements.connectionText;
-                
-                if (connected) {
-                    statusDot.style.backgroundColor = "var(--success)";
-                    statusText.textContent = "Conectado";
-                    statusText.style.color = "var(--success)";
-                } else {
-                    statusDot.style.backgroundColor = "var(--danger)";
-                    statusText.textContent = "Desconectado";
-                    statusText.style.color = "var(--danger)";
-                }
-            }
-        }
-        
-        function updateLastUpdateTime() {
-            const now = new Date();
-            const diff = Math.floor((now - lastUpdateTime) / 1000);
-            
-            let text = "Ahora mismo";
-            if (diff > 0) {
-                if (diff < 60) {
-                    text = `Hace ${diff}s`;
-                } else if (diff < 3600) {
-                    const minutes = Math.floor(diff / 60);
-                    text = `Hace ${minutes}m`;
-                } else {
-                    const hours = Math.floor(diff / 3600);
-                    text = `Hace ${hours}h`;
-                }
-            }
-            
-            if (window.elements && window.elements.lastUpdate) {
-                window.elements.lastUpdate.textContent = text;
-            }
-            
-            // Si han pasado más de 30 segundos sin actualizaciones MQTT
-            if (isMQTTConnected && diff > 30) {
-                setMQTTStatus("Sin datos", "warning");
-            }
-        }
-        
-        function updateUptime() {
-            const hours = dataReceivedCount * 3 / 3600;
-            const days = Math.floor(hours / 24);
-            const remainingHours = Math.floor(hours % 24);
-            if (window.elements && window.elements.uptimeValue) {
-                window.elements.uptimeValue.textContent = days > 0 ? `${days}d ${remainingHours}h` : `${remainingHours}h`;
-            }
-        }
-        
-        function updateUptimeFromValue(value) {
-            // value está en segundos según tu ESP32
-            const days = Math.floor(value / 86400);
-            const hours = Math.floor((value % 86400) / 3600);
-            if (window.elements && window.elements.uptimeValue) {
-                window.elements.uptimeValue.textContent = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
-            }
-        }
-        
-        // ==================== LOGS FUNCTIONS ====================
-        
-        function initLogs() {
-            addLog("Sistema de logs inicializado", "success");
-            
-            document.getElementById('clearLogs').addEventListener('click', () => {
-                systemLogs = [];
-                updateLogsDisplay();
-                addLog("Logs limpiados", "warning");
-            });
-            
-            document.getElementById('toggleAutoScroll').addEventListener('click', function() {
-                autoScrollLogs = !autoScrollLogs;
-                this.innerHTML = autoScrollLogs ? 
-                    '<i class="fas fa-scroll"></i>' : 
-                    '<i class="fas fa-scroll"></i>';
-                this.title = autoScrollLogs ? 'Auto-scroll: ON' : 'Auto-scroll: OFF';
-                addLog(`Auto-scroll ${autoScrollLogs ? 'activado' : 'desactivado'}`, "info");
-            });
-            
-            document.getElementById('exportLogs').addEventListener('click', () => {
-                exportLogs();
-            });
-            
-            document.getElementById('toggleMQTT').addEventListener('click', () => {
-                if (isMQTTConnected && mqttClient) {
-                    mqttClient.end();
-                    addLog("Desconectado manualmente de MQTT", "warning");
-                } else {
-                    connectToMQTT();
-                    addLog("Intentando reconexión manual a MQTT", "info");
-                }
-            });
-            
-            document.getElementById('checkMQTT').addEventListener('click', () => {
-                checkAndDisplayMQTTStatus();
-            });
-        }
-        
-        function checkAndDisplayMQTTStatus() {
-            const status = checkMQTTStatus();
-            addLog(`Verificación MQTT: ${status.connected ? 'Conectado' : 'Desconectado'}`, "info");
-            addLog(`Topics suscritos: ${status.subscribedTopics.length}`, "info");
-            
-            // Mostrar en un alert para fácil visualización
-            alert(`Estado MQTT:\n\n` +
-                  `Conectado: ${status.connected ? '✅ Sí' : '❌ No'}\n` +
-                  `Cliente: ${status.clientExists ? '✅ Creado' : '❌ No creado'}\n` +
-                  `Topics suscritos: ${status.subscribedTopics.length}\n` +
-                  `Última actualización: ${lastUpdateTime.toLocaleTimeString()}\n\n` +
-                  `Para más detalles, mira la consola (F12)`);
-        }
-        
-        function addLog(message, type = "info") {
+
+        // ==================== LOGS DEL SISTEMA ====================
+        function addLog(message, type = 'info') {
             const logEntry = {
                 time: new Date(),
                 message: message,
                 type: type
             };
             
-            systemLogs.unshift(logEntry);
+            state.systemLogs.unshift(logEntry);
             
-            if (systemLogs.length > 100) {
-                systemLogs.pop();
+            // Mantener máximo 100 logs
+            if (state.systemLogs.length > 100) {
+                state.systemLogs.pop();
             }
             
             updateLogsDisplay();
         }
-        
+
         function updateLogsDisplay() {
-            const container = elements?.logsContainer;
-            if (!container) return;
+            if (!window.ui || !window.ui.logsContainer) return;
             
+            const container = window.ui.logsContainer;
             container.innerHTML = '';
             
-            systemLogs.forEach(log => {
+            state.systemLogs.forEach(log => {
                 const logEl = document.createElement('div');
                 logEl.className = 'log-entry';
                 
@@ -2018,13 +1820,90 @@
                 container.appendChild(logEl);
             });
             
-            if (autoScrollLogs && systemLogs.length > 0) {
+            // Auto-scroll
+            if (state.autoScrollLogs && state.systemLogs.length > 0) {
                 container.scrollTop = 0;
             }
         }
-        
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            // Botón actualizar manual
+            document.getElementById('manualRefresh').addEventListener('click', () => {
+                const btn = document.getElementById('manualRefresh');
+                btn.classList.add('loading');
+                
+                addLog('Actualización manual solicitada', 'info');
+                
+                setTimeout(() => {
+                    btn.classList.remove('loading');
+                }, 1000);
+            });
+            
+            // Botón animación flujo
+            document.getElementById('toggleFlow').addEventListener('click', function() {
+                const lines = document.querySelectorAll('.flow-line');
+                state.flowAnimationActive = !state.flowAnimationActive;
+                
+                lines.forEach(line => {
+                    if (state.flowAnimationActive) {
+                        line.classList.add('active');
+                    } else {
+                        line.classList.remove('active');
+                    }
+                });
+                
+                this.innerHTML = state.flowAnimationActive ? 
+                    '<i class="fas fa-pause"></i> Pausar' : 
+                    '<i class="fas fa-play"></i> Animación';
+                    
+                addLog(`Animación de flujo ${state.flowAnimationActive ? 'activada' : 'desactivada'}`, 'info');
+            });
+            
+            // Botón reset view
+            document.getElementById('resetView').addEventListener('click', () => {
+                initializeFlowDiagram();
+                addLog('Diagrama de flujo restablecido', 'info');
+            });
+            
+            // Botón limpiar logs
+            document.getElementById('clearLogs').addEventListener('click', () => {
+                state.systemLogs = [];
+                updateLogsDisplay();
+                addLog('Logs limpiados', 'warning');
+            });
+            
+            // Botón auto-scroll
+            document.getElementById('toggleAutoScroll').addEventListener('click', function() {
+                state.autoScrollLogs = !state.autoScrollLogs;
+                this.innerHTML = state.autoScrollLogs ? 
+                    '<i class="fas fa-scroll"></i> Auto-scroll' : 
+                    '<i class="fas fa-scroll"></i> Manual';
+                addLog(`Auto-scroll ${state.autoScrollLogs ? 'activado' : 'desactivado'}`, 'info');
+            });
+            
+            // Botón exportar logs
+            document.getElementById('exportLogs').addEventListener('click', () => {
+                exportLogs();
+            });
+            
+            // Botón reconectar MQTT
+            document.getElementById('reconnectMQTT').addEventListener('click', () => {
+                if (state.mqttClient) {
+                    state.mqttClient.end();
+                }
+                setTimeout(connectToMQTT, 1000);
+                addLog('Reconexión MQTT solicitada', 'info');
+            });
+            
+            // Redimensionar ventana
+            window.addEventListener('resize', () => {
+                initializeFlowDiagram();
+            });
+        }
+
         function exportLogs() {
-            const logText = systemLogs.map(log => 
+            const logText = state.systemLogs.map(log => 
                 `[${log.time.toLocaleString()}] ${log.message}`
             ).join('\n');
             
@@ -2038,40 +1917,54 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            addLog("Logs exportados a archivo", "success");
+            addLog('Logs exportados a archivo', 'success');
         }
-        
-        // ==================== EVENT LISTENERS ====================
-        
-        function setupEventListeners() {
-            const refreshBtn = document.getElementById('refreshBattery');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', function() {
-                    this.classList.add('fa-spin');
-                    simulateDataUpdate();
-                    setTimeout(() => {
-                        this.classList.remove('fa-spin');
-                    }, 1000);
-                    addLog("Datos actualizados manualmente", "info");
-                });
+
+        // ==================== FUNCIONES DE DIAGNÓSTICO ====================
+        // Disponibles en consola para debugging
+        window.checkMQTTStatus = () => {
+            console.log('=== ESTADO MQTT ===');
+            console.log(`Conectado: ${state.isConnected}`);
+            console.log(`Cliente: ${state.mqttClient ? 'Creado' : 'No creado'}`);
+            console.log(`Topics suscritos: ${state.subscribedTopics.size}`);
+            console.log(`Datos recibidos: ${state.dataReceived}`);
+            console.log(`Última actualización: ${state.lastUpdate ? state.lastUpdate.toLocaleTimeString() : 'Nunca'}`);
+            
+            if (state.subscribedTopics.size > 0) {
+                console.log('\n=== TOPICS SUSCRITOS ===');
+                state.subscribedTopics.forEach(topic => console.log(`- ${topic}`));
             }
             
-            window.addEventListener('resize', () => {
-                if (flowDiagram) {
-                    updateFlowDiagram();
-                }
-            });
-        }
-        
-        // ==================== INICIALIZACIÓN ====================
-        
-        document.addEventListener('DOMContentLoaded', initDashboard);
-        
-        // Hacer funciones disponibles globalmente para la consola
-        window.checkMQTTStatus = checkMQTTStatus;
-        window.listSubscribedTopics = listSubscribedTopics;
-        window.reconnectMQTT = reconnectMQTT;
-        window.testMQTTPublish = testMQTTPublish;
+            return {
+                connected: state.isConnected,
+                client: state.mqttClient,
+                topics: Array.from(state.subscribedTopics),
+                dataReceived: state.dataReceived,
+                lastUpdate: state.lastUpdate
+            };
+        };
+
+        window.getSystemStatus = () => {
+            console.log('=== ESTADO DEL SISTEMA ===');
+            console.log('Batería:', state.battery);
+            console.log('Solar:', state.solar);
+            console.log('Inversor:', state.inverter);
+            console.log('Orion:', state.orion);
+            console.log('Temperatura:', state.temperature);
+            console.log('Logs:', state.systemLogs.length);
+            console.log('Alarmas:', state.alarms.length);
+            
+            return state;
+        };
+
+        window.reconnectMQTT = () => {
+            console.log('Forzando reconexión MQTT...');
+            if (state.mqttClient) {
+                state.mqttClient.end();
+            }
+            setTimeout(connectToMQTT, 1000);
+            return 'Reconexión iniciada';
+        };
     </script>
 </body>
 </html>
