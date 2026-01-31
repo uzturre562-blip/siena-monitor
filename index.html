@@ -1456,37 +1456,38 @@
             updateConnectionStatus('connecting', 'Reconectando...');
         }
 
+        // En tu archivo HTML, reemplaza la función getMQTTTopics() con esto:
         function getMQTTTopics() {
-            return [
-                // SmartShunt
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/soc_ultimatron/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/tension_smartshunt/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/corriente_smartshunt/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/ah_consumidos/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/tiempo_restante/state`,
-                
-                // Solar
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_bateria_mppt/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/potencia_solar/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/energia_hoy/state`,
-                
-                // Inversor
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_bateria_phoenix/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/potencia_salida_phoenix/state`,
-                
-                // Orion
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_entrada_orion/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_salida_orion/state`,
-                
-                // Temperatura
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/voltaje_battery_sense/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/temperatura_bateria/state`,
-                
-                // Sistema
-                `${CONFIG.MQTT_TOPIC_PREFIX}/sensor/uptime_monitor/state`,
-                `${CONFIG.MQTT_TOPIC_PREFIX}/status`
-            ];
-        }
+    return [
+        // SmartShunt (Batería Ultimatron 100Ah)
+        'siena395_monitor_mikel_2026/sensor/soc_ultimatron/state',
+        'siena395_monitor_mikel_2026/sensor/tension_smartshunt/state',
+        'siena395_monitor_mikel_2026/sensor/corriente_smartshunt/state',
+        'siena395_monitor_mikel_2026/sensor/ah_consumidos/state',
+        'siena395_monitor_mikel_2026/sensor/tiempo_restante/state',
+        
+        // MPPT Solar
+        'siena395_monitor_mikel_2026/sensor/voltaje_bateria_mppt/state',
+        'siena395_monitor_mikel_2026/sensor/potencia_solar/state',
+        'siena395_monitor_mikel_2026/sensor/energia_hoy/state',
+        
+        // Phoenix Inverter
+        'siena395_monitor_mikel_2026/sensor/voltaje_bateria_phoenix/state',
+        'siena395_monitor_mikel_2026/sensor/potencia_salida_phoenix/state',
+        
+        // Orion DC-DC
+        'siena395_monitor_mikel_2026/sensor/voltaje_entrada_orion/state',
+        'siena395_monitor_mikel_2026/sensor/voltaje_salida_orion/state',
+        
+        // Battery Sense
+        'siena395_monitor_mikel_2026/sensor/voltaje_battery_sense/state',
+        'siena395_monitor_mikel_2026/sensor/temperatura_bateria/state',
+        
+        // Sistema
+        'siena395_monitor_mikel_2026/sensor/uptime_monitor/state',
+        'siena395_monitor_mikel_2026/status'
+    ];
+}
 
         function updateDataFromMQTT(topic, value) {
             const topicMap = {
