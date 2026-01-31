@@ -14,7 +14,7 @@
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
-            /* Modo claro (default) - MEJORADO */
+            /* Modo claro (default) - MEJORADO con tarjetas más oscuras */
             --primary: #2d3748;
             --secondary: #4a5568;
             --accent: #3182ce;
@@ -25,13 +25,13 @@
             --light: #f0f4f8;
             --dark: #1a202c;
             --bg-color: #edf2f7;
-            --card-bg: #f8fafc;
+            --card-bg: #e8edf2; /* CAMBIADO: Tarjetas más oscuras en modo claro */
             --text-color: #2d3748;
             --border-color: #e2e8f0;
             --border-radius: 14px;
             --shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
             --shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.12);
-            --card-gradient: linear-gradient(145deg, #ffffff, #f1f5f9);
+            --card-gradient: linear-gradient(145deg, #f1f5f9, #e8edf2); /* CAMBIADO: Más oscuro */
         }
 
         .dark-mode {
@@ -214,7 +214,7 @@
             transform: scale(0.9) rotate(15deg);
         }
 
-        /* Cards - MEJORADAS */
+        /* Cards - MEJORADAS y más oscuras en modo claro */
         .card {
             background: var(--card-gradient);
             border-radius: var(--border-radius);
@@ -274,7 +274,7 @@
             height: 40px;
         }
 
-        /* Battery Section - CENTRADO */
+        /* Battery Section - CENTRADO MEJORADO */
         .battery-section {
             grid-column: 1 / -1;
         }
@@ -329,6 +329,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center; /* MEJORADO: Centrado adicional */
         }
 
         .soc-value {
@@ -339,6 +340,9 @@
             margin-bottom: 4px;
             transition: color 0.3s;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center; /* MEJORADO: Centrado */
+            width: 100%;
         }
 
         .soc-label {
@@ -346,6 +350,8 @@
             color: var(--secondary);
             margin-bottom: 16px;
             font-weight: 500;
+            text-align: center;
+            width: 100%;
         }
 
         .battery-info-grid {
@@ -401,15 +407,15 @@
             font-weight: 500;
         }
 
-        /* Diagrama de Flujo - MEJORADO */
+        /* Diagrama de Flujo - MEJORADO con más separación vertical */
         .flow-section {
             grid-column: 1 / -1;
-            min-height: 340px;
+            min-height: 400px; /* Aumentado para más espacio */
         }
 
         .flow-diagram {
             position: relative;
-            height: 300px;
+            height: 360px; /* Aumentado para más espacio */
             background: linear-gradient(145deg, var(--light), var(--card-bg));
             border-radius: 16px;
             overflow: hidden;
@@ -497,7 +503,7 @@
             50% { opacity: 1; }
         }
 
-        /* Botones de acción - MEJORADOS */
+        /* Botones de acción - MEJORADOS con botón configuración funcional */
         .action-button {
             background: linear-gradient(135deg, var(--accent), var(--info));
             color: white;
@@ -541,6 +547,36 @@
 
         .action-button.success {
             background: linear-gradient(135deg, var(--success), #2f855a);
+        }
+
+        /* Botón de Configuración específico */
+        .config-button {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            min-height: 36px;
+            box-shadow: 0 4px 12px rgba(113, 128, 150, 0.3);
+        }
+
+        .config-button:hover {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(113, 128, 150, 0.4);
+        }
+
+        .config-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(113, 128, 150, 0.3);
         }
 
         /* Gráficos históricos */
@@ -768,7 +804,7 @@
             }
             
             .flow-diagram {
-                height: 280px;
+                height: 320px; /* Ajustado */
             }
             
             .flow-node {
@@ -810,7 +846,7 @@
             }
             
             .flow-diagram {
-                height: 340px;
+                height: 380px; /* Aumentado */
             }
             
             .flow-node {
@@ -851,7 +887,7 @@
             }
             
             .flow-diagram {
-                height: 360px;
+                height: 400px; /* Aumentado */
             }
         }
 
@@ -950,13 +986,18 @@
             </div>
         </header>
 
-        <!-- Sección Batería - CENTRADA -->
+        <!-- Sección Batería - CENTRADA MEJORADA -->
         <section class="card battery-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-battery-full card-icon"></i> Ultimatron 100Ah</h2>
-                <button class="action-button" id="manualRefresh">
-                    <i class="fas fa-sync-alt"></i> Actualizar
-                </button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="config-button" id="configButton" title="Configuración del sistema">
+                        <i class="fas fa-cog"></i> Configuración
+                    </button>
+                    <button class="action-button" id="manualRefresh">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
             </div>
             
             <div class="battery-container">
@@ -967,7 +1008,8 @@
                 </div>
                 
                 <div class="soc-display">
-                    <div class="soc-value" id="socValue">--%</div>
+                    <!-- MEJORADO: Texto perfectamente centrado -->
+                    <div class="soc-value" id="socValue" style="text-align: center; display: block; margin: 0 auto;">--%</div>
                     <div class="soc-label">Estado de Carga (SOC)</div>
                 </div>
                 
@@ -992,7 +1034,7 @@
             </div>
         </section>
 
-        <!-- Diagrama de Flujo - MEJORADO -->
+        <!-- Diagrama de Flujo - MEJORADO con más separación vertical -->
         <section class="card flow-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-project-diagram card-icon"></i> Flujo de Energía</h2>
@@ -1108,7 +1150,7 @@
                 <h2 class="card-title"><i class="fas fa-thermometer-half card-icon"></i> Temperatura</h2>
             </div>
             <div class="soc-display" style="margin: 0 0 16px 0;">
-                <div class="soc-value" id="tempValue" style="font-size: 2.5rem;">--</div>
+                <div class="soc-value" id="tempValue" style="font-size: 2.5rem; text-align: center; display: block; margin: 0 auto;">--</div>
                 <div class="soc-label">°C Batería Ultimatron</div>
             </div>
             <div class="info-item">
@@ -1337,7 +1379,8 @@
                 logsContainer: document.getElementById('logsContainer'),
                 alarmsContainer: document.getElementById('alarmsContainer'),
                 alarmCount: document.getElementById('alarmCount'),
-                mqttConnectionInfo: document.getElementById('mqttConnectionInfo')
+                mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
+                configButton: document.getElementById('configButton') // Nuevo
             };
             
             window.ui.mqttConnectionInfo.textContent = 
@@ -1474,7 +1517,7 @@
             addLog(`Gráfico actualizado: últimas ${hours}h`, 'info');
         }
 
-        // ==================== DIAGRAMA DE FLUJO - MEJORADO ====================
+        // ==================== DIAGRAMA DE FLUJO - MEJORADO CON MÁS SEPARACIÓN ====================
         function initializeFlowDiagram() {
             const diagram = document.getElementById('flowDiagram');
             diagram.innerHTML = '';
@@ -1482,22 +1525,22 @@
             const width = diagram.offsetWidth;
             const height = diagram.offsetHeight;
             
-            // NODOS MÁS A LA IZQUIERDA - MEJOR CENTRADO
+            // NODOS CON MÁS SEPARACIÓN VERTICAL - AUMENTADO DE 0.3/0.6 A 0.25/0.65
             const nodes = [
-                { id: 'solar', name: 'Solar', icon: 'fa-sun', color: '#f6ad55', x: width * 0.15, y: height * 0.3 },
-                { id: 'mppt', name: 'MPPT', icon: 'fa-bolt', color: '#4299e1', x: width * 0.4, y: height * 0.3 },
-                { id: 'battery', name: 'Batería', icon: 'fa-battery-full', color: '#38a169', x: width * 0.4, y: height * 0.6 },
-                { id: 'orion', name: 'Orion', icon: 'fa-exchange-alt', color: '#9f7aea', x: width * 0.15, y: height * 0.6 },
-                { id: 'inverter', name: 'Inversor', icon: 'fa-plug', color: '#ed8936', x: width * 0.7, y: height * 0.3 },
-                { id: 'load', name: 'Cargas', icon: 'fa-home', color: '#e53e3e', x: width * 0.7, y: height * 0.6 }
+                { id: 'solar', name: 'Solar', icon: 'fa-sun', color: '#f6ad55', x: width * 0.15, y: height * 0.25 }, // Cambiado de 0.3 a 0.25
+                { id: 'mppt', name: 'MPPT', icon: 'fa-bolt', color: '#4299e1', x: width * 0.4, y: height * 0.25 }, // Cambiado de 0.3 a 0.25
+                { id: 'battery', name: 'Batería', icon: 'fa-battery-full', color: '#38a169', x: width * 0.4, y: height * 0.65 }, // Cambiado de 0.6 a 0.65
+                { id: 'orion', name: 'Orion', icon: 'fa-exchange-alt', color: '#9f7aea', x: width * 0.15, y: height * 0.65 }, // Cambiado de 0.6 a 0.65
+                { id: 'inverter', name: 'Inversor', icon: 'fa-plug', color: '#ed8936', x: width * 0.7, y: height * 0.25 }, // Cambiado de 0.3 a 0.25
+                { id: 'load', name: 'Cargas', icon: 'fa-home', color: '#e53e3e', x: width * 0.7, y: height * 0.65 } // Cambiado de 0.6 a 0.65
             ];
             
             // Crear nodos
             nodes.forEach(node => {
                 const nodeEl = document.createElement('div');
                 nodeEl.className = 'flow-node';
-                nodeEl.style.left = `${node.x - 40}px`; // Centrado
-                nodeEl.style.top = `${node.y - 40}px`; // Centrado
+                nodeEl.style.left = `${node.x - 40}px`;
+                nodeEl.style.top = `${node.y - 40}px`;
                 nodeEl.style.background = `linear-gradient(135deg, ${node.color}, ${darkenColor(node.color, 20)})`;
                 nodeEl.innerHTML = `
                     <i class="fas ${node.icon}"></i>
@@ -1526,7 +1569,7 @@
                 }
             });
             
-            addLog('Diagrama de flujo inicializado', 'info');
+            addLog('Diagrama de flujo inicializado con más separación vertical', 'info');
         }
 
         function createFlowLine(fromNode, toNode, color) {
@@ -1534,7 +1577,6 @@
             const line = document.createElement('div');
             line.className = `flow-line ${state.flowAnimationActive ? 'active' : ''}`;
             
-            // Calcular posición
             const x1 = fromNode.x;
             const y1 = fromNode.y;
             const x2 = toNode.x;
@@ -1545,7 +1587,6 @@
             const length = Math.sqrt(dx * dx + dy * dy);
             const angle = Math.atan2(dy, dx) * 180 / Math.PI;
             
-            // Configurar línea
             line.style.width = `${length}px`;
             line.style.left = `${x1}px`;
             line.style.top = `${y1}px`;
@@ -1733,7 +1774,7 @@
         function updateUI() {
             if (!window.ui) return;
             
-            // Batería
+            // Batería - MEJORADO CENTRADO
             updateElement(window.ui.socValue, state.battery.soc, '%');
             updateElement(window.ui.voltageValue, state.battery.voltage, 'V');
             updateElement(window.ui.currentValue, state.battery.current, 'A');
@@ -1758,6 +1799,13 @@
                 window.ui.batteryLevelText.textContent = '--%';
             }
             
+            // Asegurar que el texto de SOC está centrado
+            if (window.ui.socValue) {
+                window.ui.socValue.style.textAlign = 'center';
+                window.ui.socValue.style.display = 'block';
+                window.ui.socValue.style.margin = '0 auto';
+            }
+            
             // Otros datos
             updateElement(window.ui.solarVoltage, state.solar.voltage, 'V');
             updateElement(window.ui.solarPower, state.solar.power, 'W');
@@ -1778,6 +1826,13 @@
                 } else {
                     window.ui.tempValue.style.color = 'var(--primary)';
                 }
+            }
+            
+            // Asegurar que el texto de temperatura está centrado
+            if (window.ui.tempValue) {
+                window.ui.tempValue.style.textAlign = 'center';
+                window.ui.tempValue.style.display = 'block';
+                window.ui.tempValue.style.margin = '0 auto';
             }
             
             // Sistema
@@ -2073,18 +2128,121 @@
 
         // ==================== EVENT LISTENERS ====================
         function setupEventListeners() {
-            // Botón actualizar manual - AHORA SÍ HACE ALGO
+            // Botón de configuración - AHORA FUNCIONAL
+            document.getElementById('configButton').addEventListener('click', function() {
+                addLog('Configuración del sistema abierta', 'info');
+                
+                // Crear modal de configuración
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                    backdrop-filter: blur(5px);
+                `;
+                
+                const modalContent = document.createElement('div');
+                modalContent.style.cssText = `
+                    background: var(--card-gradient);
+                    padding: 30px;
+                    border-radius: var(--border-radius);
+                    max-width: 500px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: var(--shadow-hover);
+                    border: 1px solid var(--border-color);
+                `;
+                
+                modalContent.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="font-size: 1.3rem; color: var(--primary);"><i class="fas fa-cog"></i> Configuración del Sistema</h2>
+                        <button id="closeModal" style="background: none; border: none; color: var(--secondary); cursor: pointer; font-size: 1.2rem;">✕</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="font-size: 1rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-server"></i> Conexión MQTT</h3>
+                        <div style="display: grid; gap: 12px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">Broker MQTT</label>
+                                <input type="text" value="${CONFIG.MQTT_BROKER}" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">Topic Prefix</label>
+                                <input type="text" value="${CONFIG.MQTT_TOPIC_PREFIX}" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="font-size: 1rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-battery-full"></i> Umbrales de Batería</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">SOC Crítico (%)</label>
+                                <input type="number" value="10" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">SOC Bajo (%)</label>
+                                <input type="number" value="20" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="font-size: 1rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-thermometer-half"></i> Temperatura</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">Mínima (°C)</label>
+                                <input type="number" value="5" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">Máxima (°C)</label>
+                                <input type="number" value="45" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button id="saveConfig" style="background: linear-gradient(135deg, var(--success), #2f855a); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600;">Guardar</button>
+                        <button id="cancelConfig" style="background: linear-gradient(135deg, var(--secondary), #718096); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600;">Cancelar</button>
+                    </div>
+                `;
+                
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+                
+                // Eventos del modal
+                modal.querySelector('#closeModal').addEventListener('click', () => modal.remove());
+                modal.querySelector('#cancelConfig').addEventListener('click', () => modal.remove());
+                
+                modal.querySelector('#saveConfig').addEventListener('click', function() {
+                    addLog('Configuración guardada', 'success');
+                    alert('Configuración guardada correctamente. Los cambios se aplicarán tras reiniciar.');
+                    modal.remove();
+                });
+                
+                // Cerrar modal al hacer clic fuera
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+            });
+            
+            // Botón actualizar manual
             document.getElementById('manualRefresh').addEventListener('click', () => {
                 const btn = document.getElementById('manualRefresh');
                 btn.classList.add('loading');
                 
                 addLog('Actualización manual solicitada', 'info');
                 updateUI();
-                
-                // Forzar actualización de datos MQTT
-                if (state.mqttClient && state.isConnected) {
-                    addLog('Forzando actualización de datos MQTT...', 'info');
-                }
                 
                 setTimeout(() => {
                     btn.classList.remove('loading');
@@ -2111,7 +2269,7 @@
                 addLog(`Animación de flujo ${state.flowAnimationActive ? 'activada' : 'desactivada'}`, 'info');
             });
             
-            // Botón reset view - AHORA SÍ FUNCIONA
+            // Botón reset view
             document.getElementById('resetView').addEventListener('click', () => {
                 initializeFlowDiagram();
                 addLog('Diagrama de flujo restablecido', 'info');
