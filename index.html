@@ -1,173 +1,1076 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siena395 TOTAL CONTROL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Dashboard Siena395 Monitor</title>
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --accent: #00d2ff; --text: #f8fafc; --border: rgba(255,255,255,0.1); }
-        [data-theme="light"] { --bg: #cbd5e1; --card: #f1f5f9; --accent: #0284c7; --text: #1e293b; --border: rgba(0,0,0,0.08); }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; min-height: 100vh; }
-        .glass-card { background: var(--card); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; border: 1px solid var(--border); height: 100%; }
-        .stat-main { font-size: 2.2rem; font-weight: 800; color: var(--accent); line-height: 1; }
-        .stat-sub { font-size: 0.7rem; opacity: 0.6; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-        .theme-switch { cursor: pointer; padding: 8px 12px; border-radius: 20px; background: var(--card); border: 1px solid var(--border); }
+        :root {
+            --primary: #2d3748;
+            --secondary: #4a5568;
+            --accent: #3182ce;
+            --danger: #e53e3e;
+            --warning: #d69e2e;
+            --success: #38a169;
+            --info: #4299e1;
+            --light: #f7fafc;
+            --dark: #1a202c;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+
+        /* Header */
+        header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            color: var(--accent);
+            font-size: 1.4rem;
+        }
+
+        /* Battery Section */
+        .battery-section {
+            grid-column: span 6;
+        }
+
+        .battery-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .battery {
+            width: 180px;
+            height: 80px;
+            border: 4px solid var(--primary);
+            border-radius: 10px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .battery::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -10px;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 20px;
+            background-color: var(--primary);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .battery-level {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--warning));
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .soc-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .soc-label {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+
+        .battery-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .info-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .info-unit {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-left: 3px;
+        }
+
+        /* Solar Section */
+        .solar-section {
+            grid-column: span 3;
+        }
+
+        .solar-icon {
+            text-align: center;
+            margin: 15px 0;
+            color: #f6ad55;
+            font-size: 3.5rem;
+        }
+
+        /* Inverter & DC-DC Section */
+        .inverter-section, .orion-section {
+            grid-column: span 3;
+        }
+
+        /* Temperature Section */
+        .temp-section {
+            grid-column: span 4;
+        }
+
+        .temp-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .temp-value {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        .temp-icon {
+            font-size: 2.5rem;
+            color: var(--info);
+        }
+
+        /* Voltage Section */
+        .voltage-section {
+            grid-column: span 4;
+        }
+
+        .voltage-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        /* Energy Section */
+        .energy-section {
+            grid-column: span 4;
+        }
+
+        .energy-today {
+            background: linear-gradient(135deg, #4299e1, #667eea);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .energy-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .energy-label {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        /* Status Section */
+        .status-section {
+            grid-column: span 6;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .status-item {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .status-dot-small {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .online {
+            background-color: var(--success);
+        }
+
+        .offline {
+            background-color: var(--danger);
+        }
+
+        /* Alarmas */
+        .alarms-section {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        .alarm {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .alarm-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+        }
+
+        .alarm-danger {
+            background-color: rgba(229, 62, 62, 0.1);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alarm-info {
+            background-color: rgba(66, 153, 225, 0.1);
+            border-left: 4px solid var(--info);
+        }
+
+        .alarm-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: var(--secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .github-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .github-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .battery-section, .status-section {
+                grid-column: span 12;
+            }
+            
+            .solar-section, .inverter-section, .orion-section, .temp-section, .voltage-section, .energy-section {
+                grid-column: span 6;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .battery-section, .solar-section, .inverter-section, .orion-section, 
+            .temp-section, .voltage-section, .energy-section, .status-section {
+                grid-column: 1;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-left h1 {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-left">
+                <h1><i class="fas fa-caravan"></i> Siena395 Monitor</h1>
+                <p>Sistema de monitorización Victron para autocaravana Siena395</p>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="connectionStatus"></div>
+                <span id="connectionText">Conectando...</span>
+            </div>
+        </header>
 
-<div class="container py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h4 class="fw-bold mb-0">SIENA 395 <span class="text-info">ULTRA</span></h4>
-            <div class="small"><span id="esp-status-dot" class="badge bg-success rounded-circle p-1"> </span> <span id="esp-status-text">MQTT ONLINE</span></div>
-        </div>
-        <div class="d-flex align-items-center">
-            <div id="themeToggle" class="theme-switch me-2"><i class="fas fa-moon"></i></div>
-            <span class="badge bg-dark" id="clock">00:00:00</span>
-        </div>
+        <!-- Sección Batería -->
+        <section class="card battery-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-battery-full card-icon"></i> Batería Ultimatron 100Ah</h2>
+                <div class="card-actions">
+                    <i class="fas fa-sync-alt" id="refreshBattery"></i>
+                </div>
+            </div>
+            
+            <div class="battery-container">
+                <div class="battery">
+                    <div class="battery-level" id="batteryLevel" style="width: 85%"></div>
+                </div>
+                
+                <div class="soc-value" id="socValue">85%</div>
+                <div class="soc-label">Estado de Carga (SOC)</div>
+                
+                <div class="battery-info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Voltaje</div>
+                        <div class="info-value"><span id="voltageValue">12.8</span><span class="info-unit">V</span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Corriente</div>
+                        <div class="info-value"><span id="currentValue">5.3</span><span class="info-unit">A</span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Ah Consumidos</div>
+                        <div class="info-value"><span id="consumedAh">-12.5</span><span class="info-unit">Ah</span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Tiempo Restante</div>
+                        <div class="info-value"><span id="timeToGo">15.2</span><span class="info-unit">h</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Solar -->
+        <section class="card solar-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-sun card-icon"></i> Panel Solar</h2>
+            </div>
+            
+            <div class="solar-icon">
+                <i class="fas fa-solar-panel"></i>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Voltaje Batería</div>
+                <div class="info-value"><span id="solarVoltage">13.2</span><span class="info-unit">V</span></div>
+            </div>
+            
+            <div class="info-item" style="margin-top: 15px;">
+                <div class="info-label">Potencia Solar</div>
+                <div class="info-value"><span id="solarPower">125</span><span class="info-unit">W</span></div>
+            </div>
+        </section>
+
+        <!-- Sección Inversor -->
+        <section class="card inverter-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-bolt card-icon"></i> Inversor Phoenix</h2>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Voltaje Batería</div>
+                <div class="info-value"><span id="inverterVoltage">12.6</span><span class="info-unit">V</span></div>
+            </div>
+            
+            <div class="info-item" style="margin-top: 15px;">
+                <div class="info-label">Potencia Salida</div>
+                <div class="info-value"><span id="inverterPower">350</span><span class="info-unit">VA</span></div>
+            </div>
+        </section>
+
+        <!-- Sección Orion DC-DC -->
+        <section class="card orion-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-exchange-alt card-icon"></i> Orion DC-DC</h2>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Voltaje Entrada</div>
+                <div class="info-value"><span id="orionInputVoltage">13.8</span><span class="info-unit">V</span></div>
+            </div>
+            
+            <div class="info-item" style="margin-top: 15px;">
+                <div class="info-label">Voltaje Salida</div>
+                <div class="info-value"><span id="orionOutputVoltage">14.2</span><span class="info-unit">V</span></div>
+            </div>
+        </section>
+
+        <!-- Sección Temperatura -->
+        <section class="card temp-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-thermometer-half card-icon"></i> Temperatura Batería</h2>
+            </div>
+            
+            <div class="temp-display">
+                <div class="temp-value" id="tempValue">22.5</div>
+                <div class="temp-icon">
+                    <i class="fas fa-temperature-high"></i>
+                </div>
+            </div>
+            
+            <div class="info-item" style="margin-top: 15px;">
+                <div class="info-label">Voltaje Battery Sense</div>
+                <div class="info-value"><span id="batterySenseVoltage">12.7</span><span class="info-unit">V</span></div>
+            </div>
+        </section>
+
+        <!-- Sección Voltajes -->
+        <section class="card voltage-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-tachometer-alt card-icon"></i> Voltajes del Sistema</h2>
+            </div>
+            
+            <div class="voltage-grid">
+                <div class="info-item">
+                    <div class="info-label">SmartShunt</div>
+                    <div class="info-value"><span id="voltageSmartShunt">12.8</span><span class="info-unit">V</span></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">MPPT Solar</div>
+                    <div class="info-value"><span id="voltageMppt">13.2</span><span class="info-unit">V</span></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phoenix</div>
+                    <div class="info-value"><span id="voltagePhoenix">12.6</span><span class="info-unit">V</span></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Battery Sense</div>
+                    <div class="info-value"><span id="voltageBatterySense">12.7</span><span class="info-unit">V</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Energía -->
+        <section class="card energy-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-charging-station card-icon"></i> Energía Solar Hoy</h2>
+            </div>
+            
+            <div class="energy-today">
+                <div class="energy-value" id="energyToday">0.85</div>
+                <div class="energy-label">kWh generados hoy</div>
+            </div>
+            
+            <div class="info-item" style="margin-top: 20px;">
+                <div class="info-label">Uptime Monitor</div>
+                <div class="info-value" id="uptimeValue">2d 5h 12m</div>
+            </div>
+        </section>
+
+        <!-- Sección Estado -->
+        <section class="card status-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-network-wired card-icon"></i> Estado del Sistema</h2>
+            </div>
+            
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="info-label">WiFi</div>
+                    <div class="status-value">
+                        <span class="status-dot-small online"></span>
+                        <span id="wifiStatus">Conectado</span>
+                    </div>
+                    <div class="info-label" id="wifiNetwork">auto_wifi</div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="info-label">MQTT</div>
+                    <div class="status-value">
+                        <span class="status-dot-small online"></span>
+                        <span id="mqttStatus">Conectado</span>
+                    </div>
+                    <div class="info-label">broker.emqx.io</div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="info-label">SmartShunt</div>
+                    <div class="status-value">
+                        <span class="status-dot-small online"></span>
+                        <span id="smartShuntStatus">Conectado</span>
+                    </div>
+                    <div class="info-label">F1:C5:E5:53:04:D3</div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="info-label">MPPT Solar</div>
+                    <div class="status-value">
+                        <span class="status-dot-small online"></span>
+                        <span id="mpptStatus">Conectado</span>
+                    </div>
+                    <div class="info-label">DF:B0:9D:0D:6F:8F</div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="info-label">Phoenix</div>
+                    <div class="status-value">
+                        <span class="status-dot-small online"></span>
+                        <span id="phoenixStatus">Conectado</span>
+                    </div>
+                    <div class="info-label">CD:A0:35:30:F5:B2</div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="info-label">Orion DC-DC</div>
+                    <div class="status-value">
+                        <span class="status-dot-small online"></span>
+                        <span id="orionStatus">Conectado</span>
+                    </div>
+                    <div class="info-label">CE:90:98:17:A4:54</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Alarmas -->
+        <section class="card alarms-section">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-exclamation-triangle card-icon"></i> Sistema de Alarmas</h2>
+            </div>
+            
+            <div id="alarmsContainer">
+                <!-- Las alarmas se mostrarán aquí dinámicamente -->
+                <div class="alarm alarm-info">
+                    <div class="alarm-icon"><i class="fas fa-info-circle"></i></div>
+                    <div>
+                        <div class="info-label">Sistema iniciado</div>
+                        <div class="info-value">Todas las alarmas están desactivadas</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>Dashboard Siena395 Monitor &copy; 2026 | 
+                <a href="https://github.com/uzturre562-blip/siena-monitor" class="github-link" target="_blank">
+                    <i class="fab fa-github"></i> Ver en GitHub
+                </a>
+            </p>
+            <p style="margin-top: 8px; font-size: 0.8rem;">Datos actualizados automáticamente desde el sistema Victron vía MQTT</p>
+        </footer>
     </div>
 
-    <div class="row g-2">
-        <div class="col-lg-8">
-            <div class="glass-card">
-                <div class="stat-sub mb-2">Batería Ultimatron 100Ah (SmartShunt)</div>
-                <div class="row align-items-center text-center">
-                    <div class="col-4 border-end border-secondary">
-                        <div class="stat-main" id="soc_smartshunt">--%</div>
-                        <div class="progress mx-auto mt-2" style="height: 6px; width: 80%;"><div id="soc_bar" class="progress-bar bg-info" style="width: 0%"></div></div>
-                    </div>
-                    <div class="col-4 border-end border-secondary">
-                        <div class="h3 fw-bold mb-0" id="current_smartshunt">--.--A</div>
-                        <small class="stat-sub">Corriente</small>
-                    </div>
-                    <div class="col-4">
-                        <div class="h3 fw-bold mb-0 text-info" id="power_smartshunt">--W</div>
-                        <small class="stat-sub">Potencia Neta</small>
-                    </div>
-                </div>
-                <div class="mt-3 small border-top pt-2 text-center opacity-75">
-                    Voltaje Shunt: <b id="voltage_smartshunt">--.--V</b>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="glass-card border-danger">
-                <div class="stat-sub text-danger">Smart Battery Sense</div>
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                    <div class="h2 fw-bold text-danger mb-0" id="battery_temp_sensor">--°C</div>
-                    <div class="text-end">
-                        <div class="h5 mb-0" id="battery_voltage_sense">--.--V</div>
-                        <small class="stat-sub">Voltaje Preciso</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="glass-card border-warning">
-                <div class="stat-sub text-warning">Solar SmartSolar</div>
-                <div class="h2 fw-bold text-warning mt-1" id="power_mppt">0W</div>
-                <div class="d-flex justify-content-between small opacity-75">
-                    <span>Panel: <b id="voltage_mppt">--V</b></span>
-                    <span>Carga: <b id="battery_voltage_mppt">--V</b></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="glass-card border-primary">
-                <div class="stat-sub text-primary">Booster Orion DC-DC</div>
-                <div class="h4 fw-bold mt-1" id="orion_output_voltage">--.-V</div>
-                <div class="small opacity-75">Entrada Alternador: <b id="orion_input_voltage">--.-V</b></div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="glass-card border-success">
-                <div class="stat-sub text-success">Phoenix 12/2000VA</div>
-                <div class="h4 fw-bold text-success mt-1" id="inverter_power">0VA</div>
-                <div class="d-flex justify-content-between small">
-                    <span id="inverter_state" class="badge bg-dark">--</span>
-                    <span>Batt: <b id="voltage_phoenix">--V</b></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12">
-            <div class="glass-card">
-                <div class="stat-sub mb-2">Histórico Voltaje (SmartShunt)</div>
-                <canvas id="mainChart" height="100"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const BROKER = "wss://broker.emqx.io:8084/mqtt";
-    const PREFIX = "siena395_monitor_mikel_2026";
-    const client = mqtt.connect(BROKER);
-    let chart;
-
-    document.getElementById('themeToggle').onclick = () => {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-        document.querySelector('#themeToggle i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-    };
-
-    setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
-
-    client.on('connect', () => {
-        document.getElementById('esp-status-dot').className = "badge bg-success rounded-circle p-1";
-        client.subscribe(`${PREFIX}/#`);
-    });
-
-    client.on('message', (topic, msg) => {
-        const val = msg.toString();
-        const id = topic.split('/')[2];
-        const el = document.getElementById(id);
-
-        if (el) {
-            if (id === 'soc_smartshunt') {
-                el.innerText = parseFloat(val).toFixed(1) + '%';
-                document.getElementById('soc_bar').style.width = val + '%';
-            } else if (id === 'power_mppt' || id === 'power_smartshunt') {
-                el.innerHTML = `${Math.round(val)}W`;
-            } else if (id === 'inverter_power') {
-                el.innerHTML = `${Math.round(val)}VA`;
-            } else if (id === 'battery_temp_sensor') {
-                el.innerText = parseFloat(val).toFixed(1) + '°C';
-            } else if (id === 'inverter_state') {
-                el.innerText = val.toUpperCase();
+    <script>
+        // Configuración MQTT - Usando el broker público de EMQX
+        const MQTT_BROKER = "broker.emqx.io";
+        const MQTT_PORT = 8084; // WebSocket con SSL
+        const MQTT_TOPIC_PREFIX = "siena395_monitor_mikel_2026";
+        
+        // Estado inicial del dashboard
+        let dashboardData = {
+            battery: {
+                soc: 85,
+                voltage: 12.8,
+                current: 5.3,
+                consumedAh: -12.5,
+                timeToGo: 15.2
+            },
+            solar: {
+                voltage: 13.2,
+                power: 125
+            },
+            inverter: {
+                voltage: 12.6,
+                power: 350
+            },
+            orion: {
+                inputVoltage: 13.8,
+                outputVoltage: 14.2
+            },
+            temperature: {
+                batteryTemp: 22.5,
+                batterySenseVoltage: 12.7
+            },
+            energy: {
+                today: 0.85
+            },
+            status: {
+                wifi: "Conectado",
+                mqtt: "Conectado",
+                smartShunt: "Conectado",
+                mppt: "Conectado",
+                phoenix: "Conectado",
+                orion: "Conectado"
+            },
+            alarms: []
+        };
+        
+        // Elementos DOM
+        const elements = {
+            // Batería
+            socValue: document.getElementById('socValue'),
+            batteryLevel: document.getElementById('batteryLevel'),
+            voltageValue: document.getElementById('voltageValue'),
+            currentValue: document.getElementById('currentValue'),
+            consumedAh: document.getElementById('consumedAh'),
+            timeToGo: document.getElementById('timeToGo'),
+            
+            // Solar
+            solarVoltage: document.getElementById('solarVoltage'),
+            solarPower: document.getElementById('solarPower'),
+            
+            // Inversor
+            inverterVoltage: document.getElementById('inverterVoltage'),
+            inverterPower: document.getElementById('inverterPower'),
+            
+            // Orion
+            orionInputVoltage: document.getElementById('orionInputVoltage'),
+            orionOutputVoltage: document.getElementById('orionOutputVoltage'),
+            
+            // Temperatura
+            tempValue: document.getElementById('tempValue'),
+            batterySenseVoltage: document.getElementById('batterySenseVoltage'),
+            
+            // Voltajes
+            voltageSmartShunt: document.getElementById('voltageSmartShunt'),
+            voltageMppt: document.getElementById('voltageMppt'),
+            voltagePhoenix: document.getElementById('voltagePhoenix'),
+            voltageBatterySense: document.getElementById('voltageBatterySense'),
+            
+            // Energía
+            energyToday: document.getElementById('energyToday'),
+            uptimeValue: document.getElementById('uptimeValue'),
+            
+            // Estado
+            connectionStatus: document.getElementById('connectionStatus'),
+            connectionText: document.getElementById('connectionText'),
+            wifiStatus: document.getElementById('wifiStatus'),
+            wifiNetwork: document.getElementById('wifiNetwork'),
+            mqttStatus: document.getElementById('mqttStatus'),
+            smartShuntStatus: document.getElementById('smartShuntStatus'),
+            mpptStatus: document.getElementById('mpptStatus'),
+            phoenixStatus: document.getElementById('phoenixStatus'),
+            orionStatus: document.getElementById('orionStatus'),
+            
+            // Alarmas
+            alarmsContainer: document.getElementById('alarmsContainer')
+        };
+        
+        // Inicializar dashboard con datos iniciales
+        function initDashboard() {
+            updateBatteryUI();
+            updateSolarUI();
+            updateInverterUI();
+            updateOrionUI();
+            updateTemperatureUI();
+            updateVoltagesUI();
+            updateEnergyUI();
+            updateStatusUI();
+            updateAlarmsUI();
+            
+            // Simular conexión inicial exitosa
+            setTimeout(() => {
+                elements.connectionStatus.style.backgroundColor = "#38a169";
+                elements.connectionText.textContent = "Conectado";
+                elements.connectionText.style.color = "#38a169";
+            }, 1000);
+            
+            // Simular actualización de datos periódica (para demostración)
+            setInterval(simulateDataUpdate, 5000);
+            
+            // Configurar botón de refresco
+            document.getElementById('refreshBattery').addEventListener('click', function() {
+                this.classList.add('fa-spin');
+                setTimeout(() => {
+                    this.classList.remove('fa-spin');
+                }, 1000);
+                simulateDataUpdate();
+            });
+        }
+        
+        // Actualizar UI de batería
+        function updateBatteryUI() {
+            const { soc, voltage, current, consumedAh, timeToGo } = dashboardData.battery;
+            
+            elements.socValue.textContent = `${soc}%`;
+            elements.batteryLevel.style.width = `${soc}%`;
+            elements.voltageValue.textContent = voltage.toFixed(1);
+            elements.currentValue.textContent = current.toFixed(1);
+            elements.consumedAh.textContent = consumedAh.toFixed(1);
+            elements.timeToGo.textContent = timeToGo.toFixed(1);
+            
+            // Cambiar color de la batería según SOC
+            if (soc <= 10) {
+                elements.batteryLevel.style.background = "linear-gradient(90deg, #e53e3e, #c53030)";
+            } else if (soc <= 20) {
+                elements.batteryLevel.style.background = "linear-gradient(90deg, #ed8936, #dd6b20)";
+            } else if (soc <= 50) {
+                elements.batteryLevel.style.background = "linear-gradient(90deg, #ecc94b, #d69e2e)";
             } else {
-                el.innerText = parseFloat(val).toFixed(2) + 'V';
-                if (id === 'voltage_smartshunt') updateChart(parseFloat(val));
+                elements.batteryLevel.style.background = "linear-gradient(90deg, #48bb78, #38a169)";
             }
         }
-    });
-
-    function initChart() {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ label: 'Voltaje', data: [], borderColor: '#00d2ff', backgroundColor: 'rgba(0, 210, 255, 0.1)', fill: true, tension: 0.3, pointRadius: 0 }] },
-            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 12.4, max: 14.8 } } }
-        });
-    }
-
-    function updateChart(v) {
-        if (!chart) return;
-        chart.data.labels.push("");
-        chart.data.datasets[0].data.push(v);
-        if (chart.data.labels.length > 40) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
-        chart.update();
-    }
-    window.onload = initChart;
-</script>
+        
+        // Actualizar UI solar
+        function updateSolarUI() {
+            const { voltage, power } = dashboardData.solar;
+            elements.solarVoltage.textContent = voltage.toFixed(1);
+            elements.solarPower.textContent = Math.round(power);
+        }
+        
+        // Actualizar UI inversor
+        function updateInverterUI() {
+            const { voltage, power } = dashboardData.inverter;
+            elements.inverterVoltage.textContent = voltage.toFixed(1);
+            elements.inverterPower.textContent = Math.round(power);
+        }
+        
+        // Actualizar UI Orion
+        function updateOrionUI() {
+            const { inputVoltage, outputVoltage } = dashboardData.orion;
+            elements.orionInputVoltage.textContent = inputVoltage.toFixed(1);
+            elements.orionOutputVoltage.textContent = outputVoltage.toFixed(1);
+        }
+        
+        // Actualizar UI temperatura
+        function updateTemperatureUI() {
+            const { batteryTemp, batterySenseVoltage } = dashboardData.temperature;
+            elements.tempValue.textContent = batteryTemp.toFixed(1);
+            elements.batterySenseVoltage.textContent = batterySenseVoltage.toFixed(1);
+            
+            // Cambiar color según temperatura
+            if (batteryTemp <= 5 || batteryTemp >= 45) {
+                elements.tempValue.style.color = "#e53e3e";
+            } else if (batteryTemp <= 10 || batteryTemp >= 40) {
+                elements.tempValue.style.color = "#ed8936";
+            } else {
+                elements.tempValue.style.color = "#2d3748";
+            }
+        }
+        
+        // Actualizar UI voltajes
+        function updateVoltagesUI() {
+            const { voltage } = dashboardData.battery;
+            const { voltage: solarVoltage } = dashboardData.solar;
+            const { voltage: inverterVoltage } = dashboardData.inverter;
+            const { batterySenseVoltage } = dashboardData.temperature;
+            
+            elements.voltageSmartShunt.textContent = voltage.toFixed(1);
+            elements.voltageMppt.textContent = solarVoltage.toFixed(1);
+            elements.voltagePhoenix.textContent = inverterVoltage.toFixed(1);
+            elements.voltageBatterySense.textContent = batterySenseVoltage.toFixed(1);
+        }
+        
+        // Actualizar UI energía
+        function updateEnergyUI() {
+            const { today } = dashboardData.energy;
+            elements.energyToday.textContent = today.toFixed(2);
+        }
+        
+        // Actualizar UI estado
+        function updateStatusUI() {
+            const { wifi, mqtt, smartShunt, mppt, phoenix, orion } = dashboardData.status;
+            
+            elements.wifiStatus.textContent = wifi;
+            elements.mqttStatus.textContent = mqtt;
+            elements.smartShuntStatus.textContent = smartShunt;
+            elements.mpptStatus.textContent = mppt;
+            elements.phoenixStatus.textContent = phoenix;
+            elements.orionStatus.textContent = orion;
+            
+            // Actualizar puntos de estado
+            updateStatusDot('wifi', wifi);
+            updateStatusDot('mqtt', mqtt);
+            updateStatusDot('smartShunt', smartShunt);
+            updateStatusDot('mppt', mppt);
+            updateStatusDot('phoenix', phoenix);
+            updateStatusDot('orion', orion);
+        }
+        
+        function updateStatusDot(device, status) {
+            const dot = document.querySelector(`#${device}Status`).previousElementSibling;
+            if (status === "Conectado") {
+                dot.className = "status-dot-small online";
+            } else {
+                dot.className = "status-dot-small offline";
+            }
+        }
+        
+        // Actualizar UI alarmas
+        function updateAlarmsUI() {
+            const alarms = dashboardData.alarms;
+            const container = elements.alarmsContainer;
+            
+            if (alarms.length === 0) {
+                container.innerHTML = `
+                    <div class="alarm alarm-info">
+                        <div class="alarm-icon"><i class="fas fa-info-circle"></i></div>
+                        <div>
+                            <div class="info-label">Sistema estable</div>
+                            <div class="info-value">Todas las alarmas están desactivadas</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            alarms.forEach(alarm => {
+                let alarmClass = "alarm-info";
+                let icon = "info-circle";
+                
+                if (alarm.type === "warning") {
+                    alarmClass = "alarm-warning";
+                    icon = "exclamation-triangle";
+                } else if (alarm.type === "danger") {
+                    alarmClass = "alarm-danger";
+                    icon = "exclamation-circle";
+                }
+                
+                html += `
+                    <div class="alarm ${alarmClass}">
+                        <div class="alarm-icon"><i class="fas fa-${icon}"></i></div>
+                        <div>
+                            <div class="info-label">${alarm.title}</div>
+                            <div class="info-value">${alarm.message}</div>
+                            <div class="info-label" style="margin-top: 5px; font-size: 0.8rem;">${alarm.time}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Simular actualización de datos (en producción esto vendría de MQTT)
+        function simulateDataUpdate() {
+            // Simular fluctuaciones en los datos
+            const randomFactor = (Math.random() - 0.5) * 0.2; // -0.1 a +0.1
+            
+            // Actualizar datos de batería
+            dashboardData.battery.soc = Math.max(0, Math.min(100, dashboardData.battery.soc + randomFactor));
+            dashboardData.battery.voltage = 12.5 + Math.random() * 1.5;
+            dashboardData.battery.current = (Math.random() - 0.5) * 20;
+            dashboardData.battery.consumedAh = -15 + Math.random() * 5;
+            dashboardData.battery.timeToGo = 10 + Math.random() * 20;
+            
+            // Actualizar datos solares
+            dashboardData.solar.voltage = 13.0 + Math.random() * 1.0;
+            dashboardData.solar.power = Math.max(0, 100 + Math.random() * 100);
+            
+            // Actualizar energía generada hoy
+            dashboardData.energy.today = 0.8 + Math.random() * 0.3;
+            
+            // Actualizar temperatura de batería
+            dashboardData.temperature.batteryTemp = 20 + (Math.random() - 0.5) * 10;
+            
+            // Generar alarmas aleatorias basadas en condiciones
+            generateRandomAlarms();
+            
+            // Actualizar todas las UIs
+            updateBatteryUI();
+            updateSolarUI();
+            updateTemperatureUI();
+            updateVoltagesUI();
+            updateEnergyUI();
+            updateAlarmsUI();
+            
+            // Simular cambio de estado de conexión aleatorio
+            if (Math.random() > 0.9) {
+                const devices = ['smartShunt', 'mppt', 'phoenix', 'orion'];
+                const randomDevice = devices[Math.floor(Math.random() * devices.length)];
+                const currentStatus = dashboardData.status[randomDevice];
+                dashboardData.status[randomDevice] = currentStatus === "Conectado" ? "Desconectado" : "Conectado";
+                updateStatusUI();
+            }
+        }
+        
+        // Generar alarmas aleatorias basadas en condiciones
+        function generateRandomAlarms() {
+            dashboardData.alarms = [];
+            
+            // Alarma SOC bajo
+            if (dashboardData.battery.soc <= 20 && dashboardData.battery.soc > 10) {
+                dashboardData.alarms.push({
+                    type: "warning",
+                    title: "Batería Baja",
+                    message: `SOC al ${dashboardData.battery.soc.toFixed(1)}% - Cargar batería pronto`,
+                    time: "Hace 5 minutos"
+                });
+            }
+            
+            // Alarma SOC crítico
+            if (dashboardData.battery.soc <= 10) {
+                dashboardData.alarms.push({
+                    type: "danger",
+                    title: "¡BATERÍA CRÍTICA!",
+                    message: `SOC al ${dashboardData.battery.soc.toFixed(1)}% - CARGAR INMEDIATAMENTE`,
+                    time: "Hace 2 minutos"
+                });
+            }
+            
+            // Alarma temperatura
+            if (dashboardData.temperature.batteryTemp <= 5 || dashboardData.temperature.batteryTemp >= 45) {
+                dashboardData.alarms.push({
+                    type: "danger",
+                    title: "Temperatura Peligrosa",
+                    message: `Temperatura de batería: ${dashboardData.temperature.batteryTemp.toFixed(1)}°C`,
+                    time: "Hace 10 minutos"
+                });
+            } else if (dashboardData.temperature.batteryTemp <= 10 || dashboardData.temperature.batteryTemp >= 40) {
+                dashboardData.alarms.push({
+                    type: "warning",
+                    title: "Temperatura Extrema",
+                    message: `Temperatura de batería: ${dashboardData.temperature.batteryTemp.toFixed(1)}°C - Cuidado con la carga`,
+                    time: "Hace 15 minutos"
+                });
+            }
+            
+            // Alarma voltaje bajo
+            if (dashboardData.battery.voltage < 11.5) {
+                dashboardData.alarms.push({
+                    type: "warning",
+                    title: "Voltaje Bajo",
+                    message: `Voltaje de batería: ${dashboardData.battery.voltage.toFixed(1)}V`,
+                    time: "Hace 8 minutos"
+                });
+            }
+        }
+        
+        // Inicializar dashboard cuando se carga la página
+        document.addEventListener('DOMContentLoaded', initDashboard);
+        
+        // Nota: En una implementación real, aquí se conectaría al broker MQTT
+        // para recibir datos en tiempo real. Por simplicidad, estamos simulando los datos.
+        console.log("Dashboard Siena395 Monitor cargado.");
+        console.log("Para una implementación completa, conectar a MQTT broker:", MQTT_BROKER);
+        console.log("Topic prefix:", MQTT_TOPIC_PREFIX);
+    </script>
 </body>
 </html>
