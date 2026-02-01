@@ -25,13 +25,13 @@
             --light: #f0f4f8;
             --dark: #1a202c;
             --bg-color: #edf2f7;
-            --card-bg: #e8edf2; /* CAMBIADO: Tarjetas más oscuras en modo claro */
+            --card-bg: #e8edf2;
             --text-color: #2d3748;
             --border-color: #e2e8f0;
             --border-radius: 14px;
             --shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
             --shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.12);
-            --card-gradient: linear-gradient(145deg, #f1f5f9, #e8edf2); /* CAMBIADO: Más oscuro */
+            --card-gradient: linear-gradient(145deg, #f1f5f9, #e8edf2);
         }
 
         .dark-mode {
@@ -79,7 +79,7 @@
             margin: 0 auto;
         }
 
-        /* Header - MEJORADO */
+        /* Header */
         header {
             grid-column: 1 / -1;
             background: linear-gradient(135deg, var(--accent), var(--info));
@@ -95,7 +95,6 @@
 
         .dark-mode header {
             background: linear-gradient(135deg, #4a5568, #2d3748);
-            color: var(--header-text-dark);
         }
 
         .header-top {
@@ -114,20 +113,11 @@
             flex-wrap: wrap;
         }
 
-        .dark-mode .header-left h1 {
-            color: #ffffff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
         .header-left p {
             opacity: 0.95;
             font-size: 0.85rem;
             margin-top: 4px;
             font-weight: 400;
-        }
-
-        .dark-mode .header-left p {
-            color: #e2e8f0;
         }
 
         .mode-badge {
@@ -201,20 +191,12 @@
             backdrop-filter: blur(5px);
         }
 
-        .dark-mode .theme-toggle {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
         .theme-toggle:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: rotate(15deg);
         }
 
-        .theme-toggle:active {
-            transform: scale(0.9) rotate(15deg);
-        }
-
-        /* Cards - MEJORADAS y más oscuras en modo claro */
+        /* Cards */
         .card {
             background: var(--card-gradient);
             border-radius: var(--border-radius);
@@ -222,7 +204,6 @@
             padding: 20px;
             transition: all 0.3s ease;
             border: 1px solid var(--border-color);
-            -webkit-tap-highlight-color: transparent;
             position: relative;
             overflow: hidden;
         }
@@ -236,11 +217,6 @@
             height: 4px;
             background: linear-gradient(90deg, var(--accent), var(--info));
             border-radius: var(--border-radius) var(--border-radius) 0 0;
-        }
-
-        .card:active {
-            transform: translateY(2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .card-header {
@@ -274,7 +250,7 @@
             height: 40px;
         }
 
-        /* Battery Section - CENTRADO MEJORADO */
+        /* Battery Section - CORREGIDO CENTRADO */
         .battery-section {
             grid-column: 1 / -1;
         }
@@ -323,13 +299,14 @@
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
+        /* CORRECCIÓN: SOC CENTRADO */
         .soc-display {
             text-align: center;
             margin: 16px 0;
+            width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* MEJORADO: Centrado adicional */
         }
 
         .soc-value {
@@ -338,11 +315,9 @@
             line-height: 1;
             color: var(--primary);
             margin-bottom: 4px;
-            transition: color 0.3s;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: center; /* MEJORADO: Centrado */
+            text-align: center;
             width: 100%;
+            display: block;
         }
 
         .soc-label {
@@ -373,18 +348,10 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        .info-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
         .info-label {
             font-size: 0.8rem;
             color: var(--secondary);
             margin-bottom: 6px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -407,22 +374,20 @@
             font-weight: 500;
         }
 
-        /* Diagrama de Flujo - MEJORADO con más separación vertical */
+        /* Diagrama de Flujo - MEJORADO CON MÁS SEPARACIÓN VERTICAL */
         .flow-section {
             grid-column: 1 / -1;
-            min-height: 400px; /* Aumentado para más espacio */
+            min-height: 400px;
         }
 
         .flow-diagram {
             position: relative;
-            height: 360px; /* Aumentado para más espacio */
+            height: 380px; /* Aumentado para más espacio vertical */
             background: linear-gradient(145deg, var(--light), var(--card-bg));
             border-radius: 16px;
             overflow: hidden;
             margin-top: 12px;
-            touch-action: none;
             border: 2px solid var(--border-color);
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
         }
 
         .flow-node {
@@ -442,28 +407,16 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             transition: all 0.4s ease;
             cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
             border: 3px solid rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(5px);
-        }
-
-        .flow-node:hover {
-            transform: scale(1.05);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.4);
-        }
-
-        .flow-node:active {
-            transform: scale(0.95);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         .flow-node i {
             font-size: 1.8rem;
             margin-bottom: 8px;
-            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.3));
         }
 
-        /* LÍNEAS MEJORADAS - Discontinuas y con efecto */
+        /* LÍNEAS CON MÁS SEPARACIÓN VERTICAL */
         .flow-line {
             position: absolute;
             height: 4px;
@@ -503,7 +456,7 @@
             50% { opacity: 1; }
         }
 
-        /* Botones de acción - MEJORADOS con botón configuración funcional */
+        /* Botones de acción */
         .action-button {
             background: linear-gradient(135deg, var(--accent), var(--info));
             color: white;
@@ -517,39 +470,11 @@
             gap: 8px;
             cursor: pointer;
             transition: all 0.3s;
-            -webkit-tap-highlight-color: transparent;
             font-weight: 600;
             min-height: 36px;
             box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
         }
 
-        .action-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(49, 130, 206, 0.4);
-        }
-
-        .action-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
-        }
-
-        .action-button.secondary {
-            background: linear-gradient(135deg, var(--secondary), #718096);
-        }
-
-        .action-button.warning {
-            background: linear-gradient(135deg, var(--warning), #ed8936);
-        }
-
-        .action-button.danger {
-            background: linear-gradient(135deg, var(--danger), #c53030);
-        }
-
-        .action-button.success {
-            background: linear-gradient(135deg, var(--success), #2f855a);
-        }
-
-        /* Botón de Configuración específico */
         .config-button {
             background: linear-gradient(135deg, #718096, #4a5568);
             color: white;
@@ -568,18 +493,7 @@
             box-shadow: 0 4px 12px rgba(113, 128, 150, 0.3);
         }
 
-        .config-button:hover {
-            background: linear-gradient(135deg, #4a5568, #2d3748);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(113, 128, 150, 0.4);
-        }
-
-        .config-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(113, 128, 150, 0.3);
-        }
-
-        /* Gráficos históricos */
+        /* Gráficos */
         .chart-section {
             grid-column: 1 / -1;
             min-height: 320px;
@@ -595,26 +509,13 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Logs del sistema */
+        /* Logs */
         .logs-section {
             grid-column: 1 / -1;
             max-height: 340px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-        }
-
-        .logs-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .logs-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
         }
 
         .logs-container {
@@ -626,9 +527,7 @@
             margin-top: 12px;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.8rem;
-            -webkit-overflow-scrolling: touch;
             border: 1px solid var(--border-color);
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
         }
 
         .log-entry {
@@ -637,11 +536,6 @@
             display: flex;
             gap: 10px;
             align-items: flex-start;
-            transition: background-color 0.2s;
-        }
-
-        .log-entry:hover {
-            background-color: var(--light);
         }
 
         .log-time {
@@ -666,13 +560,6 @@
         .log-success { color: var(--success); }
         .log-mqtt { color: #9f7aea; }
 
-        /* Secciones más pequeñas */
-        .solar-section, .inverter-section, .orion-section, 
-        .temp-section, .voltage-section, .energy-section,
-        .system-status-section {
-            min-height: 180px;
-        }
-
         /* Alarmas */
         .alarms-section {
             grid-column: 1 / -1;
@@ -685,17 +572,7 @@
             gap: 16px;
             margin-top: 12px;
             padding-bottom: 10px;
-            -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-        }
-
-        .alarms-container::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .alarms-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(90deg, var(--accent), var(--info));
-            border-radius: 3px;
         }
 
         .alarm {
@@ -708,11 +585,6 @@
             gap: 14px;
             border-left: 6px solid;
             box-shadow: var(--shadow);
-            transition: transform 0.3s;
-        }
-
-        .alarm:hover {
-            transform: translateY(-3px);
         }
 
         .alarm-warning {
@@ -762,25 +634,7 @@
             box-shadow: var(--shadow);
         }
 
-        .github-link {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 600;
-            padding: 8px 16px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            background: rgba(49, 130, 206, 0.1);
-            border-radius: 25px;
-        }
-
-        .github-link:hover {
-            background: rgba(49, 130, 206, 0.2);
-            transform: translateY(-2px);
-        }
-
-        /* Media Queries específicas */
+        /* Responsive */
         @media (max-width: 393px) {
             body {
                 padding: 10px;
@@ -804,7 +658,7 @@
             }
             
             .flow-diagram {
-                height: 320px; /* Ajustado */
+                height: 320px;
             }
             
             .flow-node {
@@ -846,7 +700,7 @@
             }
             
             .flow-diagram {
-                height: 380px; /* Aumentado */
+                height: 400px; /* Más altura en tablet */
             }
             
             .flow-node {
@@ -857,10 +711,6 @@
             
             .flow-node i {
                 font-size: 2rem;
-            }
-            
-            .alarm {
-                width: 360px;
             }
         }
 
@@ -887,16 +737,11 @@
             }
             
             .flow-diagram {
-                height: 400px; /* Aumentado */
+                height: 420px; /* Más altura en desktop */
             }
         }
 
-        /* Mejoras táctiles */
-        button, .action-button, .theme-toggle {
-            touch-action: manipulation;
-        }
-
-        /* Loading states */
+        /* Loading */
         .loading {
             opacity: 0.8;
             pointer-events: none;
@@ -916,29 +761,6 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        /* Estado offline */
-        .offline-data {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .offline-icon {
-            font-size: 3.5rem;
-            color: var(--secondary);
-            margin-bottom: 20px;
-            opacity: 0.6;
-        }
-
-        .offline-message {
-            color: var(--secondary);
-            font-size: 1rem;
-            line-height: 1.5;
         }
     </style>
 </head>
@@ -966,7 +788,7 @@
                 </div>
             </div>
             
-            <!-- Información rápida del sistema -->
+            <!-- Información rápida -->
             <div style="display: flex; justify-content: space-between; font-size: 0.85rem; opacity: 0.95; flex-wrap: wrap; gap: 10px;">
                 <div>
                     <i class="fas fa-microchip"></i> <span id="heapStatus">-- bytes</span>
@@ -986,7 +808,7 @@
             </div>
         </header>
 
-        <!-- Sección Batería - CENTRADA MEJORADA -->
+        <!-- Sección Batería - CENTRADO CORREGIDO -->
         <section class="card battery-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-battery-full card-icon"></i> Ultimatron 100Ah</h2>
@@ -1007,9 +829,9 @@
                     </div>
                 </div>
                 
+                <!-- CORREGIDO: Texto perfectamente centrado -->
                 <div class="soc-display">
-                    <!-- MEJORADO: Texto perfectamente centrado -->
-                    <div class="soc-value" id="socValue" style="text-align: center; display: block; margin: 0 auto;">--%</div>
+                    <div class="soc-value" id="socValue">--%</div>
                     <div class="soc-label">Estado de Carga (SOC)</div>
                 </div>
                 
@@ -1034,7 +856,7 @@
             </div>
         </section>
 
-        <!-- Diagrama de Flujo - MEJORADO con más separación vertical -->
+        <!-- Diagrama de Flujo - CON MÁS SEPARACIÓN VERTICAL -->
         <section class="card flow-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-project-diagram card-icon"></i> Flujo de Energía</h2>
@@ -1150,7 +972,7 @@
                 <h2 class="card-title"><i class="fas fa-thermometer-half card-icon"></i> Temperatura</h2>
             </div>
             <div class="soc-display" style="margin: 0 0 16px 0;">
-                <div class="soc-value" id="tempValue" style="font-size: 2.5rem; text-align: center; display: block; margin: 0 auto;">--</div>
+                <div class="soc-value" id="tempValue" style="font-size: 2.5rem; text-align: center;">--</div>
                 <div class="soc-label">°C Batería Ultimatron</div>
             </div>
             <div class="info-item">
@@ -1209,7 +1031,7 @@
         <section class="card alarms-section">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-exclamation-triangle card-icon"></i> Sistema de Alarmas</h2>
-                <div id="alarmCount" style="background: linear-gradient(135deg, var(--danger), #c53030); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; display: none; font-weight: 700; box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);">0</div>
+                <div id="alarmCount" style="background: linear-gradient(135deg, var(--danger), #c53030); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; display: none; font-weight: 700;">0</div>
             </div>
             
             <div class="alarms-container" id="alarmsContainer">
@@ -1266,7 +1088,7 @@
             orion: { inputVoltage: null, outputVoltage: null },
             temperature: { batteryTemp: null, batterySenseVoltage: null },
             system: { freeHeap: null, wifiRSSI: null, ipAddress: null },
-            historicalData: { soc: [], voltage: [], temperature: [], solarPower: [] },
+            historicalData: { soc: [] },
             systemLogs: [],
             alarms: [],
             mqttClient: null,
@@ -1287,7 +1109,7 @@
             setupTheme();
             initializeUI();
             initializeChart();
-            initializeFlowDiagram(); // LLAMADA MEJORADA
+            initializeFlowDiagram(); // CON MÁS SEPARACIÓN VERTICAL
             setupEventListeners();
             connectToMQTT();
             
@@ -1380,7 +1202,7 @@
                 alarmsContainer: document.getElementById('alarmsContainer'),
                 alarmCount: document.getElementById('alarmCount'),
                 mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
-                configButton: document.getElementById('configButton') // Nuevo
+                configButton: document.getElementById('configButton')
             };
             
             window.ui.mqttConnectionInfo.textContent = 
@@ -1428,9 +1250,7 @@
                         fill: true,
                         tension: 0.4,
                         pointRadius: 3,
-                        pointBackgroundColor: '#3182ce',
-                        pointBorderColor: 'white',
-                        pointBorderWidth: 2
+                        pointBackgroundColor: '#3182ce'
                     }]
                 },
                 options: {
@@ -1446,10 +1266,7 @@
                     },
                     scales: {
                         x: { 
-                            grid: { 
-                                color: gridColor,
-                                drawBorder: false
-                            },
+                            grid: { color: gridColor },
                             ticks: { 
                                 color: textColor, 
                                 maxTicksLimit: 8,
@@ -1459,10 +1276,7 @@
                         y: {
                             min: 0,
                             max: 100,
-                            grid: { 
-                                color: gridColor,
-                                drawBorder: false
-                            },
+                            grid: { color: gridColor },
                             ticks: { 
                                 color: textColor,
                                 callback: value => value + '%',
@@ -1517,7 +1331,7 @@
             addLog(`Gráfico actualizado: últimas ${hours}h`, 'info');
         }
 
-        // ==================== DIAGRAMA DE FLUJO - MEJORADO CON MÁS SEPARACIÓN ====================
+        // ==================== DIAGRAMA DE FLUJO - CON MÁS SEPARACIÓN VERTICAL ====================
         function initializeFlowDiagram() {
             const diagram = document.getElementById('flowDiagram');
             diagram.innerHTML = '';
@@ -1525,14 +1339,15 @@
             const width = diagram.offsetWidth;
             const height = diagram.offsetHeight;
             
-            // NODOS CON MÁS SEPARACIÓN VERTICAL - AUMENTADO DE 0.3/0.6 A 0.25/0.65
+            // NODOS CON MÁS SEPARACIÓN VERTICAL (como en la imagen)
+            // Valores ajustados para mayor separación vertical entre filas
             const nodes = [
-                { id: 'solar', name: 'Solar', icon: 'fa-sun', color: '#f6ad55', x: width * 0.15, y: height * 0.25 }, // Cambiado de 0.3 a 0.25
-                { id: 'mppt', name: 'MPPT', icon: 'fa-bolt', color: '#4299e1', x: width * 0.4, y: height * 0.25 }, // Cambiado de 0.3 a 0.25
-                { id: 'battery', name: 'Batería', icon: 'fa-battery-full', color: '#38a169', x: width * 0.4, y: height * 0.65 }, // Cambiado de 0.6 a 0.65
-                { id: 'orion', name: 'Orion', icon: 'fa-exchange-alt', color: '#9f7aea', x: width * 0.15, y: height * 0.65 }, // Cambiado de 0.6 a 0.65
-                { id: 'inverter', name: 'Inversor', icon: 'fa-plug', color: '#ed8936', x: width * 0.7, y: height * 0.25 }, // Cambiado de 0.3 a 0.25
-                { id: 'load', name: 'Cargas', icon: 'fa-home', color: '#e53e3e', x: width * 0.7, y: height * 0.65 } // Cambiado de 0.6 a 0.65
+                { id: 'solar', name: 'Solar', icon: 'fa-sun', color: '#f6ad55', x: width * 0.15, y: height * 0.22 }, // Fila superior más arriba
+                { id: 'mppt', name: 'MPPT', icon: 'fa-bolt', color: '#4299e1', x: width * 0.4, y: height * 0.22 },
+                { id: 'inverter', name: 'Inversor', icon: 'fa-plug', color: '#ed8936', x: width * 0.7, y: height * 0.22 },
+                { id: 'orion', name: 'Orion', icon: 'fa-exchange-alt', color: '#9f7aea', x: width * 0.15, y: height * 0.68 }, // Fila inferior más abajo
+                { id: 'battery', name: 'Batería', icon: 'fa-battery-full', color: '#38a169', x: width * 0.4, y: height * 0.68 },
+                { id: 'load', name: 'Cargas', icon: 'fa-home', color: '#e53e3e', x: width * 0.7, y: height * 0.68 }
             ];
             
             // Crear nodos
@@ -1569,7 +1384,7 @@
                 }
             });
             
-            addLog('Diagrama de flujo inicializado con más separación vertical', 'info');
+            addLog('Diagrama de flujo inicializado con mayor separación vertical', 'info');
         }
 
         function createFlowLine(fromNode, toNode, color) {
@@ -1676,8 +1491,6 @@
             const messageStr = message.toString();
             const value = parseFloat(messageStr);
             
-            console.log(`📩 MQTT: ${topic} = ${value}`);
-            
             updateDataFromMQTT(topic, value, messageStr);
             updateUI();
             
@@ -1774,7 +1587,7 @@
         function updateUI() {
             if (!window.ui) return;
             
-            // Batería - MEJORADO CENTRADO
+            // Batería - CENTRADO CORREGIDO
             updateElement(window.ui.socValue, state.battery.soc, '%');
             updateElement(window.ui.voltageValue, state.battery.voltage, 'V');
             updateElement(window.ui.currentValue, state.battery.current, 'A');
@@ -1799,13 +1612,6 @@
                 window.ui.batteryLevelText.textContent = '--%';
             }
             
-            // Asegurar que el texto de SOC está centrado
-            if (window.ui.socValue) {
-                window.ui.socValue.style.textAlign = 'center';
-                window.ui.socValue.style.display = 'block';
-                window.ui.socValue.style.margin = '0 auto';
-            }
-            
             // Otros datos
             updateElement(window.ui.solarVoltage, state.solar.voltage, 'V');
             updateElement(window.ui.solarPower, state.solar.power, 'W');
@@ -1826,13 +1632,6 @@
                 } else {
                     window.ui.tempValue.style.color = 'var(--primary)';
                 }
-            }
-            
-            // Asegurar que el texto de temperatura está centrado
-            if (window.ui.tempValue) {
-                window.ui.tempValue.style.textAlign = 'center';
-                window.ui.tempValue.style.display = 'block';
-                window.ui.tempValue.style.margin = '0 auto';
             }
             
             // Sistema
@@ -2128,7 +1927,7 @@
 
         // ==================== EVENT LISTENERS ====================
         function setupEventListeners() {
-            // Botón de configuración - AHORA FUNCIONAL
+            // Botón de configuración
             document.getElementById('configButton').addEventListener('click', function() {
                 addLog('Configuración del sistema abierta', 'info');
                 
@@ -2145,7 +1944,6 @@
                     justify-content: center;
                     align-items: center;
                     z-index: 1000;
-                    backdrop-filter: blur(5px);
                 `;
                 
                 const modalContent = document.createElement('div');
@@ -2328,83 +2126,6 @@
             
             addLog('Logs exportados a archivo', 'success');
         }
-
-        // ==================== FUNCIONES DE DIAGNÓSTICO ====================
-        window.checkMQTTStatus = () => {
-            console.log('=== ESTADO MQTT ===');
-            console.log(`Conectado: ${state.isConnected}`);
-            console.log(`Topics suscritos: ${state.subscribedTopics.size}`);
-            console.log(`Datos recibidos: ${state.dataReceived}`);
-            console.log(`Última actualización: ${state.lastUpdate ? state.lastUpdate.toLocaleTimeString() : 'Nunca'}`);
-            
-            if (state.subscribedTopics.size > 0) {
-                console.log('\n=== TOPICS SUSCRITOS ===');
-                state.subscribedTopics.forEach(topic => console.log(`- ${topic}`));
-            }
-            
-            return {
-                connected: state.isConnected,
-                topics: Array.from(state.subscribedTopics),
-                dataReceived: state.dataReceived,
-                lastUpdate: state.lastUpdate
-            };
-        };
-
-        window.getSystemStatus = () => {
-            console.log('=== ESTADO DEL SISTEMA ===');
-            console.log('Batería:', state.battery);
-            console.log('Solar:', state.solar);
-            console.log('Inversor:', state.inverter);
-            console.log('Orion:', state.orion);
-            console.log('Temperatura:', state.temperature);
-            console.log('Sistema:', state.system);
-            console.log('Dispositivos BLE conectados:', state.victronDevicesConnected);
-            
-            return state;
-        };
-
-        window.reconnectMQTT = () => {
-            console.log('Forzando reconexión MQTT...');
-            if (state.mqttClient) {
-                state.mqttClient.end();
-            }
-            setTimeout(connectToMQTT, 1000);
-            return 'Reconexión iniciada';
-        };
-        // ==================== DIAGNÓSTICO TELEGRAM ====================
-setTimeout(() => {
-    console.log("🔍 Activando diagnóstico Telegram...");
-    
-    // Suscribirse a Telegram topics
-    if (state.mqttClient && state.isConnected) {
-        state.mqttClient.subscribe('siena395_monitor_mikel_2026/telegram/#');
-        console.log("✅ Suscrito a telegram/");
-        
-        // Publicar mensaje de prueba
-        const testMsg = JSON.stringify({
-            test: "diagnóstico",
-            time: new Date().toISOString()
-        });
-        state.mqttClient.publish('siena395_monitor_mikel_2026/telegram/test', testMsg);
-        console.log("📤 Publicado mensaje prueba");
-    } else {
-        console.log("❌ MQTT no conectado para diagnóstico");
-    }
-}, 5000);
-
-// Interceptar mensajes Telegram
-const originalHandle = state.mqttClient.onMessageArrived;
-state.mqttClient.onMessageArrived = function(topic, message) {
-    // Llamar al handler original
-    if (originalHandle) originalHandle(topic, message);
-    
-    // Mostrar logs de Telegram
-    const topicStr = topic.toString();
-    if (topicStr.includes('telegram')) {
-        console.log("📨 TELEGRAM RAW:", topicStr, "=", message.toString());
-        addLog(`Telegram: ${message.toString().slice(0, 50)}`, 'mqtt');
-    }
-};
     </script>
 </body>
 </html>
