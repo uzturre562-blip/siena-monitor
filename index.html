@@ -179,27 +179,24 @@
     client.on('message', (topic, msg) => {
     const valRaw = msg.toString();
     const val = parseFloat(valRaw).toFixed(1);
-    
-    // Esta línea extrae el nombre del sensor (ej: "ultimatron_soc") 
-    // quitando el prefijo y el "/state"
     const sensorName = topic.split('/')[2]; 
 
-    console.log("Procesando sensor:", sensorName, "Valor:", val); // Para que lo veas en F12
+    console.log("Procesando sensor:", sensorName, "Valor:", val);
 
-    if(sensorName === 'ultimatron_soc') { 
+    // Mapeo corregido según tus nombres reales:
+    if(sensorName === 'soc_bateria') { 
         document.getElementById('socValue').innerText = Math.round(val) + '%'; 
         document.getElementById('socMini').innerText = Math.round(val) + '%'; 
     }
-    if(sensorName === 'battery_sense_voltage') document.getElementById('btsV').innerText = val + 'V';
-    if(sensorName === 'battery_sense_temperature') document.getElementById('btsT').innerText = val + '°C';
-    if(sensorName === 'mppt_power') document.getElementById('solW').innerText = Math.round(val) + 'W';
-    if(sensorName === 'orion_input_voltage') document.getElementById('oriIn').innerText = val + 'V';
-    if(sensorName === 'orion_output_voltage') document.getElementById('oriOut').innerText = val + 'V';
-    if(sensorName === 'inverter_apparent_power') document.getElementById('invVA').innerText = Math.round(val) + 'VA';
-    if(sensorName === 'ultimatron_voltage') document.getElementById('vBat').innerText = val + 'V';
-    if(sensorName === 'ultimatron_current') document.getElementById('iBat').innerText = val + 'A';
+    if(sensorName === 'voltaje_battery_sense') document.getElementById('btsV').innerText = val + 'V';
+    if(sensorName === 'temperatura_bateria') document.getElementById('btsT').innerText = val + '°C';
+    if(sensorName === 'potencia_solar') document.getElementById('solW').innerText = Math.round(val) + 'W';
+    if(sensorName === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val + 'V';
+    if(sensorName === 'voltaje_salida_orion') document.getElementById('oriOut').innerText = val + 'V';
+    if(sensorName === 'potencia_salida_phoenix') document.getElementById('invVA').innerText = Math.round(val) + 'VA';
+    if(sensorName === 'tension_shunt') document.getElementById('vBat').innerText = val + 'V';
+    if(sensorName === 'corriente_shunt') document.getElementById('iBat').innerText = val + 'A';
 });
-
     window.addEventListener('resize', resize);
     resize(); animate();
 
