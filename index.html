@@ -130,22 +130,22 @@
     const ctx = canvas.getContext('2d');
     let w, h;
 
-    // --- FUNCIONES DE TRADUCCIÓN PARA EL AFINADO ---
+    // --- TRADUCTORES DE ESTADO PROFESIONALES ---
     function traducirEstadoOrion(val) {
         const v = Math.round(parseFloat(val));
-        if (v === 0) return "OFF";
-        if (v === 1) return "CARGANDO";
-        if (v === 2) return "COMPLETA";
-        return "STANDBY";
+        const estados = { 0: "OFF", 1: "CARGANDO", 2: "COMPLETA", 3: "ERROR" };
+        return estados[v] || "STANDBY";
     }
 
     function traducirEstadoInversor(val) {
         const v = Math.round(parseFloat(val));
-        const estados = { 0: "OFF", 1: "FALLO", 2: "LPV", 3: "ON", 4: "ECO" };
+        // Mapeo estándar de Phoenix: 3 es ON, 2 es Low Voltage, 1 es Fallo
+        const estados = { 0: "OFF", 1: "FALLO", 2: "BATERÍA BAJA", 3: "ON", 4: "ECO" };
         return estados[v] || "DESC.";
     }
 
     function resize() { w = canvas.width = canvas.offsetWidth; h = canvas.height = canvas.offsetHeight; }
+    // ... resto de tus funciones resize, getCoords y animate ...
 
     function getCoords() {
         return {
@@ -195,28 +195,32 @@
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
-    client.on('message', (topic, msg) => {
+client.on('message', (topic, msg) => {
         const valRaw = msg.toString();
         const val = parseFloat(valRaw).toFixed(1);
         const sensorName = topic.split('/')[2]; 
 
-        // Este console.log es el que ya ves funcionar
-        console.log("Procesando sensor:", sensorName, "Valor:", val);
-
-        // MAPEO DE TUS DATOS REALES A LAS TARJETAS VISUALES
-         if(sensorName === 'soc_bateria') { 
-        const soc = Math.round(val);
-        const el = document.getElementById('socValue');
-        el.innerText = soc + '%';
-        
-        // Cambio de color dinámico
-        if(soc > 80) el.style.color = '#38a169'; // Verde sano
-        else if(soc > 20) el.style.color = '#d69e2e'; // Naranja aviso
-        else el.style.color = '#e53e3e'; // Rojo crítico
-        
-        if(document.getElementById('socMini')) document.getElementById('socMini').innerText = soc + '%'; 
-    }
+        // 1. BATERÍA CON COLOR DINÁMICO
+        if(sensorName === 'soc_bateria') { 
+            const soc = Math.round(val);
+            const el = document.getElementById('socValue');
+            if(el) {
+                el.innerText = soc + '%';
+                // Cambia el color del número según el porcentaje
+                if(soc > 80) el.style.color = '#38a169'; // Verde
+                else if(soc > 25) el.style.color = '#d69e2e'; // Naranja
+                else el.style.color = '#e53e3e'; // Rojo
+            }
+            if(document.getElementById('socMini')) document.getElementById('socMini').innerText = soc + '%'; 
         }
+
+        // 2. TRADUCCIÓN DE ESTADOS (Usando las funciones que pusiste en el punto 1)
+        if(sensorName === 'estado_orion') {
+            const elOri = document.getElementById('oriEstado');
+            if(elOri) elOri.innerText = traducirEstadoOrion(valRaw);
+        }
+
+        // 3. RESTO DE SENSORES (Voltajes, Potencias, etc.)
         if(sensorName === 'voltaje_battery_sense') document.getElementById('btsV').innerText = val + 'V';
         if(sensorName === 'temperatura_bateria') document.getElementById('btsT').innerText = val + '°C';
         if(sensorName === 'potencia_solar') document.getElementById('solW').innerText = Math.round(val) + 'W';
