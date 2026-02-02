@@ -130,6 +130,21 @@
     const ctx = canvas.getContext('2d');
     let w, h;
 
+    // --- FUNCIONES DE TRADUCCIÓN PARA EL AFINADO ---
+    function traducirEstadoOrion(val) {
+        const v = Math.round(parseFloat(val));
+        if (v === 0) return "OFF";
+        if (v === 1) return "CARGANDO";
+        if (v === 2) return "COMPLETA";
+        return "STANDBY";
+    }
+
+    function traducirEstadoInversor(val) {
+        const v = Math.round(parseFloat(val));
+        const estados = { 0: "OFF", 1: "FALLO", 2: "LPV", 3: "ON", 4: "ECO" };
+        return estados[v] || "DESC.";
+    }
+
     function resize() { w = canvas.width = canvas.offsetWidth; h = canvas.height = canvas.offsetHeight; }
 
     function getCoords() {
@@ -141,6 +156,10 @@
             loads: { x: w*0.92 - 45, y: h*0.92 - 45, color: '#e53e3e' }
         };
     }
+
+    // ... (Aquí mantienes tu función animate() tal cual la tienes) ...
+
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
     function animate() {
         ctx.clearRect(0, 0, w, h);
@@ -185,11 +204,18 @@
         console.log("Procesando sensor:", sensorName, "Valor:", val);
 
         // MAPEO DE TUS DATOS REALES A LAS TARJETAS VISUALES
-        if(sensorName === 'soc_bateria') { 
-            document.getElementById('socValue').innerText = Math.round(val) + '%'; 
-            // Si tienes un circulito central:
-            const socMini = document.getElementById('socMini');
-            if(socMini) socMini.innerText = Math.round(val) + '%'; 
+         if(sensorName === 'soc_bateria') { 
+        const soc = Math.round(val);
+        const el = document.getElementById('socValue');
+        el.innerText = soc + '%';
+        
+        // Cambio de color dinámico
+        if(soc > 80) el.style.color = '#38a169'; // Verde sano
+        else if(soc > 20) el.style.color = '#d69e2e'; // Naranja aviso
+        else el.style.color = '#e53e3e'; // Rojo crítico
+        
+        if(document.getElementById('socMini')) document.getElementById('socMini').innerText = soc + '%'; 
+    }
         }
         if(sensorName === 'voltaje_battery_sense') document.getElementById('btsV').innerText = val + 'V';
         if(sensorName === 'temperatura_bateria') document.getElementById('btsT').innerText = val + '°C';
