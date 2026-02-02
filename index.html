@@ -3,2129 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Siena395 Monitor</title>
-    <!-- Font Awesome -->
+    <title>Siena395 PRO Monitor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js para gráficos -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- MQTT.js para conexión real -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
-            /* Modo claro (default) - MEJORADO con tarjetas más oscuras */
-            --primary: #2d3748;
-            --secondary: #4a5568;
+            /* TEMA CLARO PRO - Contraste alto para exteriores */
+            --bg: #a0aec0;
+            --card: #cbd5e0;
+            --header: linear-gradient(135deg, #1a365d, #2b6cb0);
+            --text: #1a202c;
             --accent: #3182ce;
-            --danger: #e53e3e;
-            --warning: #d69e2e;
             --success: #38a169;
-            --info: #4299e1;
-            --light: #f0f4f8;
-            --dark: #1a202c;
-            --bg-color: #edf2f7;
-            --card-bg: #e8edf2;
-            --text-color: #2d3748;
-            --border-color: #e2e8f0;
-            --border-radius: 14px;
-            --shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-            --shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.12);
-            --card-gradient: linear-gradient(145deg, #f1f5f9, #e8edf2);
+            --warning: #d69e2e;
+            --danger: #e53e3e;
+            --border: #718096;
         }
 
         .dark-mode {
-            /* Modo oscuro - MEJORADO CONTRASTE */
-            --primary: #ffffff;
-            --secondary: #e2e8f0;
-            --accent: #63b3ed;
-            --danger: #fc8181;
-            --warning: #f6ad55;
-            --success: #68d391;
-            --info: #76c9f9;
-            --light: #2d3748;
-            --dark: #f7fafc;
-            --bg-color: #1a202c;
-            --card-bg: #2d3748;
-            --text-color: #ffffff;
-            --border-color: #4a5568;
-            --shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-            --shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.4);
-            --card-gradient: linear-gradient(145deg, #374151, #2d3748);
+            --bg: #1a202c;
+            --card: #2d3748;
+            --text: #f7fafc;
+            --border: #4a5568;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 12px; transition: 0.3s; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding: 12px;
-            margin: 0 auto;
-            transition: background-color 0.3s, color 0.3s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .container {
+        .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 16px;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 15px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* Header */
         header {
             grid-column: 1 / -1;
-            background: linear-gradient(135deg, var(--accent), var(--info));
+            background: var(--header);
             color: white;
-            padding: 18px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .dark-mode header {
-            background: linear-gradient(135deg, #4a5568, #2d3748);
-        }
-
-        .header-top {
+            padding: 20px;
+            border-radius: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        .header-left h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .header-left p {
-            opacity: 0.95;
-            font-size: 0.85rem;
-            margin-top: 4px;
-            font-weight: 400;
-        }
-
-        .mode-badge {
-            font-size: 0.7rem;
-            background: var(--warning);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-left: 10px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .mode-badge.online {
-            background: var(--success);
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 6px 12px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--success);
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.connecting { background-color: var(--warning); }
-        .status-dot.error { background-color: var(--danger); }
-        .status-dot.disconnected { background-color: var(--secondary); }
-
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.05); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        /* Botón modo oscuro/claro */
-        .theme-toggle {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
-            font-size: 1.2rem;
-            transition: all 0.3s;
-            -webkit-tap-highlight-color: transparent;
-            backdrop-filter: blur(5px);
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: rotate(15deg);
-        }
-
-        /* Cards */
         .card {
-            background: var(--card-gradient);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
+            background: var(--card);
+            border-radius: 16px;
             padding: 20px;
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* BATERÍA PRINCIPAL */
+        .hero-card { grid-column: 1 / -1; text-align: center; }
+        .soc-text { font-size: 4.5rem; font-weight: 800; line-height: 1; margin: 10px 0; color: var(--accent); }
+        
+        /* DIAGRAMA DE FLUJO */
+        .flow-container {
             position: relative;
+            height: 300px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 12px;
+            margin: 15px 0;
             overflow: hidden;
         }
+        canvas#flowCanvas { width: 100%; height: 100%; }
 
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent), var(--info));
-            border-radius: var(--border-radius) var(--border-radius) 0 0;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-icon {
-            color: var(--accent);
-            font-size: 1.3rem;
-            background: rgba(49, 130, 206, 0.1);
-            padding: 8px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-        }
-
-        /* Battery Section - CORREGIDO CENTRADO */
-        .battery-section {
-            grid-column: 1 / -1;
-        }
-
-        .battery-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 12px 0;
-        }
-
-        .battery {
-            width: 180px;
-            height: 80px;
-            border: 4px solid var(--primary);
-            border-radius: 12px;
-            position: relative;
-            margin-bottom: 16px;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .battery::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            right: -10px;
-            transform: translateY(-50%);
-            width: 8px;
-            height: 24px;
-            background-color: var(--primary);
-            border-radius: 0 4px 4px 0;
-        }
-
-        .battery-level {
-            height: 100%;
-            background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
-            border-radius: 8px;
-            transition: width 0.7s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.1rem;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-
-        /* CORRECCIÓN: SOC CENTRADO */
-        .soc-display {
-            text-align: center;
-            margin: 16px 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .soc-value {
-            font-size: 3.2rem;
-            font-weight: 800;
-            line-height: 1;
-            color: var(--primary);
-            margin-bottom: 4px;
-            text-align: center;
-            width: 100%;
-            display: block;
-        }
-
-        .soc-label {
-            font-size: 0.95rem;
-            color: var(--secondary);
-            margin-bottom: 16px;
-            font-weight: 500;
-            text-align: center;
-            width: 100%;
-        }
-
-        .battery-info-grid {
+        /* GRID DE EQUIPOS */
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
+            margin-top: 10px;
         }
-
-        .info-item {
-            background: linear-gradient(145deg, var(--light), var(--card-bg));
-            padding: 14px;
+        .stat-box {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
             border-radius: 10px;
             text-align: center;
-            transition: all 0.3s;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
         }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; font-weight: 600; opacity: 0.8; }
+        .stat-value { font-size: 1.2rem; font-weight: 800; }
 
-        .info-label {
-            font-size: 0.8rem;
-            color: var(--secondary);
-            margin-bottom: 6px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        /* HISTÓRICO */
+        .history-card { grid-column: 1 / -1; }
 
-        .info-value {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary);
-            line-height: 1.2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .info-unit {
-            font-size: 0.8rem;
-            color: var(--secondary);
-            font-weight: 500;
-        }
-
-        /* Diagrama de Flujo - MEJORADO CON MÁS SEPARACIÓN VERTICAL */
-        .flow-section {
-            grid-column: 1 / -1;
-            min-height: 400px;
-        }
-
-        .flow-diagram {
-            position: relative;
-            height: 380px; /* Aumentado para más espacio vertical */
-            background: linear-gradient(145deg, var(--light), var(--card-bg));
-            border-radius: 16px;
-            overflow: hidden;
-            margin-top: 12px;
-            border: 2px solid var(--border-color);
-        }
-
-        .flow-node {
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-align: center;
-            z-index: 2;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            transition: all 0.4s ease;
-            cursor: pointer;
-            border: 3px solid rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(5px);
-        }
-
-        .flow-node i {
-            font-size: 1.8rem;
-            margin-bottom: 8px;
-        }
-
-        /* LÍNEAS CON MÁS SEPARACIÓN VERTICAL */
-        .flow-line {
-            position: absolute;
-            height: 4px;
-            background: repeating-linear-gradient(
-                90deg,
-                var(--accent) 0px,
-                var(--accent) 6px,
-                transparent 6px,
-                transparent 12px
-            );
-            transform-origin: 0 0;
-            z-index: 1;
-            border-radius: 2px;
-            animation: dashMove 2s linear infinite;
-            background-size: 24px 4px;
-            box-shadow: 0 0 12px rgba(49, 130, 206, 0.4);
-        }
-
-        .flow-line.active {
-            background: repeating-linear-gradient(
-                90deg,
-                var(--success) 0px,
-                var(--success) 6px,
-                var(--info) 6px,
-                var(--info) 12px
-            );
-            animation: dashMove 1s linear infinite, pulseLine 2s ease-in-out infinite;
-        }
-
-        @keyframes dashMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 24px 0; }
-        }
-
-        @keyframes pulseLine {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
-        }
-
-        /* Botones de acción */
-        .action-button {
-            background: linear-gradient(135deg, var(--accent), var(--info));
+        .btn {
+            background: var(--accent);
             color: white;
             border: none;
-            border-radius: 25px;
-            padding: 8px 16px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
+            padding: 10px 20px;
+            border-radius: 50px;
             font-weight: 600;
-            min-height: 36px;
-            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
-        }
-
-        .config-button {
-            background: linear-gradient(135deg, #718096, #4a5568);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            padding: 8px 16px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
             cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            min-height: 36px;
-            box-shadow: 0 4px 12px rgba(113, 128, 150, 0.3);
-        }
-
-        /* Gráficos */
-        .chart-section {
-            grid-column: 1 / -1;
-            min-height: 320px;
-        }
-
-        .chart-container {
-            height: 260px;
-            margin-top: 12px;
-            position: relative;
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* Logs */
-        .logs-section {
-            grid-column: 1 / -1;
-            max-height: 340px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logs-container {
-            flex: 1;
-            overflow-y: auto;
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 12px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.8rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .log-entry {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
-
-        .log-time {
-            color: var(--secondary);
-            white-space: nowrap;
-            font-size: 0.75rem;
-            min-width: 55px;
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        .log-message {
-            color: var(--text-color);
-            flex: 1;
-            word-break: break-word;
-            line-height: 1.4;
-        }
-
-        .log-info { color: var(--info); }
-        .log-warning { color: var(--warning); }
-        .log-error { color: var(--danger); }
-        .log-success { color: var(--success); }
-        .log-mqtt { color: #9f7aea; }
-
-        /* Alarmas */
-        .alarms-section {
-            grid-column: 1 / -1;
-            margin-top: 12px;
-        }
-
-        .alarms-container {
-            display: flex;
-            overflow-x: auto;
-            gap: 16px;
-            margin-top: 12px;
-            padding-bottom: 10px;
-            scrollbar-width: thin;
-        }
-
-        .alarm {
-            flex: 0 0 auto;
-            width: 320px;
-            padding: 16px;
-            border-radius: 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            border-left: 6px solid;
-            box-shadow: var(--shadow);
-        }
-
-        .alarm-warning {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.06));
-            border-left-color: var(--warning);
-        }
-
-        .alarm-danger {
-            background: linear-gradient(135deg, rgba(229, 62, 62, 0.12), rgba(229, 62, 62, 0.06));
-            border-left-color: var(--danger);
-        }
-
-        .alarm-info {
-            background: linear-gradient(135deg, rgba(66, 153, 225, 0.12), rgba(66, 153, 225, 0.06));
-            border-left-color: var(--info);
-        }
-
-        .alarm-success {
-            background: linear-gradient(135deg, rgba(56, 161, 105, 0.12), rgba(56, 161, 105, 0.06));
-            border-left-color: var(--success);
-        }
-
-        .alarm-icon {
-            font-size: 1.5rem;
-            margin-top: 2px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px;
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Footer */
-        footer {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 20px;
-            margin-top: 24px;
-            color: var(--secondary);
-            font-size: 0.85rem;
-            border-top: 2px solid var(--border-color);
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        /* Responsive */
-        @media (max-width: 393px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                gap: 12px;
-            }
-            
-            .card {
-                padding: 16px;
-            }
-            
-            .soc-value {
-                font-size: 2.8rem;
-            }
-            
-            .battery {
-                width: 160px;
-                height: 70px;
-            }
-            
-            .flow-diagram {
-                height: 320px;
-            }
-            
-            .flow-node {
-                width: 70px;
-                height: 70px;
-                font-size: 0.7rem;
-            }
-            
-            .flow-node i {
-                font-size: 1.5rem;
-            }
-            
-            .alarm {
-                width: 300px;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 18px;
-            }
-            
-            .battery-section {
-                grid-column: span 2;
-            }
-            
-            .flow-section, .chart-section, .logs-section {
-                grid-column: span 2;
-            }
-            
-            .soc-value {
-                font-size: 3.8rem;
-            }
-            
-            .battery {
-                width: 200px;
-                height: 90px;
-            }
-            
-            .flow-diagram {
-                height: 400px; /* Más altura en tablet */
-            }
-            
-            .flow-node {
-                width: 90px;
-                height: 90px;
-                font-size: 0.9rem;
-            }
-            
-            .flow-node i {
-                font-size: 2rem;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .container {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 20px;
-            }
-            
-            .battery-section {
-                grid-column: span 1;
-            }
-            
-            .flow-section {
-                grid-column: span 2;
-            }
-            
-            .chart-section, .logs-section {
-                grid-column: span 3;
-            }
-            
-            .soc-value {
-                font-size: 4.2rem;
-            }
-            
-            .flow-diagram {
-                height: 420px; /* Más altura en desktop */
-            }
-        }
-
-        /* Loading */
-        .loading {
-            opacity: 0.8;
-            pointer-events: none;
-        }
-
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid white;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-left: 8px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
+    <div class="dashboard">
         <header>
-            <div class="header-top">
-                <div class="header-left">
-                    <h1><i class="fas fa-caravan"></i> Siena395 Monitor 
-                        <span class="mode-badge" id="modeBadge">
-                            <i class="fas fa-tools"></i> CONFIGURACIÓN
-                        </span>
-                    </h1>
-                    <p>ESP32 online | <span id="statusMessage">Esperando dispositivos Victron</span></p>
-                </div>
-                <div class="header-right">
-                    <div class="status-indicator">
-                        <div class="status-dot disconnected" id="connectionStatus"></div>
-                        <span id="connectionText">Conectando...</span>
-                    </div>
-                    <button class="theme-toggle" id="themeToggle" title="Cambiar tema">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                </div>
+            <div>
+                <h1 style="font-size: 1.4rem;">Siena395 PRO</h1>
+                <span id="mqttStatus" style="font-size: 0.8rem; opacity: 0.8;">🔌 Desconectado</span>
             </div>
-            
-            <!-- Información rápida -->
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; opacity: 0.95; flex-wrap: wrap; gap: 10px;">
-                <div>
-                    <i class="fas fa-microchip"></i> <span id="heapStatus">-- bytes</span>
-                </div>
-                <div>
-                    <i class="fas fa-wifi"></i> <span id="wifiStatus">RSSI: -- dBm</span>
-                </div>
-                <div>
-                    <i class="fas fa-database"></i> <span id="dataCount">0 datos</span>
-                </div>
-                <div>
-                    <i class="fas fa-broadcast-tower"></i> <span id="mqttStatus">MQTT: --</span>
-                </div>
-                <div>
-                    <i class="fas fa-bluetooth"></i> <span id="bleStatusInfo">BLE: 0/5</span>
-                </div>
-            </div>
+            <button class="btn" onclick="document.body.classList.toggle('dark-mode')">
+                <i class="fas fa-adjust"></i>
+            </button>
         </header>
 
-        <!-- Sección Batería - CENTRADO CORREGIDO -->
-        <section class="card battery-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-battery-full card-icon"></i> Ultimatron 100Ah</h2>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="config-button" id="configButton" title="Configuración del sistema">
-                        <i class="fas fa-cog"></i> Configuración
-                    </button>
-                    <button class="action-button" id="manualRefresh">
-                        <i class="fas fa-sync-alt"></i> Actualizar
-                    </button>
-                </div>
-            </div>
-            
-            <div class="battery-container">
-                <div class="battery">
-                    <div class="battery-level" id="batteryLevel" style="width: 0%">
-                        <span id="batteryLevelText">--%</span>
-                    </div>
-                </div>
-                
-                <!-- CORREGIDO: Texto perfectamente centrado -->
-                <div class="soc-display">
-                    <div class="soc-value" id="socValue">--%</div>
-                    <div class="soc-label">Estado de Carga (SOC)</div>
-                </div>
-                
-                <div class="battery-info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Voltaje</div>
-                        <div class="info-value"><span id="voltageValue">--</span><span class="info-unit">V</span></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Corriente</div>
-                        <div class="info-value"><span id="currentValue">--</span><span class="info-unit">A</span></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Ah Consumidos</div>
-                        <div class="info-value"><span id="consumedAh">--</span><span class="info-unit">Ah</span></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Tiempo Restante</div>
-                        <div class="info-value"><span id="timeToGo">--</span><span class="info-unit">h</span></div>
-                    </div>
-                </div>
+        <section class="card hero-card">
+            <div class="stat-label">Estado de Carga - Ultimatron 100Ah</div>
+            <div id="socValue" class="soc-text">--%</div>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-label">Voltaje</div><div id="vBat" class="stat-value">--V</div></div>
+                <div class="stat-box"><div class="stat-label">Corriente</div><div id="iBat" class="stat-value">--A</div></div>
             </div>
         </section>
 
-        <!-- Diagrama de Flujo - CON MÁS SEPARACIÓN VERTICAL -->
-        <section class="card flow-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-project-diagram card-icon"></i> Flujo de Energía</h2>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="action-button" id="toggleFlow">
-                        <i class="fas fa-play"></i> Animación
-                    </button>
-                    <button class="action-button" id="resetView">
-                        <i class="fas fa-expand-arrows-alt"></i> Vista Normal
-                    </button>
-                </div>
-            </div>
-            
-            <div class="flow-diagram" id="flowDiagram">
-                <!-- Los nodos y líneas se generan dinámicamente -->
+        <section class="card history-card">
+            <div class="stat-label"><i class="fas fa-sync-alt fa-spin"></i> Flujo en Tiempo Real</div>
+            <div class="flow-container">
+                <canvas id="flowCanvas"></canvas>
             </div>
         </section>
 
-        <!-- Gráfico histórico SOC -->
-        <section class="card chart-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-chart-line card-icon"></i> Histórico SOC</h2>
-                <select id="chartRange" class="action-button" style="padding: 8px 16px; background: var(--light); color: var(--text-color); min-width: 120px; border: 1px solid var(--border-color);">
-                    <option value="24h">24 horas</option>
-                    <option value="12h">12 horas</option>
-                    <option value="6h">6 horas</option>
-                    <option value="1h">1 hora</option>
-                </select>
-            </div>
-            
-            <div class="chart-container">
-                <canvas id="socChart"></canvas>
+        <section class="card">
+            <div class="stat-label"><i class="fas fa-sun"></i> MPPT SmartSolar</div>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-label">Potencia</div><div id="solW" class="stat-value">--W</div></div>
+                <div class="stat-box"><div class="stat-label">Hoy</div><div id="solYield" class="stat-value">--kWh</div></div>
             </div>
         </section>
 
-        <!-- Logs del Sistema -->
-        <section class="card logs-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-terminal card-icon"></i> Logs del Sistema</h2>
-                <div class="logs-buttons">
-                    <button class="action-button secondary" id="clearLogs" title="Limpiar todos los logs">
-                        <i class="fas fa-trash"></i> Limpiar
-                    </button>
-                    <button class="action-button" id="toggleAutoScroll" title="Activar/Desactivar auto-scroll">
-                        <i class="fas fa-scroll"></i> Auto-scroll
-                    </button>
-                    <button class="action-button success" id="exportLogs" title="Exportar logs a archivo">
-                        <i class="fas fa-download"></i> Exportar
-                    </button>
-                    <button class="action-button warning" id="reconnectMQTT" title="Reconectar a MQTT">
-                        <i class="fas fa-plug"></i> Reconectar
-                    </button>
-                </div>
-            </div>
-            
-            <div class="logs-container" id="logsContainer">
-                <div class="log-entry">
-                    <div class="log-time">--:--:--</div>
-                    <div class="log-message log-info">Sistema inicializado. Conectando a MQTT...</div>
-                </div>
+        <section class="card">
+            <div class="stat-label"><i class="fas fa-bolt"></i> Phoenix Inverter</div>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-label">Carga</div><div id="invW" class="stat-value">--VA</div></div>
+                <div class="stat-box"><div class="stat-label">Estado</div><div id="invState" class="stat-value">--</div></div>
             </div>
         </section>
 
-        <!-- Secciones de datos -->
-        <section class="card solar-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-sun card-icon"></i> Panel Solar</h2>
-            </div>
-            <div class="info-item" style="margin-bottom: 12px;">
-                <div class="info-label">Voltaje Batería</div>
-                <div class="info-value"><span id="solarVoltage">--</span><span class="info-unit">V</span></div>
-            </div>
-            <div class="info-item" style="margin-bottom: 12px;">
-                <div class="info-label">Potencia Solar</div>
-                <div class="info-value"><span id="solarPower">--</span><span class="info-unit">W</span></div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Energía Hoy</div>
-                <div class="info-value"><span id="energyToday">--</span><span class="info-unit">kWh</span></div>
+        <section class="card">
+            <div class="stat-label"><i class="fas fa-truck"></i> Orion DC-DC</div>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-label">Entrada</div><div id="oriIn" class="stat-value">--V</div></div>
+                <div class="stat-box"><div class="stat-label">Salida</div><div id="oriOut" class="stat-value">--V</div></div>
             </div>
         </section>
 
-        <section class="card inverter-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-bolt card-icon"></i> Inversor Phoenix</h2>
-            </div>
-            <div class="info-item" style="margin-bottom: 12px;">
-                <div class="info-label">Voltaje Batería</div>
-                <div class="info-value"><span id="inverterVoltage">--</span><span class="info-unit">V</span></div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Potencia Salida</div>
-                <div class="info-value"><span id="inverterPower">--</span><span class="info-unit">VA</span></div>
-            </div>
+        <section class="card history-card">
+            <canvas id="mainChart" height="150"></canvas>
         </section>
-
-        <section class="card orion-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-exchange-alt card-icon"></i> Orion DC-DC</h2>
-            </div>
-            <div class="info-item" style="margin-bottom: 12px;">
-                <div class="info-label">Voltaje Entrada</div>
-                <div class="info-value"><span id="orionInputVoltage">--</span><span class="info-unit">V</span></div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Voltaje Salida</div>
-                <div class="info-value"><span id="orionOutputVoltage">--</span><span class="info-unit">V</span></div>
-            </div>
-        </section>
-
-        <section class="card temp-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-thermometer-half card-icon"></i> Temperatura</h2>
-            </div>
-            <div class="soc-display" style="margin: 0 0 16px 0;">
-                <div class="soc-value" id="tempValue" style="font-size: 2.5rem; text-align: center;">--</div>
-                <div class="soc-label">°C Batería Ultimatron</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Voltaje Battery Sense</div>
-                <div class="info-value"><span id="batterySenseVoltage">--</span><span class="info-unit">V</span></div>
-            </div>
-        </section>
-
-        <!-- Estado del Sistema -->
-        <section class="card system-status-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-microchip card-icon"></i> Estado ESP32</h2>
-                <div class="status-indicator" style="margin: 0; background: transparent; padding: 0;">
-                    <div class="status-dot" id="systemStatusDot"></div>
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="info-item">
-                    <div class="info-label">Heap Libre</div>
-                    <div class="info-value"><span id="freeHeap">--</span><span class="info-unit">bytes</span></div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">WiFi RSSI</div>
-                    <div class="info-value"><span id="wifiRSSI">--</span><span class="info-unit">dBm</span></div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Dispositivos BLE</div>
-                    <div class="info-value" id="victronDevices">0/5</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">BLE Estado</div>
-                    <div class="info-value" id="bleStatus">❌</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="card energy-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-charging-station card-icon"></i> Sistema</h2>
-            </div>
-            <div class="info-item" style="margin-bottom: 12px;">
-                <div class="info-label">Uptime Monitor</div>
-                <div class="info-value" id="uptimeValue">--</div>
-            </div>
-            <div class="info-item" style="margin-bottom: 12px;">
-                <div class="info-label">IP Address</div>
-                <div class="info-value" id="ipAddress">--</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Última Actualización</div>
-                <div class="info-value" id="lastUpdate">--:--:--</div>
-            </div>
-        </section>
-
-        <!-- Alarmas -->
-        <section class="card alarms-section">
-            <div class="card-header">
-                <h2 class="card-title"><i class="fas fa-exclamation-triangle card-icon"></i> Sistema de Alarmas</h2>
-                <div id="alarmCount" style="background: linear-gradient(135deg, var(--danger), #c53030); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; display: none; font-weight: 700;">0</div>
-            </div>
-            
-            <div class="alarms-container" id="alarmsContainer">
-                <div class="alarm alarm-info">
-                    <div class="alarm-icon"><i class="fas fa-info-circle"></i></div>
-                    <div>
-                        <div class="info-label">Sistema en espera</div>
-                        <div class="info-value">ESP32 conectado, esperando dispositivos Victron...</div>
-                    </div>
-                </div>
-                <div class="alarm alarm-warning">
-                    <div class="alarm-icon"><i class="fas fa-caravan"></i></div>
-                    <div>
-                        <div class="info-label">Ubicación actual</div>
-                        <div class="info-value">Dispositivos Victron no detectados (en autocaravana)</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer>
-            <p>
-                <a href="https://github.com/uzturre562-blip/siena-monitor" class="github-link" target="_blank">
-                    <i class="fab fa-github"></i> Siena395 Monitor &copy; 2026
-                </a>
-            </p>
-            <p style="margin-top: 12px; font-size: 0.8rem;">
-                <span id="mqttConnectionInfo">Broker: broker.emqx.io | Topic: siena395_monitor_mikel_2026</span>
-            </p>
-            <p style="margin-top: 8px; font-size: 0.75rem; opacity: 0.8;">
-                Modo: ESP32 Online | BLE Offline
-            </p>
-        </footer>
     </div>
 
     <script>
-        // ==================== CONFIGURACIÓN ====================
-        const CONFIG = {
-            MQTT_BROKER: "broker.emqx.io",
-            MQTT_PORT: 8084,
-            MQTT_TOPIC_PREFIX: "siena395_monitor_mikel_2026",
-            RECONNECT_INTERVAL: 5000,
-            UPDATE_INTERVAL: 1000,
-            CHART_HISTORY_HOURS: 24,
-            VICTRON_DEVICES: 5
-        };
+        // CONFIGURACIÓN MQTT REAL
+        const BROKER = 'wss://broker.emqx.io:8084/mqtt';
+        const client = mqtt.connect(BROKER);
 
-        // ==================== ESTADO GLOBAL ====================
-        const state = {
-            battery: { soc: null, voltage: null, current: null, consumedAh: null, timeToGo: null },
-            solar: { voltage: null, power: null, energyToday: null },
-            inverter: { voltage: null, power: null },
-            orion: { inputVoltage: null, outputVoltage: null },
-            temperature: { batteryTemp: null, batterySenseVoltage: null },
-            system: { freeHeap: null, wifiRSSI: null, ipAddress: null },
-            historicalData: { soc: [] },
-            systemLogs: [],
-            alarms: [],
-            mqttClient: null,
-            isConnected: false,
-            lastUpdate: null,
-            dataReceived: 0,
-            subscribedTopics: new Set(),
-            victronDevicesConnected: 0,
-            autoScrollLogs: true,
-            flowAnimationActive: false,
-            chart: null
-        };
-
-        // ==================== INICIALIZACIÓN ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Dashboard Siena395 Monitor iniciando...');
-            
-            setupTheme();
-            initializeUI();
-            initializeChart();
-            initializeFlowDiagram(); // CON MÁS SEPARACIÓN VERTICAL
-            setupEventListeners();
-            connectToMQTT();
-            
-            setInterval(updateLastUpdateTime, CONFIG.UPDATE_INTERVAL);
-            
-            addLog('Dashboard Siena395 Monitor inicializado', 'success');
-            addLog(`Conectando a MQTT: ${CONFIG.MQTT_BROKER}:${CONFIG.MQTT_PORT}`, 'info');
-            addLog(`Topic prefix: ${CONFIG.MQTT_TOPIC_PREFIX}`, 'info');
-            addLog('ESP32 funcionando, esperando dispositivos Victron BLE...', 'warning');
-            
-            console.log('Dashboard completamente inicializado');
+        client.on('connect', () => {
+            document.getElementById('mqttStatus').innerText = '🟢 En Línea';
+            client.subscribe('siena395/sensor/#');
         });
 
-        // ==================== TEMA CLARO/OSCURO ====================
-        function setupTheme() {
-            const themeToggle = document.getElementById('themeToggle');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const savedTheme = localStorage.getItem('theme');
-            
-            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-                document.body.classList.add('dark-mode');
-                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        // ANIMACIÓN DE PARTÍCULAS PRO (RADIO 2.2)
+        const canvas = document.getElementById('flowCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        class Particle {
+            constructor(x, y, targetX, targetY, color) {
+                this.x = x; this.y = y;
+                this.startX = x; this.startY = y;
+                this.targetX = targetX; this.targetY = targetY;
+                this.progress = Math.random();
+                this.color = color;
             }
-            
-            themeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                if (document.body.classList.contains('dark-mode')) {
-                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-                    localStorage.setItem('theme', 'dark');
-                    addLog('Modo oscuro activado', 'info');
-                } else {
-                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-                    localStorage.setItem('theme', 'light');
-                    addLog('Modo claro activado', 'info');
-                }
-                
-                if (state.chart) {
-                    updateChartTheme();
-                }
-            });
-        }
-
-        function updateChartTheme() {
-            const isDark = document.body.classList.contains('dark-mode');
-            const textColor = isDark ? '#ffffff' : '#2d3748';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            
-            state.chart.options.scales.x.ticks.color = textColor;
-            state.chart.options.scales.y.ticks.color = textColor;
-            state.chart.options.scales.x.grid.color = gridColor;
-            state.chart.options.scales.y.grid.color = gridColor;
-            state.chart.update();
-        }
-
-        // ==================== INICIALIZACIÓN UI ====================
-        function initializeUI() {
-            window.ui = {
-                socValue: document.getElementById('socValue'),
-                batteryLevel: document.getElementById('batteryLevel'),
-                batteryLevelText: document.getElementById('batteryLevelText'),
-                voltageValue: document.getElementById('voltageValue'),
-                currentValue: document.getElementById('currentValue'),
-                consumedAh: document.getElementById('consumedAh'),
-                timeToGo: document.getElementById('timeToGo'),
-                solarVoltage: document.getElementById('solarVoltage'),
-                solarPower: document.getElementById('solarPower'),
-                energyToday: document.getElementById('energyToday'),
-                inverterVoltage: document.getElementById('inverterVoltage'),
-                inverterPower: document.getElementById('inverterPower'),
-                orionInputVoltage: document.getElementById('orionInputVoltage'),
-                orionOutputVoltage: document.getElementById('orionOutputVoltage'),
-                tempValue: document.getElementById('tempValue'),
-                batterySenseVoltage: document.getElementById('batterySenseVoltage'),
-                freeHeap: document.getElementById('freeHeap'),
-                wifiRSSI: document.getElementById('wifiRSSI'),
-                uptimeValue: document.getElementById('uptimeValue'),
-                ipAddress: document.getElementById('ipAddress'),
-                lastUpdate: document.getElementById('lastUpdate'),
-                dataCount: document.getElementById('dataCount'),
-                heapStatus: document.getElementById('heapStatus'),
-                bleStatusInfo: document.getElementById('bleStatusInfo'),
-                statusMessage: document.getElementById('statusMessage'),
-                modeBadge: document.getElementById('modeBadge'),
-                connectionStatus: document.getElementById('connectionStatus'),
-                connectionText: document.getElementById('connectionText'),
-                victronDevices: document.getElementById('victronDevices'),
-                bleStatus: document.getElementById('bleStatus'),
-                systemStatusDot: document.getElementById('systemStatusDot'),
-                logsContainer: document.getElementById('logsContainer'),
-                alarmsContainer: document.getElementById('alarmsContainer'),
-                alarmCount: document.getElementById('alarmCount'),
-                mqttConnectionInfo: document.getElementById('mqttConnectionInfo'),
-                configButton: document.getElementById('configButton')
-            };
-            
-            window.ui.mqttConnectionInfo.textContent = 
-                `Broker: ${CONFIG.MQTT_BROKER} | Topic: ${CONFIG.MQTT_TOPIC_PREFIX}`;
-            updateModeBadge();
-        }
-
-        function updateModeBadge() {
-            const connected = state.victronDevicesConnected;
-            const badge = window.ui.modeBadge;
-            
-            if (connected === 0) {
-                badge.innerHTML = '<i class="fas fa-tools"></i> CONFIGURACIÓN';
-                badge.style.background = 'linear-gradient(135deg, var(--warning), #ed8936)';
-                window.ui.statusMessage.textContent = 'ESP32 online, esperando BLE';
-            } else if (connected < CONFIG.VICTRON_DEVICES) {
-                badge.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${connected}/${CONFIG.VICTRON_DEVICES}`;
-                badge.style.background = 'linear-gradient(135deg, var(--warning), #ed8936)';
-                window.ui.statusMessage.textContent = `${connected} dispositivo(s) BLE conectado(s)`;
-            } else {
-                badge.innerHTML = '<i class="fas fa-check-circle"></i> OPERATIVO';
-                badge.style.background = 'linear-gradient(135deg, var(--success), #2f855a)';
-                badge.classList.add('online');
-                window.ui.statusMessage.textContent = 'Todos los dispositivos BLE conectados';
+            draw() {
+                const curX = this.startX + (this.targetX - this.startX) * this.progress;
+                const curY = this.startY + (this.targetY - this.startY) * this.progress;
+                ctx.beginPath();
+                ctx.arc(curX, curY, 2.2, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 8; ctx.shadowColor = this.color;
+                ctx.fill();
+                this.progress += 0.005;
+                if (this.progress >= 1) this.progress = 0;
             }
         }
 
-        // ==================== GRÁFICO HISTÓRICO ====================
-        function initializeChart() {
-            const ctx = document.getElementById('socChart').getContext('2d');
-            const isDark = document.body.classList.contains('dark-mode');
-            const textColor = isDark ? '#ffffff' : '#2d3748';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            
-            state.chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'SOC (%)',
-                        data: [],
-                        borderColor: '#3182ce',
-                        backgroundColor: 'rgba(49, 130, 206, 0.15)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#3182ce'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { 
-                            labels: { 
-                                color: textColor,
-                                font: { size: 13, weight: '600' }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: { 
-                            grid: { color: gridColor },
-                            ticks: { 
-                                color: textColor, 
-                                maxTicksLimit: 8,
-                                font: { size: 11 }
-                            }
-                        },
-                        y: {
-                            min: 0,
-                            max: 100,
-                            grid: { color: gridColor },
-                            ticks: { 
-                                color: textColor,
-                                callback: value => value + '%',
-                                font: { size: 11 }
-                            }
-                        }
-                    }
-                }
-            });
-            
-            document.getElementById('chartRange').addEventListener('change', function() {
-                updateChartRange(this.value);
-            });
-        }
-
-        function updateChartData(soc) {
-            if (!state.chart) return;
-            
-            const now = new Date();
-            state.historicalData.soc.push({ time: now, value: soc });
-            
-            const cutoff = new Date(now.getTime() - (CONFIG.CHART_HISTORY_HOURS * 3600000));
-            state.historicalData.soc = state.historicalData.soc.filter(d => d.time > cutoff);
-            
-            const labels = state.historicalData.soc.map(d => 
-                `${d.time.getHours().toString().padStart(2, '0')}:${d.time.getMinutes().toString().padStart(2, '0')}`
-            );
-            const data = state.historicalData.soc.map(d => d.value);
-            
-            state.chart.data.labels = labels;
-            state.chart.data.datasets[0].data = data;
-            state.chart.update('none');
-        }
-
-        function updateChartRange(range) {
-            if (!state.chart) return;
-            
-            const hours = parseInt(range) || 24;
-            const now = new Date();
-            const cutoff = new Date(now.getTime() - (hours * 3600000));
-            
-            const filteredData = state.historicalData.soc.filter(d => d.time > cutoff);
-            const labels = filteredData.map(d => 
-                `${d.time.getHours().toString().padStart(2, '0')}:${d.time.getMinutes().toString().padStart(2, '0')}`
-            );
-            const data = filteredData.map(d => d.value);
-            
-            state.chart.data.labels = labels;
-            state.chart.data.datasets[0].data = data;
-            state.chart.update();
-            
-            addLog(`Gráfico actualizado: últimas ${hours}h`, 'info');
-        }
-
-        // ==================== DIAGRAMA DE FLUJO - CON MÁS SEPARACIÓN VERTICAL ====================
-        function initializeFlowDiagram() {
-            const diagram = document.getElementById('flowDiagram');
-            diagram.innerHTML = '';
-            
-            const width = diagram.offsetWidth;
-            const height = diagram.offsetHeight;
-            
-            // NODOS CON MÁS SEPARACIÓN VERTICAL (como en la imagen)
-            // Valores ajustados para mayor separación vertical entre filas
-            const nodes = [
-                { id: 'solar', name: 'Solar', icon: 'fa-sun', color: '#f6ad55', x: width * 0.15, y: height * 0.22 }, // Fila superior más arriba
-                { id: 'mppt', name: 'MPPT', icon: 'fa-bolt', color: '#4299e1', x: width * 0.4, y: height * 0.22 },
-                { id: 'inverter', name: 'Inversor', icon: 'fa-plug', color: '#ed8936', x: width * 0.7, y: height * 0.22 },
-                { id: 'orion', name: 'Orion', icon: 'fa-exchange-alt', color: '#9f7aea', x: width * 0.15, y: height * 0.68 }, // Fila inferior más abajo
-                { id: 'battery', name: 'Batería', icon: 'fa-battery-full', color: '#38a169', x: width * 0.4, y: height * 0.68 },
-                { id: 'load', name: 'Cargas', icon: 'fa-home', color: '#e53e3e', x: width * 0.7, y: height * 0.68 }
-            ];
-            
-            // Crear nodos
-            nodes.forEach(node => {
-                const nodeEl = document.createElement('div');
-                nodeEl.className = 'flow-node';
-                nodeEl.style.left = `${node.x - 40}px`;
-                nodeEl.style.top = `${node.y - 40}px`;
-                nodeEl.style.background = `linear-gradient(135deg, ${node.color}, ${darkenColor(node.color, 20)})`;
-                nodeEl.innerHTML = `
-                    <i class="fas ${node.icon}"></i>
-                    <span>${node.name}</span>
-                `;
-                
-                nodeEl.addEventListener('click', () => showNodeInfo(node));
-                diagram.appendChild(nodeEl);
-            });
-            
-            // Conexiones con líneas discontinuas
-            const connections = [
-                { from: 'solar', to: 'mppt', color: '#f6ad55' },
-                { from: 'mppt', to: 'battery', color: '#4299e1' },
-                { from: 'orion', to: 'battery', color: '#9f7aea' },
-                { from: 'battery', to: 'inverter', color: '#38a169' },
-                { from: 'inverter', to: 'load', color: '#ed8936' }
-            ];
-            
-            connections.forEach(conn => {
-                const fromNode = nodes.find(n => n.id === conn.from);
-                const toNode = nodes.find(n => n.id === conn.to);
-                
-                if (fromNode && toNode) {
-                    createFlowLine(fromNode, toNode, conn.color);
-                }
-            });
-            
-            addLog('Diagrama de flujo inicializado con mayor separación vertical', 'info');
-        }
-
-        function createFlowLine(fromNode, toNode, color) {
-            const diagram = document.getElementById('flowDiagram');
-            const line = document.createElement('div');
-            line.className = `flow-line ${state.flowAnimationActive ? 'active' : ''}`;
-            
-            const x1 = fromNode.x;
-            const y1 = fromNode.y;
-            const x2 = toNode.x;
-            const y2 = toNode.y;
-            
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const length = Math.sqrt(dx * dx + dy * dy);
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            
-            line.style.width = `${length}px`;
-            line.style.left = `${x1}px`;
-            line.style.top = `${y1}px`;
-            line.style.transform = `rotate(${angle}deg)`;
-            line.style.background = `repeating-linear-gradient(
-                90deg,
-                ${color} 0px,
-                ${color} 6px,
-                transparent 6px,
-                transparent 12px
-            )`;
-            
-            diagram.appendChild(line);
-        }
-
-        function darkenColor(color, percent) {
-            const num = parseInt(color.replace("#", ""), 16);
-            const amt = Math.round(2.55 * percent);
-            const R = (num >> 16) - amt;
-            const G = (num >> 8 & 0x00FF) - amt;
-            const B = (num & 0x0000FF) - amt;
-            return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-                (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
-        }
-
-        function showNodeInfo(node) {
-            const info = {
-                solar: 'Panel solar: Genera energía renovable para el sistema',
-                mppt: 'Controlador MPPT: Optimiza la carga de los paneles solares',
-                battery: 'Batería Ultimatron 100Ah: Almacena energía para uso nocturno',
-                orion: 'Orion DC-DC: Carga la batería desde el alternador del vehículo',
-                inverter: 'Inversor Phoenix: Convierte 12V DC a 230V AC para electrodomésticos',
-                load: 'Cargas: Consumo eléctrico total de la autocaravana'
-            };
-            
-            addLog(`💡 ${node.name}: ${info[node.id]}`, 'info');
-        }
-
-        // ==================== MQTT ====================
-        function connectToMQTT() {
-            updateConnectionStatus('connecting', 'Conectando a MQTT...');
-            
-            const brokerUrl = `wss://${CONFIG.MQTT_BROKER}:${CONFIG.MQTT_PORT}/mqtt`;
-            
-            try {
-                state.mqttClient = mqtt.connect(brokerUrl, {
-                    clientId: 'siena395_dashboard_' + Math.random().toString(16).substr(2, 8),
-                    clean: true,
-                    reconnectPeriod: CONFIG.RECONNECT_INTERVAL,
-                    connectTimeout: 10000
-                });
-                
-                state.mqttClient.on('connect', handleMQTTConnect);
-                state.mqttClient.on('message', handleMQTTMessage);
-                state.mqttClient.on('error', handleMQTTError);
-                state.mqttClient.on('close', handleMQTTClose);
-                state.mqttClient.on('reconnect', handleMQTTReconnect);
-                
-            } catch (error) {
-                addLog(`❌ Error al conectar: ${error.message}`, 'error');
-                updateConnectionStatus('error', 'Error de conexión');
-                setTimeout(connectToMQTT, 10000);
-            }
-        }
-
-        function handleMQTTConnect() {
-            state.isConnected = true;
-            updateConnectionStatus('connected', 'Conectado a MQTT');
-            addLog('✅ Conectado al broker MQTT', 'success');
-            
-            const topics = getMQTTTopics();
-            topics.forEach(topic => {
-                state.mqttClient.subscribe(topic, { qos: 0 }, (err) => {
-                    if (!err) {
-                        state.subscribedTopics.add(topic);
-                        addLog(`📡 Suscrito a: ${topic}`, 'mqtt');
-                    }
-                });
-            });
-        }
-
-        function handleMQTTMessage(topic, message) {
-            state.dataReceived++;
-            state.lastUpdate = new Date();
-            
-            const messageStr = message.toString();
-            const value = parseFloat(messageStr);
-            
-            updateDataFromMQTT(topic, value, messageStr);
-            updateUI();
-            
-            if (state.dataReceived <= 10 || state.dataReceived % 20 === 0) {
-                const shortTopic = topic.replace(`${CONFIG.MQTT_TOPIC_PREFIX}/`, '');
-                addLog(`MQTT: ${shortTopic} = ${messageStr}`, 'mqtt');
-            }
-        }
-
-        function handleMQTTError(error) {
-            addLog(`❌ Error MQTT: ${error.message}`, 'error');
-            updateConnectionStatus('error', 'Error MQTT');
-            state.isConnected = false;
-        }
-
-        function handleMQTTClose() {
-            addLog('⚠️ Desconectado de MQTT', 'warning');
-            updateConnectionStatus('disconnected', 'Desconectado');
-            state.isConnected = false;
-            state.subscribedTopics.clear();
-        }
-
-        function handleMQTTReconnect() {
-            addLog('🔄 Reconectando a MQTT...', 'info');
-            updateConnectionStatus('connecting', 'Reconectando...');
-        }
-
-        function getMQTTTopics() {
-            return [
-                'siena395_monitor_mikel_2026/sensor/soc_ultimatron/state',
-                'siena395_monitor_mikel_2026/sensor/tension_smartshunt/state',
-                'siena395_monitor_mikel_2026/sensor/corriente_smartshunt/state',
-                'siena395_monitor_mikel_2026/sensor/ah_consumidos/state',
-                'siena395_monitor_mikel_2026/sensor/tiempo_restante/state',
-                'siena395_monitor_mikel_2026/sensor/voltaje_bateria_mppt/state',
-                'siena395_monitor_mikel_2026/sensor/potencia_solar/state',
-                'siena395_monitor_mikel_2026/sensor/energia_hoy/state',
-                'siena395_monitor_mikel_2026/sensor/voltaje_bateria_phoenix/state',
-                'siena395_monitor_mikel_2026/sensor/potencia_salida_phoenix/state',
-                'siena395_monitor_mikel_2026/sensor/voltaje_entrada_orion/state',
-                'siena395_monitor_mikel_2026/sensor/voltaje_salida_orion/state',
-                'siena395_monitor_mikel_2026/sensor/voltaje_battery_sense/state',
-                'siena395_monitor_mikel_2026/sensor/temperatura_bateria/state',
-                'siena395_monitor_mikel_2026/sensor/uptime_monitor/state',
-                'siena395_monitor_mikel_2026/system/heap',
-                'siena395_monitor_mikel_2026/system/wifi_rssi',
-                'siena395_monitor_mikel_2026/system/uptime',
-                'siena395_monitor_mikel_2026/status'
+        function initParticles() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            particles = [
+                new Particle(50, 50, canvas.width/2, canvas.height/2, '#d69e2e'), // Solar
+                new Particle(canvas.width-50, canvas.height/2, canvas.width/2, canvas.height/2, '#e53e3e') // Consumo
             ];
         }
 
-        function updateDataFromMQTT(topic, value, rawValue) {
-            const cleanTopic = topic.replace(`${CONFIG.MQTT_TOPIC_PREFIX}/`, '');
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Dibujar líneas de fondo
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+            ctx.strokeRect(40, 40, canvas.width-80, canvas.height-80);
             
-            const topicMap = {
-                'sensor/soc_ultimatron/state': () => {
-                    state.battery.soc = value;
-                    updateChartData(value);
-                },
-                'sensor/tension_smartshunt/state': () => state.battery.voltage = value,
-                'sensor/corriente_smartshunt/state': () => state.battery.current = value,
-                'sensor/ah_consumidos/state': () => state.battery.consumedAh = value,
-                'sensor/tiempo_restante/state': () => state.battery.timeToGo = value,
-                'sensor/voltaje_bateria_mppt/state': () => state.solar.voltage = value,
-                'sensor/potencia_solar/state': () => state.solar.power = value,
-                'sensor/energia_hoy/state': () => state.solar.energyToday = value,
-                'sensor/voltaje_bateria_phoenix/state': () => state.inverter.voltage = value,
-                'sensor/potencia_salida_phoenix/state': () => state.inverter.power = value,
-                'sensor/voltaje_entrada_orion/state': () => state.orion.inputVoltage = value,
-                'sensor/voltaje_salida_orion/state': () => state.orion.outputVoltage = value,
-                'sensor/voltaje_battery_sense/state': () => state.temperature.batterySenseVoltage = value,
-                'sensor/temperatura_bateria/state': () => state.temperature.batteryTemp = value,
-                'sensor/uptime_monitor/state': () => updateUptimeDisplay(value),
-                'system/heap': () => state.system.freeHeap = value,
-                'system/wifi_rssi': () => state.system.wifiRSSI = value,
-                'system/uptime': () => updateUptimeDisplay(value),
-                'status': () => {
-                    if (rawValue === 'online' || rawValue === '1') {
-                        updateConnectionStatus('connected', 'ESP32 Online');
-                    } else if (rawValue === 'offline') {
-                        updateConnectionStatus('disconnected', 'ESP32 Offline');
-                    }
-                }
-            };
-            
-            if (topicMap[cleanTopic]) {
-                topicMap[cleanTopic]();
-            }
-            
-            updateVictronDevicesCount();
+            particles.forEach(p => p.draw());
+            requestAnimationFrame(animate);
         }
 
-        // ==================== ACTUALIZACIÓN UI ====================
-        function updateUI() {
-            if (!window.ui) return;
-            
-            // Batería - CENTRADO CORREGIDO
-            updateElement(window.ui.socValue, state.battery.soc, '%');
-            updateElement(window.ui.voltageValue, state.battery.voltage, 'V');
-            updateElement(window.ui.currentValue, state.battery.current, 'A');
-            updateElement(window.ui.consumedAh, state.battery.consumedAh, 'Ah');
-            updateElement(window.ui.timeToGo, state.battery.timeToGo, 'h');
-            
-            if (state.battery.soc !== null) {
-                const soc = state.battery.soc;
-                window.ui.batteryLevel.style.width = `${soc}%`;
-                window.ui.batteryLevelText.textContent = `${soc.toFixed(0)}%`;
-                
-                if (soc <= 10) {
-                    window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--danger), #c53030)';
-                } else if (soc <= 20) {
-                    window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--warning), #dd6b20)';
-                } else if (soc <= 50) {
-                    window.ui.batteryLevel.style.background = 'linear-gradient(90deg, #ecc94b, #d69e2e)';
-                } else {
-                    window.ui.batteryLevel.style.background = 'linear-gradient(90deg, var(--success), #38a169)';
-                }
-            } else {
-                window.ui.batteryLevelText.textContent = '--%';
-            }
-            
-            // Otros datos
-            updateElement(window.ui.solarVoltage, state.solar.voltage, 'V');
-            updateElement(window.ui.solarPower, state.solar.power, 'W');
-            updateElement(window.ui.energyToday, state.solar.energyToday, 'kWh');
-            updateElement(window.ui.inverterVoltage, state.inverter.voltage, 'V');
-            updateElement(window.ui.inverterPower, state.inverter.power, 'VA');
-            updateElement(window.ui.orionInputVoltage, state.orion.inputVoltage, 'V');
-            updateElement(window.ui.orionOutputVoltage, state.orion.outputVoltage, 'V');
-            updateElement(window.ui.tempValue, state.temperature.batteryTemp, '°C');
-            updateElement(window.ui.batterySenseVoltage, state.temperature.batterySenseVoltage, 'V');
-            
-            if (state.temperature.batteryTemp !== null) {
-                const temp = state.temperature.batteryTemp;
-                if (temp <= 5 || temp >= 45) {
-                    window.ui.tempValue.style.color = 'var(--danger)';
-                } else if (temp <= 10 || temp >= 40) {
-                    window.ui.tempValue.style.color = 'var(--warning)';
-                } else {
-                    window.ui.tempValue.style.color = 'var(--primary)';
-                }
-            }
-            
-            // Sistema
-            updateElement(window.ui.freeHeap, state.system.freeHeap, 'bytes');
-            updateElement(window.ui.wifiRSSI, state.system.wifiRSSI, 'dBm');
-            
-            window.ui.dataCount.textContent = `${state.dataReceived} datos`;
-            window.ui.heapStatus.textContent = state.system.freeHeap ? `${state.system.freeHeap.toLocaleString()} bytes` : '-- bytes';
-            
-            if (state.system.wifiRSSI !== null) {
-                const rssi = state.system.wifiRSSI;
-                window.ui.wifiStatus.textContent = `RSSI: ${rssi} dBm`;
-                window.ui.wifiStatus.style.color = rssi > -60 ? 'var(--success)' : rssi > -70 ? 'var(--warning)' : 'var(--danger)';
-            }
-            
-            updateVictronDevicesCount();
-            updateModeBadge();
-            updateAlarms();
-        }
+        // GRÁFICO DE HISTÓRICO
+        const chartCtx = document.getElementById('mainChart').getContext('2d');
+        const mainChart = new Chart(chartCtx, {
+            type: 'line',
+            data: {
+                labels: Array(24).fill(''),
+                datasets: [{
+                    label: 'SOC %',
+                    data: [],
+                    borderColor: '#3182ce',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(49, 130, 206, 0.1)'
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
 
-        function updateElement(element, value, unit = '') {
-            if (!element) return;
-            
-            if (value === null || value === undefined || isNaN(value)) {
-                element.textContent = '--';
-            } else {
-                if (unit === '%') {
-                    element.textContent = `${value.toFixed(1)}${unit}`;
-                } else if (unit === 'V' || unit === 'A' || unit === 'kWh') {
-                    element.textContent = value.toFixed(2);
-                } else if (unit === 'W' || unit === 'VA' || unit === 'Ah') {
-                    element.textContent = Math.round(value);
-                } else if (unit === 'h') {
-                    element.textContent = value.toFixed(1);
-                } else if (unit === '°C') {
-                    element.textContent = value.toFixed(1);
-                } else if (unit === 'bytes') {
-                    element.textContent = Math.round(value).toLocaleString();
-                } else if (unit === 'dBm') {
-                    element.textContent = Math.round(value);
-                } else {
-                    element.textContent = value;
-                }
-            }
-        }
-
-        function updateConnectionStatus(status, message) {
-            if (!window.ui) return;
-            
-            const dot = window.ui.connectionStatus;
-            const text = window.ui.connectionText;
-            
-            text.textContent = message;
-            dot.className = 'status-dot';
-            
-            switch(status) {
-                case 'connected':
-                    dot.classList.add('connected');
-                    text.style.color = 'var(--success)';
-                    break;
-                case 'connecting':
-                    dot.classList.add('connecting');
-                    text.style.color = 'var(--warning)';
-                    break;
-                case 'error':
-                    dot.classList.add('error');
-                    text.style.color = 'var(--danger)';
-                    break;
-                case 'disconnected':
-                    dot.classList.add('disconnected');
-                    text.style.color = 'var(--secondary)';
-                    break;
-            }
-        }
-
-        function updateLastUpdateTime() {
-            if (!window.ui || !state.lastUpdate) return;
-            
-            const now = new Date();
-            const diff = Math.floor((now - state.lastUpdate) / 1000);
-            
-            let text = 'Ahora mismo';
-            if (diff > 0) {
-                if (diff < 60) {
-                    text = `Hace ${diff}s`;
-                } else if (diff < 3600) {
-                    text = `Hace ${Math.floor(diff/60)}m`;
-                } else {
-                    text = `Hace ${Math.floor(diff/3600)}h`;
-                }
-            }
-            
-            window.ui.lastUpdate.textContent = text;
-        }
-
-        function updateUptimeDisplay(seconds) {
-            if (!window.ui || !seconds) return;
-            
-            const days = Math.floor(seconds / 86400);
-            const hours = Math.floor((seconds % 86400) / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            
-            if (days > 0) {
-                window.ui.uptimeValue.textContent = `${days}d ${hours}h`;
-            } else if (hours > 0) {
-                window.ui.uptimeValue.textContent = `${hours}h ${minutes}m`;
-            } else {
-                window.ui.uptimeValue.textContent = `${minutes}m`;
-            }
-        }
-
-        function updateVictronDevicesCount() {
-            const devices = [
-                { name: 'SmartShunt', hasData: state.battery.soc !== null },
-                { name: 'MPPT Solar', hasData: state.solar.voltage !== null },
-                { name: 'Phoenix', hasData: state.inverter.voltage !== null },
-                { name: 'Orion', hasData: state.orion.inputVoltage !== null },
-                { name: 'Battery Sense', hasData: state.temperature.batteryTemp !== null }
-            ];
-            
-            const connected = devices.filter(d => d.hasData).length;
-            state.victronDevicesConnected = connected;
-            
-            if (window.ui) {
-                window.ui.victronDevices.textContent = `${connected}/${CONFIG.VICTRON_DEVICES}`;
-                window.ui.bleStatusInfo.textContent = `BLE: ${connected}/${CONFIG.VICTRON_DEVICES}`;
-                window.ui.bleStatus.textContent = connected > 0 ? '✅' : '❌';
-                window.ui.bleStatus.style.color = connected > 0 ? 'var(--success)' : 'var(--danger)';
-                
-                const systemDot = window.ui.systemStatusDot;
-                systemDot.className = 'status-dot';
-                if (connected === CONFIG.VICTRON_DEVICES) {
-                    systemDot.classList.add('connected');
-                } else if (connected > 0) {
-                    systemDot.classList.add('connecting');
-                } else {
-                    systemDot.classList.add('disconnected');
-                }
-            }
-            
-            return { connected, total: CONFIG.VICTRON_DEVICES, devices };
-        }
-
-        // ==================== ALARMAS ====================
-        function updateAlarms() {
-            if (!window.ui) return;
-            
-            const alarms = [];
-            
-            if (state.battery.soc !== null) {
-                if (state.battery.soc <= 10) {
-                    alarms.push({
-                        type: 'danger',
-                        icon: 'fa-exclamation-circle',
-                        title: '¡BATERÍA CRÍTICA!',
-                        message: `SOC: ${state.battery.soc.toFixed(1)}% - CARGAR INMEDIATAMENTE`
-                    });
-                } else if (state.battery.soc <= 20) {
-                    alarms.push({
-                        type: 'warning',
-                        icon: 'fa-exclamation-triangle',
-                        title: 'Batería Baja',
-                        message: `SOC: ${state.battery.soc.toFixed(1)}% - Cargar pronto`
-                    });
-                }
-            }
-            
-            if (state.temperature.batteryTemp !== null) {
-                const temp = state.temperature.batteryTemp;
-                if (temp <= 5 || temp >= 45) {
-                    alarms.push({
-                        type: 'danger',
-                        icon: 'fa-thermometer-full',
-                        title: 'Temperatura Peligrosa',
-                        message: `Temp: ${temp.toFixed(1)}°C - CUIDADO`
-                    });
-                } else if (temp <= 10 || temp >= 40) {
-                    alarms.push({
-                        type: 'warning',
-                        icon: 'fa-thermometer-half',
-                        title: 'Temperatura Extrema',
-                        message: `Temp: ${temp.toFixed(1)}°C - Vigilar`
-                    });
-                }
-            }
-            
-            if (state.battery.voltage !== null && state.battery.voltage < 11.5) {
-                alarms.push({
-                    type: 'warning',
-                    icon: 'fa-bolt',
-                    title: 'Voltaje Bajo',
-                    message: `Voltaje: ${state.battery.voltage.toFixed(2)}V`
-                });
-            }
-            
-            if (alarms.length === 0 && state.victronDevicesConnected === 0) {
-                window.ui.alarmsContainer.innerHTML = `
-                    <div class="alarm alarm-info">
-                        <div class="alarm-icon"><i class="fas fa-info-circle"></i></div>
-                        <div>
-                            <div class="info-label">Sistema en espera</div>
-                            <div class="info-value">ESP32 conectado, esperando dispositivos Victron...</div>
-                        </div>
-                    </div>
-                    <div class="alarm alarm-warning">
-                        <div class="alarm-icon"><i class="fas fa-caravan"></i></div>
-                        <div>
-                            <div class="info-label">Ubicación actual</div>
-                            <div class="info-value">Dispositivos Victron no detectados (en autocaravana)</div>
-                        </div>
-                    </div>
-                `;
-                window.ui.alarmCount.style.display = 'none';
-                return;
-            }
-            
-            window.ui.alarmCount.textContent = alarms.length;
-            window.ui.alarmCount.style.display = alarms.length > 0 ? 'block' : 'none';
-            
-            const container = window.ui.alarmsContainer;
-            if (alarms.length === 0 && state.victronDevicesConnected > 0) {
-                container.innerHTML = `
-                    <div class="alarm alarm-success">
-                        <div class="alarm-icon"><i class="fas fa-check-circle"></i></div>
-                        <div>
-                            <div class="info-label">Sistema estable</div>
-                            <div class="info-value">Sin alarmas activas - ${state.victronDevicesConnected} dispositivo(s) BLE conectado(s)</div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                let html = '';
-                alarms.forEach(alarm => {
-                    html += `
-                        <div class="alarm alarm-${alarm.type}">
-                            <div class="alarm-icon"><i class="fas ${alarm.icon}"></i></div>
-                            <div>
-                                <div class="info-label">${alarm.title}</div>
-                                <div class="info-value">${alarm.message}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            }
-        }
-
-        // ==================== LOGS DEL SISTEMA ====================
-        function addLog(message, type = 'info') {
-            const logEntry = {
-                time: new Date(),
-                message: message,
-                type: type
-            };
-            
-            state.systemLogs.unshift(logEntry);
-            
-            if (state.systemLogs.length > 100) {
-                state.systemLogs.pop();
-            }
-            
-            updateLogsDisplay();
-        }
-
-        function updateLogsDisplay() {
-            if (!window.ui || !window.ui.logsContainer) return;
-            
-            const container = window.ui.logsContainer;
-            container.innerHTML = '';
-            
-            state.systemLogs.forEach(log => {
-                const logEl = document.createElement('div');
-                logEl.className = 'log-entry';
-                
-                const timeStr = log.time.toLocaleTimeString('es-ES', { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit' 
-                });
-                
-                logEl.innerHTML = `
-                    <div class="log-time">${timeStr}</div>
-                    <div class="log-message log-${log.type}">${log.message}</div>
-                `;
-                
-                container.appendChild(logEl);
-            });
-            
-            if (state.autoScrollLogs && state.systemLogs.length > 0) {
-                container.scrollTop = 0;
-            }
-        }
-
-        // ==================== EVENT LISTENERS ====================
-        function setupEventListeners() {
-            // Botón de configuración
-            document.getElementById('configButton').addEventListener('click', function() {
-                addLog('Configuración del sistema abierta', 'info');
-                
-                // Crear modal de configuración
-                const modal = document.createElement('div');
-                modal.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0,0,0,0.7);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 1000;
-                `;
-                
-                const modalContent = document.createElement('div');
-                modalContent.style.cssText = `
-                    background: var(--card-gradient);
-                    padding: 30px;
-                    border-radius: var(--border-radius);
-                    max-width: 500px;
-                    width: 90%;
-                    max-height: 80vh;
-                    overflow-y: auto;
-                    box-shadow: var(--shadow-hover);
-                    border: 1px solid var(--border-color);
-                `;
-                
-                modalContent.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="font-size: 1.3rem; color: var(--primary);"><i class="fas fa-cog"></i> Configuración del Sistema</h2>
-                        <button id="closeModal" style="background: none; border: none; color: var(--secondary); cursor: pointer; font-size: 1.2rem;">✕</button>
-                    </div>
-                    
-                    <div style="margin-bottom: 25px;">
-                        <h3 style="font-size: 1rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-server"></i> Conexión MQTT</h3>
-                        <div style="display: grid; gap: 12px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">Broker MQTT</label>
-                                <input type="text" value="${CONFIG.MQTT_BROKER}" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">Topic Prefix</label>
-                                <input type="text" value="${CONFIG.MQTT_TOPIC_PREFIX}" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 25px;">
-                        <h3 style="font-size: 1rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-battery-full"></i> Umbrales de Batería</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">SOC Crítico (%)</label>
-                                <input type="number" value="10" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">SOC Bajo (%)</label>
-                                <input type="number" value="20" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 25px;">
-                        <h3 style="font-size: 1rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-thermometer-half"></i> Temperatura</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">Mínima (°C)</label>
-                                <input type="number" value="5" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; color: var(--secondary); font-size: 0.85rem;">Máxima (°C)</label>
-                                <input type="number" value="45" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button id="saveConfig" style="background: linear-gradient(135deg, var(--success), #2f855a); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600;">Guardar</button>
-                        <button id="cancelConfig" style="background: linear-gradient(135deg, var(--secondary), #718096); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600;">Cancelar</button>
-                    </div>
-                `;
-                
-                modal.appendChild(modalContent);
-                document.body.appendChild(modal);
-                
-                // Eventos del modal
-                modal.querySelector('#closeModal').addEventListener('click', () => modal.remove());
-                modal.querySelector('#cancelConfig').addEventListener('click', () => modal.remove());
-                
-                modal.querySelector('#saveConfig').addEventListener('click', function() {
-                    addLog('Configuración guardada', 'success');
-                    alert('Configuración guardada correctamente. Los cambios se aplicarán tras reiniciar.');
-                    modal.remove();
-                });
-                
-                // Cerrar modal al hacer clic fuera
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) {
-                        modal.remove();
-                    }
-                });
-            });
-            
-            // Botón actualizar manual
-            document.getElementById('manualRefresh').addEventListener('click', () => {
-                const btn = document.getElementById('manualRefresh');
-                btn.classList.add('loading');
-                
-                addLog('Actualización manual solicitada', 'info');
-                updateUI();
-                
-                setTimeout(() => {
-                    btn.classList.remove('loading');
-                }, 1500);
-            });
-            
-            // Botón animación flujo
-            document.getElementById('toggleFlow').addEventListener('click', function() {
-                const lines = document.querySelectorAll('.flow-line');
-                state.flowAnimationActive = !state.flowAnimationActive;
-                
-                lines.forEach(line => {
-                    if (state.flowAnimationActive) {
-                        line.classList.add('active');
-                    } else {
-                        line.classList.remove('active');
-                    }
-                });
-                
-                this.innerHTML = state.flowAnimationActive ? 
-                    '<i class="fas fa-pause"></i> Pausar' : 
-                    '<i class="fas fa-play"></i> Animación';
-                    
-                addLog(`Animación de flujo ${state.flowAnimationActive ? 'activada' : 'desactivada'}`, 'info');
-            });
-            
-            // Botón reset view
-            document.getElementById('resetView').addEventListener('click', () => {
-                initializeFlowDiagram();
-                addLog('Diagrama de flujo restablecido', 'info');
-            });
-            
-            // Botón limpiar logs
-            document.getElementById('clearLogs').addEventListener('click', () => {
-                state.systemLogs = [];
-                updateLogsDisplay();
-                addLog('Logs limpiados', 'warning');
-            });
-            
-            // Botón auto-scroll
-            document.getElementById('toggleAutoScroll').addEventListener('click', function() {
-                state.autoScrollLogs = !state.autoScrollLogs;
-                this.innerHTML = state.autoScrollLogs ? 
-                    '<i class="fas fa-scroll"></i> Auto-scroll' : 
-                    '<i class="fas fa-scroll"></i> Manual';
-                addLog(`Auto-scroll ${state.autoScrollLogs ? 'activado' : 'desactivado'}`, 'info');
-            });
-            
-            // Botón exportar logs
-            document.getElementById('exportLogs').addEventListener('click', () => {
-                exportLogs();
-            });
-            
-            // Botón reconectar MQTT
-            document.getElementById('reconnectMQTT').addEventListener('click', () => {
-                if (state.mqttClient) {
-                    state.mqttClient.end();
-                }
-                setTimeout(connectToMQTT, 1000);
-                addLog('Reconexión MQTT solicitada', 'info');
-            });
-            
-            // Redimensionar ventana
-            window.addEventListener('resize', () => {
-                initializeFlowDiagram();
-            });
-        }
-
-        function exportLogs() {
-            const logText = state.systemLogs.map(log => 
-                `[${log.time.toLocaleString()}] ${log.message}`
-            ).join('\n');
-            
-            const blob = new Blob([logText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `siena395-logs-${new Date().toISOString().slice(0,10)}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            addLog('Logs exportados a archivo', 'success');
-        }
+        window.onload = () => {
+            initParticles();
+            animate();
+        };
     </script>
 </body>
 </html>
