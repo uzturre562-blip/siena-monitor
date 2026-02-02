@@ -186,7 +186,7 @@
     }
 
     // CONEXIÓN MQTT CORREGIDA
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    
     
     client.on('connect', () => {
         document.getElementById('mqttDot').classList.add('online');
