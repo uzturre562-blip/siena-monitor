@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena395 Master PRO</title>
+    <title>Siena395 Master PRO - Full Victron</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -28,16 +28,14 @@
 
         header {
             grid-column: 1 / -1; background: #1a202c; color: white; padding: 15px 20px;
-            border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center;
         }
 
         .card { 
             background: var(--card); border-radius: var(--radius); padding: 20px; 
             border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        /* ESTADO MQTT */
         .mqtt-bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 10px 20px !important; font-size: 0.8rem; font-weight: 700; }
         .mqtt-dot { width: 10px; height: 10px; border-radius: 50%; background: #e53e3e; }
         .mqtt-dot.online { background: #38a169; box-shadow: 0 0 8px #38a169; }
@@ -49,13 +47,11 @@
         .node {
             position: absolute; z-index: 2; width: 90px; height: 90px;
             background: var(--card); border: 3px solid var(--border); border-radius: 50%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
         }
         .node i { font-size: 1.3rem; margin-bottom: 4px; }
         .node span { font-size: 0.65rem; font-weight: 800; line-height: 1.1; text-transform: uppercase; }
 
-        /* Posicionamiento Nodos */
         .n-solar { top: 8%; left: 10%; border-color: var(--solar); }
         .n-orion { bottom: 8%; left: 10%; border-color: var(--accent); }
         .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: var(--battery); width: 115px; height: 115px; }
@@ -75,26 +71,26 @@
 
 <div class="dashboard">
     <header>
-        <div><h1 style="font-size: 1.3rem;">SIENA395 <span style="color:var(--accent)">ULTRA PRO</span></h1></div>
+        <div><h1 style="font-size: 1.3rem;">SIENA395 <span style="color:var(--accent)">MASTER PRO</span></h1></div>
         <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:white; font-size: 1.4rem;"><i class="fas fa-circle-half-stroke"></i></button>
     </header>
 
     <section class="card mqtt-bar">
         <div id="mqttDot" class="mqtt-dot"></div>
-        <span id="mqttText">CONECTANDO A BROKER...</span>
+        <span id="mqttText">SISTEMA MQTT DESCONECTADO</span>
         <span style="margin-left: auto; opacity: 0.6;" id="mqttPing">-- ms</span>
     </section>
 
     <section class="card flow-section">
         <canvas id="flowCanvas"></canvas>
-        <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>Panel<br>Solar</span></div>
-        <div class="node n-orion"><i class="fas fa-shuttle-van" style="color:var(--accent)"></i><span>Orion<br>DCDC</span></div>
+        <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>MPPT<br>Solar</span></div>
+        <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion<br>DCDC</span></div>
         <div class="node n-battery">
             <i class="fas fa-car-battery" style="color:var(--battery); font-size: 1.8rem;"></i>
-            <span id="socMini" style="font-size: 1rem; margin-top: 2px;">--%</span>
+            <span id="socMini" style="font-size: 1rem; font-weight: 900;">--%</span>
         </div>
-        <div class="node n-inverter"><i class="fas fa-bolt" style="color:var(--accent)"></i><span>Phoenix<br>220V</span></div>
-        <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Consumo<br>12V</span></div>
+        <div class="node n-inverter"><i class="fas fa-bolt" style="color:var(--accent)"></i><span>Phoenix<br>Inverter</span></div>
+        <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Consumos<br>12V</span></div>
     </section>
 
     <section class="card">
@@ -107,44 +103,34 @@
     </section>
 
     <section class="card">
-        <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> VICTRON SMART SOLAR</div>
+        <div class="card-title"><i class="fas fa-temperature-high" style="color:#e53e3e"></i> SMART BATTERY SENSE</div>
         <div class="stats-grid">
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 2.5rem;" id="solW">--W</span><span class="lab">Potencia Actual</span></div>
-            <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">Voltaje Panel</span></div>
-            <div class="stat-item"><span class="val" id="solY">--kWh</span><span class="lab">Cosecha Hoy</span></div>
+            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 2.2rem;" id="btsT">--°C</span><span class="lab">Temperatura Batería</span></div>
+            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
+            <div class="stat-item"><span class="val" id="btsS">--</span><span class="lab">Estado Red</span></div>
         </div>
     </section>
 
     <section class="card">
-        <div class="card-title"><i class="fas fa-truck-moving" style="color:var(--accent)"></i> VICTRON ORION-TR</div>
+        <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> SMART SOLAR MPPT</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Entrada Altern.</span></div>
-            <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">Salida Carga</span></div>
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" id="oriSt">--</span><span class="lab">Estado Orion</span></div>
+            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 2.2rem; color:var(--solar)" id="solW">--W</span><span class="lab">Potencia Solar</span></div>
+            <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">Panel (V)</span></div>
+            <div class="stat-item"><span class="val" id="solY">--kWh</span><span class="lab">Hoy</span></div>
         </div>
     </section>
 
     <section class="card">
-        <div class="card-title"><i class="fas fa-plug" style="color:var(--accent)"></i> PHOENIX INVERTER</div>
+        <div class="card-title"><i class="fas fa-exchange-alt"></i> CONVERSORES</div>
         <div class="stats-grid">
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 2rem;" id="invVA">--VA</span><span class="lab">Carga AC Actual</span></div>
-            <div class="stat-item"><span class="val" id="invV">--V</span><span class="lab">Tensión AC</span></div>
-            <div class="stat-item"><span class="val" id="invSt">--</span><span class="lab">Modo</span></div>
-        </div>
-    </section>
-
-    <section class="card">
-        <div class="card-title"><i class="fas fa-microchip"></i> ESTADO SISTEMA</div>
-        <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="sysT">--°C</span><span class="lab">Temp. ESP32</span></div>
-            <div class="stat-item"><span class="val" id="sysR">--dBm</span><span class="lab">Señal WiFi</span></div>
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" id="sysU">--</span><span class="lab">Tiempo Activo</span></div>
+            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Alternador</span></div>
+            <div class="stat-item"><span class="val" id="invVA">--VA</span><span class="lab">Inversor AC</span></div>
         </div>
     </section>
 
     <section class="card" style="grid-column: 1 / -1;">
-        <div class="lab">TENDENCIA SOC 24H</div>
-        <canvas id="histChart" height="120"></canvas>
+        <div class="lab">TENDENCIA ÚLTIMAS 24 HORAS</div>
+        <canvas id="histChart" height="110"></canvas>
     </section>
 </div>
 
@@ -184,32 +170,31 @@
                 let p = (time + i*0.5) % 1;
                 let x = l.from.x + (l.to.x - l.from.x) * p;
                 let y = l.from.y + (l.to.y - l.from.y) * p;
-                ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI*2);
+                ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI*2); // TAMAÑO 2.2 PRO
                 ctx.fillStyle = l.from === pts.battery ? l.to.color : l.from.color;
-                ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle; ctx.fill();
+                ctx.shadowBlur = 8; ctx.shadowColor = ctx.fillStyle; ctx.fill();
             }
         });
         requestAnimationFrame(animate);
     }
 
-    // MQTT REAL
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     client.on('connect', () => {
         document.getElementById('mqttDot').classList.add('online');
-        document.getElementById('mqttText').innerText = 'SISTEMA ONLINE';
+        document.getElementById('mqttText').innerText = 'SIENA395 ONLINE';
         client.subscribe('siena395/sensor/#');
     });
 
     client.on('message', (topic, msg) => {
         const val = msg.toString();
+        // Mapeo dinámico de tus sensores reales
         if(topic.includes('soc')) {
             document.getElementById('socValue').innerText = val + '%';
             document.getElementById('socMini').innerText = val + '%';
         }
-        if(topic.includes('mppt/power')) document.getElementById('solW').innerText = val + 'W';
-        if(topic.includes('orion/vin')) document.getElementById('oriIn').innerText = val + 'V';
-        if(topic.includes('inv/va')) document.getElementById('invVA').innerText = val + 'VA';
-        // Mapear el resto de IDs según tus tópicos reales
+        if(topic.includes('bts/temp')) document.getElementById('btsT').innerText = val + '°C';
+        if(topic.includes('bts/volt')) document.getElementById('btsV').innerText = val + 'V';
+        if(topic.includes('mppt/p')) document.getElementById('solW').innerText = val + 'W';
     });
 
     window.addEventListener('resize', resize);
@@ -220,7 +205,7 @@
         data: {
             labels: Array(24).fill(''),
             datasets: [{
-                data: [98, 97, 95, 93, 91, 89, 92, 95, 98, 100, 100, 100],
+                data: [95, 94, 92, 90, 88, 85, 88, 92, 96, 100, 100, 99],
                 borderColor: '#3182ce', tension: 0.4, fill: true, pointRadius: 0,
                 backgroundColor: 'rgba(49, 130, 206, 0.1)'
             }]
