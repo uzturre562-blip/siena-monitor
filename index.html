@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena395 Master PRO - Full Victron</title>
+    <title>Siena395 MASTER ULTRA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,7 +11,7 @@
     <style>
         :root {
             --bg: #a0aec0; /* Gris Acero Mikel */
-            --card: #cbd5e0; /* Tarjetas oscurecidas */
+            --card: #cbd5e0; 
             --text: #1a202c;
             --accent: #3182ce;
             --solar: #d69e2e;
@@ -24,86 +24,69 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg); color: var(--text); padding: 12px; transition: 0.3s; padding-bottom: 50px; }
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
 
-        header {
-            grid-column: 1 / -1; background: #1a202c; color: white; padding: 15px 20px;
-            border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .card { 
-            background: var(--card); border-radius: var(--radius); padding: 20px; 
-            border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
+        header { grid-column: 1 / -1; background: #1a202c; color: white; padding: 15px 20px; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; }
         .mqtt-bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 10px 20px !important; font-size: 0.8rem; font-weight: 700; }
         .mqtt-dot { width: 10px; height: 10px; border-radius: 50%; background: #e53e3e; }
         .mqtt-dot.online { background: #38a169; box-shadow: 0 0 8px #38a169; }
 
-        /* FLUJO DE ENERGÍA */
-        .flow-section { grid-column: 1 / -1; height: 420px; position: relative; overflow: hidden; background: rgba(0,0,0,0.03); border-radius: var(--radius); }
+        .card { background: var(--card); border-radius: var(--radius); padding: 18px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .flow-section { grid-column: 1 / -1; height: 420px; position: relative; overflow: hidden; background: rgba(0,0,0,0.03); }
         #flowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        .node {
-            position: absolute; z-index: 2; width: 90px; height: 90px;
-            background: var(--card); border: 3px solid var(--border); border-radius: 50%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-        }
+        .node { position: absolute; z-index: 2; width: 90px; height: 90px; background: var(--card); border: 3px solid var(--border); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .node i { font-size: 1.3rem; margin-bottom: 4px; }
         .node span { font-size: 0.65rem; font-weight: 800; line-height: 1.1; text-transform: uppercase; }
 
-        .n-solar { top: 8%; left: 10%; border-color: var(--solar); }
-        .n-orion { bottom: 8%; left: 10%; border-color: var(--accent); }
-        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: var(--battery); width: 115px; height: 115px; }
-        .n-inverter { top: 8%; right: 10%; border-color: var(--accent); }
-        .n-loads { bottom: 8%; right: 10%; border-color: var(--danger); }
+        .n-solar { top: 8%; left: 8%; border-color: var(--solar); }
+        .n-orion { bottom: 8%; left: 8%; border-color: var(--accent); }
+        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: var(--battery); width: 110px; height: 110px; }
+        .n-inverter { top: 8%; right: 8%; border-color: var(--accent); }
+        .n-loads { bottom: 8%; right: 8%; border-color: var(--danger); }
 
-        /* DATOS TÉCNICOS */
-        .soc-big { font-size: 3.8rem; font-weight: 900; color: var(--battery); text-align: center; margin: 10px 0; letter-spacing: -2px; }
+        .soc-big { font-size: 3.5rem; font-weight: 900; color: var(--battery); text-align: center; margin: 5px 0; letter-spacing: -2px; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-item { background: rgba(0,0,0,0.06); padding: 12px; border-radius: 12px; text-align: center; }
-        .val { font-size: 1.3rem; font-weight: 800; display: block; }
-        .lab { font-size: 0.7rem; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
-        .card-title { font-size: 0.85rem; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .stat-item { background: rgba(0,0,0,0.06); padding: 10px; border-radius: 12px; text-align: center; }
+        .val { font-size: 1.2rem; font-weight: 800; display: block; }
+        .lab { font-size: 0.65rem; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
+        .card-title { font-size: 0.8rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
 <div class="dashboard">
     <header>
-        <div><h1 style="font-size: 1.3rem;">SIENA395 <span style="color:var(--accent)">MASTER PRO</span></h1></div>
-        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:white; font-size: 1.4rem;"><i class="fas fa-circle-half-stroke"></i></button>
+        <h1 style="font-size: 1.2rem;">SIENA395 <span style="color:var(--accent)">ULTRA MASTER</span></h1>
+        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:white; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </header>
 
     <section class="card mqtt-bar">
         <div id="mqttDot" class="mqtt-dot"></div>
-        <span id="mqttText">SISTEMA MQTT DESCONECTADO</span>
+        <span id="mqttText">MQTT: DESCONECTADO</span>
         <span style="margin-left: auto; opacity: 0.6;" id="mqttPing">-- ms</span>
     </section>
 
     <section class="card flow-section">
         <canvas id="flowCanvas"></canvas>
-        <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>MPPT<br>Solar</span></div>
-        <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion<br>DCDC</span></div>
-        <div class="node n-battery">
-            <i class="fas fa-car-battery" style="color:var(--battery); font-size: 1.8rem;"></i>
-            <span id="socMini" style="font-size: 1rem; font-weight: 900;">--%</span>
-        </div>
-        <div class="node n-inverter"><i class="fas fa-bolt" style="color:var(--accent)"></i><span>Phoenix<br>Inverter</span></div>
-        <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Consumos<br>12V</span></div>
+        <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>Panel<br>Solar</span></div>
+        <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion<br>DC-DC</span></div>
+        <div class="node n-battery"><i class="fas fa-car-battery" style="color:var(--battery)"></i><span id="socMini">--%</span></div>
+        <div class="node n-inverter"><i class="fas fa-plug" style="color:var(--accent)"></i><span>Phoenix<br>2000VA</span></div>
+        <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Cargas<br>12V</span></div>
     </section>
 
     <section class="card">
-        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> ULTIMATRON 100Ah</div>
+        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Ultimatron LiFePO4 100Ah</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión</span></div>
+            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión BMS</span></div>
             <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
         </div>
     </section>
 
     <section class="card">
-        <div class="card-title"><i class="fas fa-thermometer-half" style="color:#e53e3e"></i> SMART BATTERY SENSE</div>
+        <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--danger)"></i> Victron Battery Sense</div>
         <div class="stats-grid">
             <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
             <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temperatura</span></div>
@@ -111,25 +94,34 @@
     </section>
 
     <section class="card">
-        <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> SMART SOLAR MPPT</div>
+        <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> Victron SmartSolar</div>
         <div class="stats-grid">
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 2.2rem; color:var(--solar)" id="solW">--W</span><span class="lab">Potencia Solar</span></div>
-            <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">Panel (V)</span></div>
+            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 2rem; color:var(--solar)" id="solW">--W</span><span class="lab">Potencia Carga</span></div>
+            <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">Panel</span></div>
             <div class="stat-item"><span class="val" id="solY">--kWh</span><span class="lab">Hoy</span></div>
         </div>
     </section>
 
     <section class="card">
-        <div class="card-title"><i class="fas fa-exchange-alt"></i> CONVERSORES</div>
+        <div class="card-title"><i class="fas fa-shuttle-van" style="color:var(--accent)"></i> Victron Orion 30A</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Alternador</span></div>
-            <div class="stat-item"><span class="val" id="invVA">--VA</span><span class="lab">Inversor AC</span></div>
+            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Entrada Altern.</span></div>
+            <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">Salida Carga</span></div>
+            <div class="stat-item" style="grid-column:1/-1;"><span class="val" id="oriSt">--</span><span class="lab">Estado</span></div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-title"><i class="fas fa-bolt" style="color:var(--accent)"></i> Phoenix 12V 2000VA</div>
+        <div class="stats-grid">
+            <div class="stat-item" style="grid-column:1/-1;"><span class="val" style="font-size: 1.8rem;" id="invVA">--VA</span><span class="lab">Potencia AC</span></div>
+            <div class="stat-item"><span class="val" id="invV">--V</span><span class="lab">Salida AC</span></div>
+            <div class="stat-item"><span class="val" id="invSt">--</span><span class="lab">Modo</span></div>
         </div>
     </section>
 
     <section class="card" style="grid-column: 1 / -1;">
-        <div class="lab">TENDENCIA ÚLTIMAS 24 HORAS</div>
-        <canvas id="histChart" height="110"></canvas>
+        <canvas id="histChart" height="100"></canvas>
     </section>
 </div>
 
@@ -138,18 +130,15 @@
     const ctx = canvas.getContext('2d');
     let w, h;
 
-    function resize() {
-        w = canvas.width = canvas.offsetWidth;
-        h = canvas.height = canvas.offsetHeight;
-    }
+    function resize() { w = canvas.width = canvas.offsetWidth; h = canvas.height = canvas.offsetHeight; }
 
     function getCoords() {
         return {
-            solar:   { x: w*0.1 + 45, y: h*0.08 + 45, color: '#d69e2e' },
-            orion:   { x: w*0.1 + 45, y: h*0.92 - 45, color: '#3182ce' },
-            battery: { x: w*0.5,      y: h*0.5,       color: '#38a169' },
-            inverter:{ x: w*0.9 - 45, y: h*0.08 + 45, color: '#3182ce' },
-            loads:   { x: w*0.9 - 45, y: h*0.92 - 45, color: '#e53e3e' }
+            solar: { x: w*0.08 + 45, y: h*0.08 + 45, color: '#d69e2e' },
+            orion: { x: w*0.08 + 45, y: h*0.92 - 45, color: '#3182ce' },
+            battery: { x: w*0.5, y: h*0.5, color: '#38a169' },
+            inverter: { x: w*0.92 - 45, y: h*0.08 + 45, color: '#3182ce' },
+            loads: { x: w*0.92 - 45, y: h*0.92 - 45, color: '#e53e3e' }
         };
     }
 
@@ -169,9 +158,9 @@
                 let p = (time + i*0.5) % 1;
                 let x = l.from.x + (l.to.x - l.from.x) * p;
                 let y = l.from.y + (l.to.y - l.from.y) * p;
-                ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI*2); // TAMAÑO 2.2 PRO
+                ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI*2);
                 ctx.fillStyle = l.from === pts.battery ? l.to.color : l.from.color;
-                ctx.shadowBlur = 8; ctx.shadowColor = ctx.fillStyle; ctx.fill();
+                ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle; ctx.fill();
             }
         });
         requestAnimationFrame(animate);
@@ -180,20 +169,22 @@
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     client.on('connect', () => {
         document.getElementById('mqttDot').classList.add('online');
-        document.getElementById('mqttText').innerText = 'SIENA395 ONLINE';
+        document.getElementById('mqttText').innerText = 'MQTT: SIENA395 ONLINE';
         client.subscribe('siena395/sensor/#');
     });
 
     client.on('message', (topic, msg) => {
         const val = msg.toString();
-        // Mapeo dinámico de tus sensores reales
-        if(topic.includes('soc')) {
-            document.getElementById('socValue').innerText = val + '%';
-            document.getElementById('socMini').innerText = val + '%';
-        }
-        if(topic.includes('bts/temp')) document.getElementById('btsT').innerText = val + '°C';
-        if(topic.includes('bts/volt')) document.getElementById('btsV').innerText = val + 'V';
-        if(topic.includes('mppt/p')) document.getElementById('solW').innerText = val + 'W';
+        // Mapeo según siena395.yaml
+        if(topic.endsWith('ultimatron_soc')) { document.getElementById('socValue').innerText = val + '%'; document.getElementById('socMini').innerText = val + '%'; }
+        if(topic.endsWith('battery_sense_voltage')) document.getElementById('btsV').innerText = val + 'V';
+        if(topic.endsWith('battery_sense_temperature')) document.getElementById('btsT').innerText = val + '°C';
+        if(topic.endsWith('mppt_power')) document.getElementById('solW').innerText = val + 'W';
+        if(topic.endsWith('orion_input_voltage')) document.getElementById('oriIn').innerText = val + 'V';
+        if(topic.endsWith('orion_output_voltage')) document.getElementById('oriOut').innerText = val + 'V';
+        if(topic.endsWith('inverter_apparent_power')) document.getElementById('invVA').innerText = val + 'VA';
+        if(topic.endsWith('ultimatron_voltage')) document.getElementById('vBat').innerText = val + 'V';
+        if(topic.endsWith('ultimatron_current')) document.getElementById('iBat').innerText = val + 'A';
     });
 
     window.addEventListener('resize', resize);
@@ -201,14 +192,7 @@
 
     new Chart(document.getElementById('histChart'), {
         type: 'line',
-        data: {
-            labels: Array(24).fill(''),
-            datasets: [{
-                data: [95, 94, 92, 90, 88, 85, 88, 92, 96, 100, 100, 99],
-                borderColor: '#3182ce', tension: 0.4, fill: true, pointRadius: 0,
-                backgroundColor: 'rgba(49, 130, 206, 0.1)'
-            }]
-        },
+        data: { labels: Array(24).fill(''), datasets: [{ data: [98, 96, 94, 92, 90, 88, 90, 93, 97, 100, 100, 99], borderColor: '#3182ce', tension: 0.4, fill: true, pointRadius: 0, backgroundColor: 'rgba(49, 130, 206, 0.1)' }] },
         options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { display: false } } }
     });
 </script>
