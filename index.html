@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #a0aec0; /* Gris Acero Mikel */
+            --bg: #a0aec0;
             --card: #cbd5e0; 
             --text: #1a202c;
             --accent: #3182ce;
@@ -64,7 +64,6 @@
     <section class="card mqtt-bar">
         <div id="mqttDot" class="mqtt-dot"></div>
         <span id="mqttText">MQTT: DESCONECTADO</span>
-        <span style="margin-left: auto; opacity: 0.6;" id="mqttPing">-- ms</span>
     </section>
 
     <section class="card flow-section">
@@ -80,7 +79,7 @@
         <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Ultimatron LiFePO4 100Ah</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión BMS</span></div>
+            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión Shunt</span></div>
             <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
         </div>
     </section>
@@ -97,8 +96,7 @@
         <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> Victron SmartSolar</div>
         <div class="stats-grid">
             <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 2rem; color:var(--solar)" id="solW">--W</span><span class="lab">Potencia Carga</span></div>
-            <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">Panel</span></div>
-            <div class="stat-item"><span class="val" id="solY">--kWh</span><span class="lab">Hoy</span></div>
+            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" id="solV">--V</span><span class="lab">Tensión Batería MPPT</span></div>
         </div>
     </section>
 
@@ -107,7 +105,7 @@
         <div class="stats-grid">
             <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Entrada Altern.</span></div>
             <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">Salida Carga</span></div>
-            <div class="stat-item" style="grid-column:1/-1;"><span class="val" id="oriSt">--</span><span class="lab">Estado</span></div>
+            <div class="stat-item" style="grid-column:1/-1;"><span class="val" id="oriSt">STANDBY</span><span class="lab">Estado</span></div>
         </div>
     </section>
 
@@ -115,8 +113,6 @@
         <div class="card-title"><i class="fas fa-bolt" style="color:var(--accent)"></i> Phoenix 12V 2000VA</div>
         <div class="stats-grid">
             <div class="stat-item" style="grid-column:1/-1;"><span class="val" style="font-size: 1.8rem;" id="invVA">--VA</span><span class="lab">Potencia AC</span></div>
-            <div class="stat-item"><span class="val" id="invV">--V</span><span class="lab">Salida AC</span></div>
-            <div class="stat-item"><span class="val" id="invSt">--</span><span class="lab">Modo</span></div>
         </div>
     </section>
 
@@ -126,27 +122,13 @@
 </div>
 
 <script>
+    // 1. CONFIGURACIÓN CANVAS
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let w, h;
 
-    // --- TRADUCTORES DE ESTADO PROFESIONALES ---
-    function traducirEstadoOrion(val) {
-        const v = Math.round(parseFloat(val));
-        const estados = { 0: "OFF", 1: "CARGANDO", 2: "COMPLETA", 3: "ERROR" };
-        return estados[v] || "STANDBY";
-    }
-
-    function traducirEstadoInversor(val) {
-        const v = Math.round(parseFloat(val));
-        // Mapeo estándar de Phoenix: 3 es ON, 2 es Low Voltage, 1 es Fallo
-        const estados = { 0: "OFF", 1: "FALLO", 2: "BATERÍA BAJA", 3: "ON", 4: "ECO" };
-        return estados[v] || "DESC.";
-    }
-
     function resize() { w = canvas.width = canvas.offsetWidth; h = canvas.height = canvas.offsetHeight; }
-    // ... resto de tus funciones resize, getCoords y animate ...
-
+    
     function getCoords() {
         return {
             solar: { x: w*0.08 + 45, y: h*0.08 + 45, color: '#d69e2e' },
@@ -157,10 +139,6 @@
         };
     }
 
-    // ... (Aquí mantienes tu función animate() tal cual la tienes) ...
-
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-
     function animate() {
         ctx.clearRect(0, 0, w, h);
         const pts = getCoords();
@@ -169,7 +147,6 @@
             { from: pts.solar, to: pts.battery }, { from: pts.orion, to: pts.battery },
             { from: pts.battery, to: pts.inverter }, { from: pts.battery, to: pts.loads }
         ];
-
         links.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.from.x, l.from.y); ctx.lineTo(l.to.x, l.to.y);
             ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 3; ctx.stroke();
@@ -185,51 +162,58 @@
         requestAnimationFrame(animate);
     }
 
-    // CONEXIÓN MQTT CORREGIDA
-    
-    
+    // 2. TRADUCTORES
+    function traducirEstadoOrion(val) {
+        const v = Math.round(parseFloat(val));
+        const estados = { 0: "OFF", 1: "CARGANDO", 2: "COMPLETA", 3: "ERROR" };
+        return estados[v] || "STANDBY";
+    }
+
+    // 3. CONEXIÓN MQTT (SOLO UNA VEZ)
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+
     client.on('connect', () => {
         document.getElementById('mqttDot').classList.add('online');
         document.getElementById('mqttText').innerText = 'MQTT: SIENA395 ONLINE';
-        // SUSCRIPCIÓN CORREGIDA (Debe coincidir con el topic_prefix del YAML)
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
-client.on('message', (topic, msg) => {
+    client.on('message', (topic, msg) => {
         const valRaw = msg.toString();
         const val = parseFloat(valRaw).toFixed(1);
         const sensorName = topic.split('/')[2]; 
 
-        // 1. BATERÍA CON COLOR DINÁMICO
+        // Mapeo de Sensores
         if(sensorName === 'soc_bateria') { 
             const soc = Math.round(val);
             const el = document.getElementById('socValue');
             if(el) {
                 el.innerText = soc + '%';
-                // Cambia el color del número según el porcentaje
-                if(soc > 80) el.style.color = '#38a169'; // Verde
-                else if(soc > 25) el.style.color = '#d69e2e'; // Naranja
-                else el.style.color = '#e53e3e'; // Rojo
+                if(soc > 80) el.style.color = '#38a169';
+                else if(soc > 25) el.style.color = '#d69e2e';
+                else el.style.color = '#e53e3e';
             }
             if(document.getElementById('socMini')) document.getElementById('socMini').innerText = soc + '%'; 
         }
 
-        // 2. TRADUCCIÓN DE ESTADOS (Usando las funciones que pusiste en el punto 1)
-        if(sensorName === 'estado_orion') {
-            const elOri = document.getElementById('oriEstado');
-            if(elOri) elOri.innerText = traducirEstadoOrion(valRaw);
-        }
-
-        // 3. RESTO DE SENSORES (Voltajes, Potencias, etc.)
+        if(sensorName === 'tension_shunt') document.getElementById('vBat').innerText = val + 'V';
+        if(sensorName === 'corriente_shunt') document.getElementById('iBat').innerText = val + 'A';
         if(sensorName === 'voltaje_battery_sense') document.getElementById('btsV').innerText = val + 'V';
         if(sensorName === 'temperatura_bateria') document.getElementById('btsT').innerText = val + '°C';
         if(sensorName === 'potencia_solar') document.getElementById('solW').innerText = Math.round(val) + 'W';
+        if(sensorName === 'voltaje_bateria_mppt') document.getElementById('solV').innerText = val + 'V';
         if(sensorName === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val + 'V';
         if(sensorName === 'voltaje_salida_orion') document.getElementById('oriOut').innerText = val + 'V';
         if(sensorName === 'potencia_salida_phoenix') document.getElementById('invVA').innerText = Math.round(val) + 'VA';
-        if(sensorName === 'tension_shunt') document.getElementById('vBat').innerText = val + 'V';
-        if(sensorName === 'corriente_shunt') document.getElementById('iBat').innerText = val + 'A';
+        
+        // Estado Orion
+        if(sensorName === 'voltaje_salida_orion') {
+            const st = document.getElementById('oriSt');
+            st.innerText = parseFloat(valRaw) > 1 ? "CARGANDO" : "STANDBY";
+        }
     });
+
+    // 4. INICIALIZACIÓN
     window.addEventListener('resize', resize);
     resize(); animate();
 
@@ -239,3 +223,5 @@ client.on('message', (topic, msg) => {
         options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { display: false } } }
     });
 </script>
+</body>
+</html>
