@@ -166,25 +166,33 @@
         requestAnimationFrame(animate);
     }
 
+    // CONEXIÓN MQTT CORREGIDA
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    
     client.on('connect', () => {
         document.getElementById('mqttDot').classList.add('online');
         document.getElementById('mqttText').innerText = 'MQTT: SIENA395 ONLINE';
-        client.subscribe('siena395/sensor/#');
+        // SUSCRIPCIÓN CORREGIDA (Debe coincidir con el topic_prefix del YAML)
+        client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
     client.on('message', (topic, msg) => {
-        const val = msg.toString();
-        // Mapeo según siena395.yaml
-        if(topic.endsWith('ultimatron_soc')) { document.getElementById('socValue').innerText = val + '%'; document.getElementById('socMini').innerText = val + '%'; }
-        if(topic.endsWith('battery_sense_voltage')) document.getElementById('btsV').innerText = val + 'V';
-        if(topic.endsWith('battery_sense_temperature')) document.getElementById('btsT').innerText = val + '°C';
-        if(topic.endsWith('mppt_power')) document.getElementById('solW').innerText = val + 'W';
-        if(topic.endsWith('orion_input_voltage')) document.getElementById('oriIn').innerText = val + 'V';
-        if(topic.endsWith('orion_output_voltage')) document.getElementById('oriOut').innerText = val + 'V';
-        if(topic.endsWith('inverter_apparent_power')) document.getElementById('invVA').innerText = val + 'VA';
-        if(topic.endsWith('ultimatron_voltage')) document.getElementById('vBat').innerText = val + 'V';
-        if(topic.endsWith('ultimatron_current')) document.getElementById('iBat').innerText = val + 'A';
+        const valRaw = msg.toString();
+        const val = parseFloat(valRaw).toFixed(1); // Formatea a 1 decimal
+        
+        // Usamos .includes para ignorar el prefijo y el "/state" final
+        if(topic.includes('ultimatron_soc')) { 
+            document.getElementById('socValue').innerText = Math.round(val) + '%'; 
+            document.getElementById('socMini').innerText = Math.round(val) + '%'; 
+        }
+        if(topic.includes('battery_sense_voltage')) document.getElementById('btsV').innerText = val + 'V';
+        if(topic.includes('battery_sense_temperature')) document.getElementById('btsT').innerText = val + '°C';
+        if(topic.includes('mppt_power')) document.getElementById('solW').innerText = Math.round(val) + 'W';
+        if(topic.includes('orion_input_voltage')) document.getElementById('oriIn').innerText = val + 'V';
+        if(topic.includes('orion_output_voltage')) document.getElementById('oriOut').innerText = val + 'V';
+        if(topic.includes('inverter_apparent_power')) document.getElementById('invVA').innerText = Math.round(val) + 'VA';
+        if(topic.includes('ultimatron_voltage')) document.getElementById('vBat').innerText = val + 'V';
+        if(topic.includes('ultimatron_current')) document.getElementById('iBat').innerText = val + 'A';
     });
 
     window.addEventListener('resize', resize);
@@ -196,5 +204,3 @@
         options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { display: false } } }
     });
 </script>
-</body>
-</html>
