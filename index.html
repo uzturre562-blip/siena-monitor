@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>SIENA395 MASTER ULTRA - Monitorización Autocaravana</title>
+    <title>SIENA-395 - Monitorización Autocaravana -v1.0.1</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
@@ -23,10 +22,10 @@
             --danger: #ef4444;
             --danger-light: #f87171;
             --warning: #f97316;
+            --sense: #8b5cf6;
             --border: #e2e8f0;
             --radius: 20px;
             --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-            --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
         }
 
         .dark-mode {
@@ -42,9 +41,9 @@
             --danger: #f87171;
             --danger-light: #ef4444;
             --warning: #fb923c;
+            --sense: #a78bfa;
             --border: #334155;
             --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -68,50 +67,39 @@
             line-height: 1.5;
         }
 
-        /* Contenedor principal responsivo */
         .dashboard {
             width: 100%;
-            max-width: 1200px;
+            max-width: 500px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            align-items: start;
+            gap: 15px;
         }
 
-        /* HEADER - Con botón de versión anterior */
+        /* HEADER */
         .dashboard-header {
-            grid-column: 1 / -1;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
-            margin-bottom: 10px;
-            border-bottom: 2px solid var(--border);
+            padding: 5px;
         }
 
         .title-container h1 {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 900;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-light));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
         }
 
         .title-container .subtitle {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             opacity: 0.7;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .header-controls {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
         }
 
-        /* TOOLTIP PARA BOTÓN VERSIÓN ANTERIOR */
+        /* TOOLTIP */
         .tooltip-container {
             position: relative;
             display: inline-block;
@@ -119,18 +107,16 @@
 
         .tooltip-container .tooltip {
             position: absolute;
-            bottom: -35px;
+            bottom: -30px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--card);
             color: var(--text);
-            padding: 6px 10px;
-            border-radius: 8px;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-size: 0.7rem;
-            font-weight: 600;
             white-space: nowrap;
             border: 1px solid var(--border);
-            box-shadow: var(--shadow);
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
@@ -141,115 +127,61 @@
             opacity: 1;
         }
 
-        /* MQTT STATUS BAR */
+        /* MQTT STATUS */
         .mqtt-status {
-            grid-column: 1 / -1;
             background: var(--card);
-            padding: 18px 25px;
+            padding: 15px;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 10px;
             border: 1px solid var(--border);
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .mqtt-status.online {
-            border-left: 5px solid var(--battery);
-        }
-
-        .mqtt-status.offline {
-            border-left: 5px solid var(--danger);
-        }
-
-        .mqtt-indicator {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            margin-bottom: 5px;
         }
 
         .mqtt-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
+            width: 12px;
+            height: 12px;
             background: var(--danger);
-            position: relative;
+            border-radius: 50%;
         }
 
         .mqtt-dot.online {
             background: var(--battery);
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            box-shadow: 0 0 10px var(--battery);
         }
 
         .mqtt-text {
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
-        .mqtt-topic {
-            font-size: 0.8rem;
-            opacity: 0.7;
-            font-family: monospace;
-            background: rgba(0,0,0,0.05);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }
-
-        /* TARJETAS GENERALES */
+        /* TARJETAS */
         .card {
             background: var(--card);
-            padding: 24px;
+            padding: 18px;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-lg);
         }
 
         .card-title {
-            font-size: 0.9rem;
-            font-weight: 800;
+            font-size: 0.85rem;
+            font-weight: 900;
             text-transform: uppercase;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            letter-spacing: 0.5px;
-            color: var(--text);
+            gap: 8px;
             opacity: 0.9;
         }
 
-        .card-title i {
-            font-size: 1.2rem;
-        }
-
-        /* FLOW DIAGRAM - Responsive */
+        /* FLOW DIAGRAM */
         .flow-section {
-            grid-column: 1 / -1;
-            height: 280px;
+            height: 220px;
             position: relative;
-            background: var(--card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
             overflow: hidden;
-            margin-bottom: 10px;
         }
 
         #flowCanvas {
@@ -262,538 +194,238 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 800;
             text-align: center;
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            border: 2px solid var(--border);
-            padding: 8px;
-            z-index: 10;
-            transition: all 0.3s ease;
+            width: 60px;
         }
 
         .node i {
-            font-size: 1.6rem;
-            margin-bottom: 6px;
-        }
-
-        .node span {
-            font-size: 0.7rem;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-
-        .n-solar { top: 10%; left: 5%; background: rgba(245, 158, 11, 0.1); border-color: var(--solar); }
-        .n-orion { bottom: 10%; left: 5%; background: rgba(59, 130, 246, 0.1); border-color: var(--accent); }
-        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); border-color: var(--battery); }
-        .n-inverter { top: 10%; right: 5%; background: rgba(59, 130, 246, 0.1); border-color: var(--accent); }
-        .n-loads { bottom: 10%; right: 5%; background: rgba(239, 68, 68, 0.1); border-color: var(--danger); }
-
-        /* BATERÍA - TARJETA PRINCIPAL */
-        .battery-main {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
-            border-color: var(--battery);
-        }
-
-        .soc-big {
-            font-size: 4.5rem;
-            font-weight: 900;
-            text-align: center;
-            margin: 20px 0;
-            color: var(--battery);
-            letter-spacing: -3px;
-            line-height: 1;
-            text-shadow: 0 5px 15px rgba(16, 185, 129, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .battery-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .battery-stat {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 16px;
-            border-radius: 14px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .stat-value {
-            display: block;
             font-size: 1.4rem;
-            font-weight: 800;
             margin-bottom: 4px;
         }
 
-        .stat-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            opacity: 0.8;
-            letter-spacing: 0.5px;
+        .n-solar { top: 10%; left: 10%; }
+        .n-orion { bottom: 10%; left: 10%; }
+        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1rem; }
+        .n-inverter { top: 10%; right: 10%; }
+        .n-loads { bottom: 10%; right: 10%; }
+
+        /* BATERÍA */
+        .soc-big {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin: 15px 0;
+            color: var(--battery);
+            letter-spacing: -2px;
         }
 
-        /* STATS GRID - Responsive */
+        /* STATS GRID */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-            margin-top: 10px;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
         .stat-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 18px 12px;
-            border-radius: 14px;
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 12px;
             text-align: center;
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-
-        .stat-item:hover {
-            transform: translateY(-3px);
-            border-color: var(--accent);
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         .val {
             display: block;
-            font-size: 1.3rem;
-            font-weight: 800;
-            margin-bottom: 6px;
-            color: var(--text);
+            font-size: 1.2rem;
+            font-weight: 900;
         }
 
         .lab {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 700;
             text-transform: uppercase;
             opacity: 0.7;
-            letter-spacing: 0.5px;
         }
 
-        /* ANIMACIONES DE ALARMA */
+        /* ANIMACIONES */
         @keyframes pulse-red {
-            0% { color: var(--battery); transform: scale(1); }
-            50% { color: var(--danger); transform: scale(1.05); text-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
-            100% { color: var(--battery); transform: scale(1); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+            0% { color: var(--battery); }
+            50% { color: var(--danger); transform: scale(1.05); }
+            100% { color: var(--battery); }
         }
 
         .critical {
-            animation: pulse-red 1s infinite, shake 0.5s ease-in-out;
+            animation: pulse-red 1s infinite;
             color: var(--danger) !important;
         }
 
-        .warning {
-            color: var(--warning) !important;
-            animation: pulse-red 2s infinite;
-        }
-
-        /* GRÁFICO HISTÓRICO */
+        /* GRÁFICO */
         .chart-container {
-            grid-column: 1 / -1;
-            height: 200px;
-            margin-top: 10px;
+            height: 150px;
         }
 
-        /* BOTONES Y CONTROLES */
-        .btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn:hover {
-            background: var(--accent-light);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-        }
-
+        /* BOTONES */
         .theme-toggle {
-            background: rgba(0, 0, 0, 0.05);
+            background: none;
             border: none;
             color: var(--text);
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             cursor: pointer;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 8px;
+            border-radius: 10px;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 50px;
         }
 
         .theme-toggle:hover {
-            background: rgba(0, 0, 0, 0.1);
-            transform: rotate(30deg);
+            background: rgba(0,0,0,0.05);
         }
 
         /* FOOTER */
         footer {
-            grid-column: 1 / -1;
             text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
-            font-size: 0.8rem;
+            margin-top: 10px;
+            font-size: 0.75rem;
             opacity: 0.6;
             color: var(--text);
             padding-bottom: 20px;
         }
 
-        /* RESPONSIVE PARA TABLET Y MÓVIL */
+        /* RESPONSIVE */
         @media (min-width: 768px) {
-            body {
-                padding: 25px;
-            }
-            
             .dashboard {
+                max-width: 800px;
                 grid-template-columns: repeat(2, 1fr);
-                gap: 25px;
             }
             
-            .flow-section {
-                height: 320px;
-            }
-            
-            .node {
-                width: 80px;
-                height: 80px;
-            }
-            
-            .node i {
-                font-size: 1.8rem;
-            }
-            
-            .soc-big {
-                font-size: 5rem;
-            }
-            
-            .title-container h1 {
-                font-size: 1.8rem;
-            }
-            
-            .theme-toggle {
-                width: 55px;
-                height: 55px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .dashboard {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 30px;
-            }
-            
-            .battery-main,
             .flow-section,
-            .chart-container,
-            .mqtt-status,
-            .dashboard-header {
-                grid-column: 1 / -1;
+            .battery-main,
+            .chart-container {
+                grid-column: span 2;
             }
-            
-            .flow-section {
-                height: 350px;
-            }
-            
-            .soc-big {
-                font-size: 5.5rem;
-            }
-            
-            .title-container h1 {
-                font-size: 2rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 12px;
-            }
-            
-            .dashboard {
-                gap: 16px;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-            
-            .soc-big {
-                font-size: 3.5rem;
-            }
-            
-            .flow-section {
-                height: 240px;
-            }
-            
-            .node {
-                width: 60px;
-                height: 60px;
-            }
-            
-            .node i {
-                font-size: 1.4rem;
-            }
-            
-            .node span {
-                font-size: 0.6rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .battery-info {
-                grid-template-columns: 1fr;
-            }
-            
-            .header-controls {
-                gap: 8px;
-            }
-            
-            .theme-toggle {
-                width: 45px;
-                height: 45px;
-                padding: 10px;
-            }
-        }
-
-        /* LOADING STATES */
-        .loading {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: loading 1.5s infinite;
-        }
-
-        @keyframes loading {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
         }
     </style>
 </head>
 <body>
 
 <div class="dashboard">
-    <!-- HEADER CON BOTÓN DE VERSIÓN ANTERIOR -->
+    <!-- HEADER -->
     <header class="dashboard-header">
         <div class="title-container">
-            <h1>SIENA395 <span style="color:var(--accent)">ULTRA MASTER</span></h1>
+            <h1>SIENA-395 <span style="color:var(--accent)">ULTRA MASTER</span></h1>
             <div class="subtitle">Monitorización en tiempo real - Sistema Victron</div>
         </div>
         <div class="header-controls">
-            <!-- BOTÓN VERSIÓN ANTERIOR CON TOOLTIP -->
             <div class="tooltip-container">
                 <a href="index-viejo.html" style="text-decoration: none;">
                     <button class="theme-toggle" 
-                            style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--solar);"
+                            style="background: rgba(245, 158, 11, 0.1);"
                             aria-label="Versión anterior">
-                        <i class="fas fa-code-branch" style="color: var(--solar);"></i>
+                        <i class="fas fa-clock-rotate-left" style="color: var(--solar);"></i>
                     </button>
                 </a>
-                <span class="tooltip">Ver versión anterior</span>
+                <span class="tooltip">Versión anterior</span>
             </div>
             
-            <!-- BOTÓN TEMA OSCURO/CLARO -->
             <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
                 <i class="fas fa-adjust"></i>
             </button>
         </div>
     </header>
 
-    <!-- BARRA DE ESTADO MQTT -->
-    <section class="mqtt-status offline" id="mqttStatus">
-        <div class="mqtt-indicator">
-            <div id="mqttDot" class="mqtt-dot"></div>
-            <div>
-                <div id="mqttText" class="mqtt-text">MQTT: DESCONECTADO</div>
-                <div class="mqtt-topic">siena395_monitor_mikel_2026/sensor/#</div>
-            </div>
-        </div>
-        <div id="lastUpdate" class="mqtt-topic">Última actualización: --:--:--</div>
+    <!-- MQTT -->
+    <section class="card mqtt-status">
+        <div id="mqttDot" class="mqtt-dot"></div>
+        <span id="mqttText" class="mqtt-text">MQTT: DESCONECTADO</span>
     </section>
 
-    <!-- DIAGRAMA DE FLUJO -->
-    <section class="flow-section card">
+    <!-- FLOW -->
+    <section class="card flow-section">
         <canvas id="flowCanvas"></canvas>
-        <div class="node n-solar"><i class="fas fa-sun"></i><span>Panel Solar</span></div>
-        <div class="node n-orion"><i class="fas fa-truck-moving"></i><span>Orion DC-DC</span></div>
-        <div class="node n-battery"><i class="fas fa-car-battery"></i><span id="socMini">--%</span></div>
-        <div class="node n-inverter"><i class="fas fa-plug"></i><span>Phoenix 2000VA</span></div>
-        <div class="node n-loads"><i class="fas fa-lightbulb"></i><span>Cargas 12V</span></div>
+        <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>Panel<br>Solar</span></div>
+        <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion<br>DC-DC</span></div>
+        <div class="node n-battery"><i class="fas fa-car-battery" style="color:var(--battery)"></i><span id="socMini">--%</span></div>
+        <div class="node n-inverter"><i class="fas fa-plug" style="color:var(--accent)"></i><span>Phoenix<br>2000VA</span></div>
+        <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Cargas<br>12V</span></div>
     </section>
 
     <!-- BATERÍA PRINCIPAL -->
     <section class="card battery-main" id="batteryCard">
-        <div class="card-title"><i class="fas fa-car-battery"></i> Ultimatron LiFePO4 100Ah</div>
+        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Ultimatron LiFePO4 100Ah</div>
         <div id="socValue" class="soc-big">--%</div>
-        <div class="battery-info">
-            <div class="battery-stat">
-                <span class="stat-value" id="vBat">--V</span>
-                <span class="stat-label">Tensión Shunt</span>
-            </div>
-            <div class="battery-stat">
-                <span class="stat-value" id="iBat">--A</span>
-                <span class="stat-label">Corriente Batería</span>
-            </div>
-            <div class="battery-stat">
-                <span class="stat-value" id="btsV">--V</span>
-                <span class="stat-label">Voltaje Real</span>
-            </div>
-            <div class="battery-stat">
-                <span class="stat-value" id="btsT">--°C</span>
-                <span class="stat-label">Temperatura</span>
-            </div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión Shunt</span></div>
+            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
         </div>
     </section>
 
-    <!-- PANEL SOLAR -->
+    <!-- BATTERY SENSE -->
+    <section class="card">
+        <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--sense)"></i> Victron Battery Sense</div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
+            <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temperatura</span></div>
+        </div>
+    </section>
+
+    <!-- SMARTSOLAR -->
     <section class="card">
         <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> Victron SmartSolar</div>
         <div class="stats-grid">
-            <div class="stat-item">
-                <span class="val" style="color:var(--solar); font-size: 1.8rem;" id="solW">--W</span>
+            <div class="stat-item" style="grid-column: 1/-1;">
+                <span class="val" style="font-size: 2rem; color:var(--solar)" id="solW">--W</span>
                 <span class="lab">Potencia Carga</span>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" style="grid-column: 1/-1;">
                 <span class="val" id="solV">--V</span>
-                <span class="lab">Tensión MPPT</span>
-            </div>
-            <div class="stat-item">
-                <span class="val" id="solA">--A</span>
-                <span class="lab">Corriente Solar</span>
+                <span class="lab">Tensión Batería MPPT</span>
             </div>
         </div>
     </section>
 
-    <!-- ORION DC-DC -->
+    <!-- ORION -->
     <section class="card">
         <div class="card-title"><i class="fas fa-shuttle-van" style="color:var(--accent)"></i> Victron Orion 30A</div>
         <div class="stats-grid">
-            <div class="stat-item">
-                <span class="val" id="oriIn">--V</span>
-                <span class="lab">Entrada Altern.</span>
-            </div>
-            <div class="stat-item">
-                <span class="val" id="oriOut">--V</span>
-                <span class="lab">Salida Carga</span>
-            </div>
-            <div class="stat-item">
+            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Entrada Altern.</span></div>
+            <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">Salida Carga</span></div>
+            <div class="stat-item" style="grid-column:1/-1;">
                 <span class="val" id="oriSt">STANDBY</span>
                 <span class="lab">Estado</span>
             </div>
         </div>
     </section>
 
-    <!-- INVERSOR -->
+    <!-- PHOENIX -->
     <section class="card">
         <div class="card-title"><i class="fas fa-bolt" style="color:var(--accent)"></i> Phoenix 12V 2000VA</div>
         <div class="stats-grid">
-            <div class="stat-item">
-                <span class="val" style="font-size: 1.8rem; color:var(--accent)" id="invVA">--VA</span>
+            <div class="stat-item" style="grid-column:1/-1;">
+                <span class="val" style="font-size: 1.8rem;" id="invVA">--VA</span>
                 <span class="lab">Potencia AC</span>
-            </div>
-            <div class="stat-item">
-                <span class="val" id="invV">--V</span>
-                <span class="lab">Tensión AC</span>
-            </div>
-            <div class="stat-item">
-                <span class="val" id="invHz">--Hz</span>
-                <span class="lab">Frecuencia</span>
             </div>
         </div>
     </section>
 
-    <!-- GRÁFICO HISTÓRICO -->
+    <!-- GRÁFICO -->
     <section class="card chart-container">
-        <div class="card-title"><i class="fas fa-chart-line"></i> Histórico SOC (Últimas 24h)</div>
-        <canvas id="histChart" height="100"></canvas>
+        <div class="card-title"><i class="fas fa-chart-line"></i> Histórico SOC</div>
+        <canvas id="histChart"></canvas>
     </section>
 
     <!-- FOOTER -->
     <footer>
         <p>MONITORIZACIÓN AUTOCARAVANA - © 2026 UZTURRE - Software Libre</p>
-        <p style="margin-top: 8px; font-size: 0.7rem;">Diseño responsive para Xiaomi 14 & Lenovo Tab M10 Plus</p>
     </footer>
 </div>
 
 <script>
-    // CONFIGURACIÓN MQTT
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
-        clientId: 'siena395_' + Math.random().toString(16).substring(2, 8),
-        clean: true,
-        reconnectPeriod: 5000,
-        connectTimeout: 5000
-    });
-
-    // VARIABLES DE ESTADO
+    // MQTT - MISMO BROKER QUE EL ORIGINAL
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     let pSolar = 0, pOrion = 0, pInv = 0, iBat = 0;
-    let lastUpdateTime = null;
-    let connectionAttempts = 0;
 
-    // ELEMENTOS DOM
-    const mqttStatus = document.getElementById('mqttStatus');
-    const mqttDot = document.getElementById('mqttDot');
-    const mqttText = document.getElementById('mqttText');
-    const lastUpdateEl = document.getElementById('lastUpdate');
-    const themeToggle = document.getElementById('themeToggle');
-
-    // INICIALIZAR TEMA
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark-mode');
-        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-    } else {
-        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-    }
-
-    // TOGGLE TEMA
-    themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        if (document.body.classList.contains('dark-mode')) {
-            localStorage.setItem('theme', 'dark');
-            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-        } else {
-            localStorage.setItem('theme', 'light');
-            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-        }
-    });
-
-    // CONFIGURAR GRÁFICO
+    // GRÁFICO - SIN DATOS SIMULADOS
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
@@ -804,390 +436,178 @@
                 data: [],
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 0,
-                pointHoverRadius: 6
+                tension: 0.3,
+                fill: true
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                    titleColor: '#f1f5f9',
-                    bodyColor: '#f1f5f9',
-                    borderColor: '#10b981',
-                    borderWidth: 1
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    min: 0,
-                    max: 100,
-                    grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                    ticks: { color: 'var(--text)', font: { size: 11 } }
-                },
-                x: {
-                    grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                    ticks: { color: 'var(--text)', font: { size: 10 }, maxTicksLimit: 10 }
-                }
-            },
-            interaction: { intersect: false, mode: 'nearest' }
+                y: { min: 0, max: 100 },
+                x: { display: false }
+            }
         }
     });
 
-    // FUNCIÓN PARA AÑADIR DATOS AL GRÁFICO
-    function addDataToChart(val) {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        
-        socChart.data.labels.push(timeStr);
+    // AÑADIR DATOS AL GRÁFICO (SOLO CUANDO LLEGAN DATOS REALES)
+    function addData(val) {
+        const now = new Date().toLocaleTimeString();
+        socChart.data.labels.push(now);
         socChart.data.datasets[0].data.push(val);
-        
-        // Mantener solo las últimas 48 lecturas (aproximadamente 24h si se actualiza cada 30min)
-        if (socChart.data.labels.length > 48) {
+        if(socChart.data.labels.length > 30) {
             socChart.data.labels.shift();
             socChart.data.datasets[0].data.shift();
         }
-        
-        socChart.update('none');
+        socChart.update();
     }
 
-    // ACTUALIZAR HORA DE ÚLTIMA ACTUALIZACIÓN
-    function updateLastUpdateTime() {
-        const now = new Date();
-        lastUpdateTime = now;
-        lastUpdateEl.textContent = `Última actualización: ${now.toLocaleTimeString('es-ES')}`;
-    }
-
-    // MANEJAR CONEXIÓN MQTT
+    // MQTT CONNECT
     client.on('connect', () => {
-        connectionAttempts = 0;
-        mqttDot.classList.add('online');
-        mqttText.textContent = 'MQTT: CONECTADO - SIENA395 ONLINE';
-        mqttStatus.classList.remove('offline');
-        mqttStatus.classList.add('online');
-        
-        // Suscribirse a los topics
-        client.subscribe('siena395_monitor_mikel_2026/sensor/#', (err) => {
-            if (!err) {
-                console.log('Suscripción exitosa a todos los sensores');
-            }
-        });
-        
-        updateLastUpdateTime();
+        document.getElementById('mqttDot').classList.add('online');
+        document.getElementById('mqttText').innerText = 'MQTT: SIENA395 ONLINE';
+        client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
-    client.on('reconnect', () => {
-        connectionAttempts++;
-        mqttDot.classList.remove('online');
-        mqttText.textContent = `MQTT: RECONECTANDO (${connectionAttempts})...`;
-        mqttStatus.classList.remove('online');
-        mqttStatus.classList.add('offline');
-    });
-
-    client.on('error', (err) => {
-        console.error('Error MQTT:', err);
-        mqttDot.classList.remove('online');
-        mqttText.textContent = 'MQTT: ERROR DE CONEXIÓN';
-        mqttStatus.classList.remove('online');
-        mqttStatus.classList.add('offline');
-    });
-
-    client.on('offline', () => {
-        mqttDot.classList.remove('online');
-        mqttText.textContent = 'MQTT: OFFLINE';
-        mqttStatus.classList.remove('online');
-        mqttStatus.classList.add('offline');
-    });
-
-    // PROCESAR MENSAJES MQTT
+    // PROCESAR MENSAJES MQTT - EXACTAMENTE LOS MISMOS SENSORES QUE EL ORIGINAL
     client.on('message', (topic, msg) => {
         const valRaw = msg.toString();
         const val = parseFloat(valRaw);
         const sensorName = topic.split('/')[2];
-        
-        updateLastUpdateTime();
 
-        // SOC DE BATERÍA
-        if (sensorName === 'porcentaje_bateria') {
-            const socEl = document.getElementById('socValue');
-            const socMiniEl = document.getElementById('socMini');
-            const socRounded = Math.round(val);
-            
-            socEl.textContent = socRounded + '%';
-            socMiniEl.textContent = socRounded + '%';
-            
-            // Alarma crítica SOC < 20%
-            if (val < 20) {
-                socEl.classList.add('critical');
-                socEl.classList.remove('warning');
-                document.getElementById('batteryCard').style.borderColor = 'var(--danger)';
-            } 
-            // Advertencia SOC < 30%
-            else if (val < 30) {
-                socEl.classList.remove('critical');
-                socEl.classList.add('warning');
-                document.getElementById('batteryCard').style.borderColor = 'var(--warning)';
-            } 
-            // Normal
-            else {
-                socEl.classList.remove('critical');
-                socEl.classList.remove('warning');
-                document.getElementById('batteryCard').style.borderColor = 'var(--battery)';
-            }
-            
-            addDataToChart(val);
+        // SOC BATERÍA
+        if(sensorName === 'porcentaje_bateria') {
+            const el = document.getElementById('socValue');
+            el.innerText = Math.round(val) + '%';
+            document.getElementById('socMini').innerText = Math.round(val) + '%';
+            if(val < 20) el.classList.add('critical');
+            else el.classList.remove('critical');
+            addData(val);
         }
 
         // VOLTAJE BATERÍA (Shunt)
-        if (sensorName === 'voltaje_bateria') {
-            const vBatEl = document.getElementById('vBat');
-            vBatEl.textContent = val.toFixed(2) + 'V';
-            
-            // Color según estado de voltaje
-            if (val < 12.1) {
-                vBatEl.style.color = 'var(--danger)';
-            } else if (val < 12.5) {
-                vBatEl.style.color = 'var(--warning)';
-            } else {
-                vBatEl.style.color = 'var(--battery)';
-            }
+        if(sensorName === 'voltaje_bateria') {
+            const el = document.getElementById('vBat');
+            el.innerText = val.toFixed(2) + 'V';
+            if(val < 12.1) el.style.color = 'var(--danger)';
+            else el.style.color = 'inherit';
         }
 
         // CORRIENTE BATERÍA
-        if (sensorName === 'corriente_bateria') {
-            const iBatEl = document.getElementById('iBat');
-            const formattedVal = (val > 0 ? '+' : '') + val.toFixed(1);
-            iBatEl.textContent = formattedVal + 'A';
+        if(sensorName === 'corriente_bateria') {
+            const el = document.getElementById('iBat');
+            el.innerText = (val > 0 ? '+' : '') + val.toFixed(1) + 'A';
+            if(val > 0.1) el.style.color = 'var(--battery)';
+            else if(val < -0.1) el.style.color = 'var(--danger)';
+            else el.style.color = 'inherit';
             iBat = val;
-            
-            // Color según dirección de la corriente
-            if (val > 0.1) {
-                iBatEl.style.color = 'var(--battery)'; // Cargando (Verde)
-            } else if (val < -0.1) {
-                iBatEl.style.color = 'var(--danger)'; // Descargando (Rojo)
-            } else {
-                iBatEl.style.color = 'var(--text)'; // Neutro
-            }
         }
 
-        // VOLTAJE REAL BATERÍA (Battery Sense)
-        if (sensorName === 'voltaje_bateria_sense') {
-            document.getElementById('btsV').textContent = val.toFixed(2) + 'V';
+        // VOLTAJE BATTERY SENSE
+        if(sensorName === 'voltaje_bateria_sense') {
+            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         }
 
         // TEMPERATURA BATERÍA
-        if (sensorName === 'temperatura_bateria') {
-            const tempEl = document.getElementById('btsT');
-            tempEl.textContent = val.toFixed(1) + '°C';
-            
-            // Color según temperatura
-            if (val > 40) {
-                tempEl.style.color = 'var(--danger)';
-            } else if (val > 35) {
-                tempEl.style.color = 'var(--warning)';
-            } else {
-                tempEl.style.color = 'var(--text)';
-            }
+        if(sensorName === 'temperatura_bateria') {
+            document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
         }
 
         // POTENCIA SOLAR
-        if (sensorName === 'potencia_solar') {
-            const solWEl = document.getElementById('solW');
-            const roundedVal = Math.round(val);
-            solWEl.textContent = roundedVal + 'W';
+        if(sensorName === 'potencia_solar') {
+            document.getElementById('solW').innerText = Math.round(val) + 'W';
             pSolar = val;
-            
-            // Efecto visual cuando hay producción solar
-            if (val > 10) {
-                solWEl.style.textShadow = '0 0 15px rgba(245, 158, 11, 0.5)';
-            } else {
-                solWEl.style.textShadow = 'none';
-            }
         }
 
         // VOLTAJE MPPT
-        if (sensorName === 'voltaje_bateria_mppt') {
-            document.getElementById('solV').textContent = val.toFixed(2) + 'V';
+        if(sensorName === 'voltaje_bateria_mppt') {
+            document.getElementById('solV').innerText = val.toFixed(2) + 'V';
         }
 
         // ENTRADA ORION
-        if (sensorName === 'voltaje_entrada_orion') {
-            const oriInEl = document.getElementById('oriIn');
-            oriInEl.textContent = val.toFixed(1) + 'V';
-            
-            // Indicador si hay voltaje de alternador
-            if (val > 13) {
-                oriInEl.style.color = 'var(--accent)';
-            } else {
-                oriInEl.style.color = 'var(--text)';
-            }
+        if(sensorName === 'voltaje_entrada_orion') {
+            document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
         }
 
         // SALIDA ORION
-        if (sensorName === 'voltaje_salida_orion') {
-            const oriOutEl = document.getElementById('oriOut');
-            const oriStEl = document.getElementById('oriSt');
-            
-            oriOutEl.textContent = val.toFixed(1) + 'V';
-            
-            if (val > 13.2) {
-                oriStEl.textContent = "CARGANDO";
-                oriStEl.style.color = 'var(--battery)';
-                pOrion = 300;
-            } else {
-                oriStEl.textContent = "STANDBY";
-                oriStEl.style.color = 'var(--text)';
-                pOrion = 0;
-            }
+        if(sensorName === 'voltaje_salida_orion') {
+            document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
+            pOrion = val > 13.2 ? 300 : 0;
+            const stEl = document.getElementById('oriSt');
+            stEl.innerText = val > 13.2 ? "CARGANDO" : "STANDBY";
+            stEl.style.color = val > 13.2 ? 'var(--battery)' : 'inherit';
         }
 
         // POTENCIA INVERSOR
-        if (sensorName === 'potencia_salida_phoenix') {
-            const invVAEl = document.getElementById('invVA');
-            const roundedVal = Math.round(val);
-            invVAEl.textContent = roundedVal + 'VA';
+        if(sensorName === 'potencia_salida_phoenix') {
+            document.getElementById('invVA').innerText = Math.round(val) + 'VA';
             pInv = val;
-            
-            // Efecto visual cuando hay carga
-            if (val > 50) {
-                invVAEl.style.textShadow = '0 0 15px rgba(59, 130, 246, 0.5)';
-            } else {
-                invVAEl.style.textShadow = 'none';
-            }
         }
     });
 
-    // ANIMACIÓN DEL FLUJO DE ENERGÍA
+    // ANIMACIÓN FLUJO - MISMA LÓGICA QUE EL ORIGINAL
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let nodes = {};
-    let animationId = null;
 
-    function resizeCanvas() {
-        const dpr = window.devicePixelRatio || 1;
-        const rect = canvas.getBoundingClientRect();
-        
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        
-        ctx.scale(dpr, dpr);
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
-        
-        // Posicionar nodos de forma responsiva
-        const w = rect.width, h = rect.height;
+    function resize() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        const w = canvas.width, h = canvas.height;
         nodes = {
-            solar: {x: w * 0.15, y: h * 0.2},
-            orion: {x: w * 0.15, y: h * 0.8},
-            battery: {x: w * 0.5, y: h * 0.5},
-            inverter: {x: w * 0.85, y: h * 0.2},
-            loads: {x: w * 0.85, y: h * 0.8}
+            solar: {x:w*0.15, y:h*0.2},
+            orion: {x:w*0.15, y:h*0.8},
+            battery: {x:w*0.5, y:h*0.5},
+            inverter: {x:w*0.85, y:h*0.2},
+            loads: {x:w*0.85, y:h*0.8}
         };
     }
 
-    function drawFlowLine(from, to, time, color, width = 2) {
+    function drawFlow(from, to, t, color) {
         ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 10]);
+        ctx.lineDashOffset = -t * 20;
         ctx.moveTo(from.x, from.y);
         ctx.lineTo(to.x, to.y);
-        
-        // Efecto de línea animada
-        ctx.strokeStyle = color;
-        ctx.lineWidth = width;
-        ctx.lineCap = 'round';
-        ctx.setLineDash([5, 10]);
-        ctx.lineDashOffset = -time * 20;
-        
-        // Sombra para efecto de brillo
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 15;
         ctx.stroke();
-        ctx.shadowBlur = 0;
     }
 
-    function drawFlow() {
+    function animate() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
         const time = Date.now() * 0.002;
-        
-        // Limpiar canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Dibujar líneas de flujo según el estado
-        if (pSolar > 5) {
-            drawFlowLine(nodes.solar, nodes.battery, time, 'var(--solar)', 3);
-        }
-        
-        if (pOrion > 0) {
-            drawFlowLine(nodes.orion, nodes.battery, time, 'var(--accent)', 3);
-        }
-        
-        if (pInv > 10 || iBat < -1.5) {
-            drawFlowLine(nodes.battery, nodes.inverter, time, 'var(--accent)', 3);
-        }
-        
-        if (iBat < -0.4) {
-            drawFlowLine(nodes.battery, nodes.loads, time, 'var(--danger)', 3);
-        }
-        
-        // Dibujar puntos de conexión
-        Object.values(nodes).forEach(node => {
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, 4, 0, Math.PI * 2);
-            ctx.fillStyle = 'var(--card)';
-            ctx.fill();
-            ctx.strokeStyle = 'var(--border)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        });
-        
-        animationId = requestAnimationFrame(drawFlow);
+        if(pSolar > 5) drawFlow(nodes.solar, nodes.battery, time, 'var(--solar)');
+        if(pOrion > 0) drawFlow(nodes.orion, nodes.battery, time, 'var(--accent)');
+        if(pInv > 10 || iBat < -1.5) drawFlow(nodes.battery, nodes.inverter, time, 'var(--danger)');
+        if(iBat < -0.4) drawFlow(nodes.battery, nodes.loads, time, 'var(--text)');
+        requestAnimationFrame(animate);
     }
 
-    // INICIALIZAR Y MANEJAR RESIZE
-    function initFlowAnimation() {
-        if (animationId) {
-            cancelAnimationFrame(animationId);
-        }
-        resizeCanvas();
-        drawFlow();
+    // TEMA OSCURO/CLARO
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if(savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
     }
 
-    // Event listeners para responsividad
-    window.addEventListener('resize', initFlowAnimation);
-    window.addEventListener('load', initFlowAnimation);
-
-    // Inicializar datos de ejemplo para el gráfico
-    setTimeout(() => {
-        // Simular datos históricos iniciales
-        const now = new Date();
-        for (let i = 47; i >= 0; i--) {
-            const time = new Date(now.getTime() - i * 30 * 60000);
-            const timeStr = time.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            socChart.data.labels.push(timeStr);
-            socChart.data.datasets[0].data.push(50 + Math.random() * 40);
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        if(document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-adjust"></i>';
         }
-        socChart.update();
-    }, 1000);
+    });
 
-    // Actualizar hora periódicamente
-    setInterval(() => {
-        if (lastUpdateTime) {
-            const now = new Date();
-            const diffMs = now - lastUpdateTime;
-            const diffMins = Math.floor(diffMs / 60000);
-            
-            if (diffMins > 5) {
-                lastUpdateEl.textContent = `Última actualización: ${lastUpdateTime.toLocaleTimeString('es-ES')} (hace ${diffMins} min)`;
-            }
-        }
-    }, 60000);
-
+    // INICIALIZAR
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
 </script>
 </body>
 </html>
