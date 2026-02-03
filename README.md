@@ -21,5 +21,5 @@ Este repositorio contiene el código del Dashboard web para la monitorización e
 - **Topic Principal:** `siena395_monitor_mikel_2026/sensor/`
 
 ## ⚖️ Licencia
-**MONITORIZACIÓN AUTOCARAVANA - Copyleft 2026 UZTURRE - Software Libre.**
+**MONITORIZACIÓN AUTOCARAVANA - &#127279; 2026 UZTURRE - Software Libre.**
 Este proyecto se distribuye con la esperanza de que sea útil para otros usuarios de autocaravanas. Se permite su uso, modificación y distribución siempre que se mantenga esta filosofía de libertad.
