@@ -26,7 +26,6 @@
         body { background: var(--bg); color: var(--text); padding: 15px; display: flex; justify-content: center; }
         
         .dashboard { width: 100%; max-width: 500px; display: grid; gap: 15px; }
-        
         header { display: flex; justify-content: space-between; align-items: center; padding: 5px; }
         
         .card { 
@@ -41,7 +40,6 @@
         .mqtt-dot { width: 12px; height: 12px; background: var(--danger); border-radius: 50%; }
         .mqtt-dot.online { background: #48bb78; box-shadow: 0 0 10px #48bb78; }
 
-        /* CORRECCIÓN FONDO DIAGRAMA */
         .flow-section { height: 220px; position: relative; overflow: hidden; background: var(--card); } 
         #flowCanvas { width: 100%; height: 100%; }
 
@@ -57,6 +55,14 @@
         .card-title { font-size: 0.85rem; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; opacity: 0.8; display: flex; align-items: center; gap: 8px; }
         .soc-big { font-size: 3.5rem; font-weight: 900; text-align: center; margin: 10px 0; color: var(--battery); letter-spacing: -2px; }
         
+        /* Animación Alarma */
+        @keyframes pulse-red {
+            0% { color: var(--battery); }
+            50% { color: var(--danger); transform: scale(1.05); }
+            100% { color: var(--battery); }
+        }
+        .critical { animation: pulse-red 1s infinite; color: var(--danger) !important; }
+
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .stat-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(0,0,0,0.05); }
         .val { display: block; font-size: 1.2rem; font-weight: 900; }
@@ -85,7 +91,7 @@
         <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Cargas<br>12V</span></div>
     </section>
 
-    <section class="card">
+    <section class="card" id="batteryCard">
         <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Ultimatron LiFePO4 100Ah</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid">
@@ -131,7 +137,7 @@
     </section>
 
     <footer style="text-align: center; margin-top: 10px; font-size: 0.75rem; opacity: 0.6; color: var(--text); padding-bottom: 20px;">
-        <p>MONITORIZACION AUTOCARAVANA - Copyleft 2026 UZTURRE - Software Libre</p>
+        <p>Siena395 Master Ultra - Copyleft 2026 Mikel - Software Libre</p>
     </footer>
 </div>
 
@@ -139,38 +145,19 @@
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     let pSolar = 0, pOrion = 0, pInv = 0, iBat = 0;
 
+    // CONFIG GRÁFICO
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'SOC %',
-                data: [],
-                borderColor: '#38a169',
-                tension: 0.3,
-                fill: true,
-                backgroundColor: 'rgba(56, 161, 105, 0.1)'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { 
-                y: { min: 0, max: 100, ticks: { color: '#718096' } },
-                x: { display: false } 
-            }
-        }
+        data: { labels: [], datasets: [{ label: 'SOC %', data: [], borderColor: '#38a169', tension: 0.3, fill: true, backgroundColor: 'rgba(56, 161, 105, 0.1)' }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 }, x: { display: false } } }
     });
 
     function addData(val) {
         const now = new Date().toLocaleTimeString();
         socChart.data.labels.push(now);
         socChart.data.datasets[0].data.push(val);
-        if(socChart.data.labels.length > 30) {
-            socChart.data.labels.shift();
-            socChart.data.datasets[0].data.shift();
-        }
+        if(socChart.data.labels.length > 30) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
         socChart.update();
     }
 
@@ -185,22 +172,36 @@
         const val = parseFloat(valRaw);
         const sensorName = topic.split('/')[2];
 
+        // LÓGICA SOC + ALARMA (Punto 3)
         if(sensorName === 'porcentaje_bateria') {
-            document.getElementById('socValue').innerText = Math.round(val) + '%';
+            const el = document.getElementById('socValue');
+            el.innerText = Math.round(val) + '%';
             document.getElementById('socMini').innerText = Math.round(val) + '%';
+            if(val < 20) el.classList.add('critical'); else el.classList.remove('critical');
             addData(val);
         }
-        if(sensorName === 'voltaje_bateria') document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
+
+        // LÓGICA VOLTAJE + ALARMA (Punto 3)
+        if(sensorName === 'voltaje_bateria') {
+            const el = document.getElementById('vBat');
+            el.innerText = val.toFixed(2) + 'V';
+            if(val < 12.1) el.style.color = 'var(--danger)'; else el.style.color = 'inherit';
+        }
+
+        // LÓGICA CORRIENTE COLOR (Punto 2)
         if(sensorName === 'corriente_bateria') {
-            document.getElementById('iBat').innerText = val.toFixed(1) + 'A';
+            const el = document.getElementById('iBat');
+            el.innerText = (val > 0 ? '+' : '') + val.toFixed(1) + 'A';
+            if(val > 0.1) el.style.color = '#48bb78'; // Cargando (Verde)
+            else if(val < -0.1) el.style.color = 'var(--danger)'; // Consumiendo (Rojo)
+            else el.style.color = 'inherit';
             iBat = val;
         }
+
+        // RESTO DE SENSORES
         if(sensorName === 'voltaje_bateria_sense') document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         if(sensorName === 'temperatura_bateria') document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
-        if(sensorName === 'potencia_solar') {
-            document.getElementById('solW').innerText = Math.round(val) + 'W';
-            pSolar = val;
-        }
+        if(sensorName === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
         if(sensorName === 'voltaje_bateria_mppt') document.getElementById('solV').innerText = val.toFixed(2) + 'V';
         if(sensorName === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
         if(sensorName === 'voltaje_salida_orion') {
@@ -208,35 +209,22 @@
             pOrion = val > 13.2 ? 300 : 0;
             document.getElementById('oriSt').innerText = val > 13.2 ? "CARGANDO" : "STANDBY";
         }
-        if(sensorName === 'potencia_salida_phoenix') {
-            document.getElementById('invVA').innerText = Math.round(val) + 'VA';
-            pInv = val;
-        }
+        if(sensorName === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
     });
 
+    // FLUJO Y ANIMACIÓN
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let nodes = {};
-
     function resize() {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
+        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
         const w = canvas.width, h = canvas.height;
-        nodes = {
-            solar:   { x: w*0.15, y: h*0.2 },
-            orion:   { x: w*0.15, y: h*0.8 },
-            battery: { x: w*0.5,  y: h*0.5 },
-            inverter:{ x: w*0.85, y: h*0.2 },
-            loads:   { x: w*0.85, y: h*0.8 }
-        };
+        nodes = { solar: {x:w*0.15,y:h*0.2}, orion: {x:w*0.15,y:h*0.8}, battery: {x:w*0.5,y:h*0.5}, inverter: {x:w*0.85,y:h*0.2}, loads: {x:w*0.85,y:h*0.8} };
     }
-
-    function drawFlow(from, to, t, color, reverse = false) {
-        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
-        ctx.setLineDash([5, 10]); ctx.lineDashOffset = reverse ? t * 20 : -t * 20;
+    function drawFlow(from, to, t, color) {
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash([5, 10]); ctx.lineDashOffset = -t * 20;
         ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
     }
-
     function animate() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
         const time = Date.now() * 0.002;
@@ -246,10 +234,8 @@
         if(iBat < -0.4) drawFlow(nodes.battery, nodes.loads, time, 'var(--text)');
         requestAnimationFrame(animate);
     }
-
     window.addEventListener('resize', resize);
     resize(); animate();
 </script>
-
 </body>
 </html>
