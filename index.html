@@ -41,7 +41,8 @@
         .mqtt-dot { width: 12px; height: 12px; background: var(--danger); border-radius: 50%; }
         .mqtt-dot.online { background: #48bb78; box-shadow: 0 0 10px #48bb78; }
 
-        .flow-section { height: 220px; position: relative; overflow: hidden; background: rgba(0,0,0,0.03); }
+        /* CORRECCIÓN FONDO DIAGRAMA */
+        .flow-section { height: 220px; position: relative; overflow: hidden; background: var(--card); } 
         #flowCanvas { width: 100%; height: 100%; }
 
         .node { position: absolute; display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; font-weight: 800; text-align: center; width: 60px; }
@@ -57,7 +58,7 @@
         .soc-big { font-size: 3.5rem; font-weight: 900; text-align: center; margin: 10px 0; color: var(--battery); letter-spacing: -2px; }
         
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-item { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(0,0,0,0.05); }
+        .stat-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(0,0,0,0.05); }
         .val { display: block; font-size: 1.2rem; font-weight: 900; }
         .lab { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
     </style>
@@ -130,18 +131,14 @@
     </section>
 
     <footer style="text-align: center; margin-top: 10px; font-size: 0.75rem; opacity: 0.6; color: var(--text); padding-bottom: 20px;">
-        <p>Siena395 Master Ultra - Copyleft 2026 Mikel - Software Libre</p>
+        <p>MONITORIZACION AUTOCARAVANA - Copyleft 2026 UZTURRE - Software Libre</p>
     </footer>
 </div>
 
 <script>
-    // 1. CONEXIÓN MQTT
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-    
-    // Variables para lógica de flujo
     let pSolar = 0, pOrion = 0, pInv = 0, iBat = 0;
 
-    // 2. GRÁFICO REAL (Inicialmente vacío)
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
@@ -217,7 +214,6 @@
         }
     });
 
-    // 3. DIAGRAMA DE FLUJO
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let nodes = {};
@@ -244,18 +240,10 @@
     function animate() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
         const time = Date.now() * 0.002;
-        
         if(pSolar > 5) drawFlow(nodes.solar, nodes.battery, time, 'var(--solar)');
         if(pOrion > 0) drawFlow(nodes.orion, nodes.battery, time, 'var(--accent)');
-        
-        // Si el Inversor gasta o el Shunt detecta descarga, flecha hacia fuera
-        if(pInv > 10 || iBat < -1.5) {
-            drawFlow(nodes.battery, nodes.inverter, time, 'var(--danger)');
-        }
-        // Si hay cualquier consumo pequeño, flecha a cargas
-        if(iBat < -0.4) {
-            drawFlow(nodes.battery, nodes.loads, time, 'var(--text)');
-        }
+        if(pInv > 10 || iBat < -1.5) drawFlow(nodes.battery, nodes.inverter, time, 'var(--danger)');
+        if(iBat < -0.4) drawFlow(nodes.battery, nodes.loads, time, 'var(--text)');
         requestAnimationFrame(animate);
     }
 
