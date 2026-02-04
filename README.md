@@ -21,6 +21,17 @@ Este repositorio contiene el código del Dashboard/Interfaz web para la monitori
 - **Broker:** `wss://broker.emqx.io:8084/mqtt`
 - **Topic Principal:** `siena395_monitor_mikel_2026/sensor/`
 
+- 
+- ## 🤝 Agradecimientos y Origen del Proyecto
+
+Este ecosistema de monitorización no habría sido posible sin la base técnica proporcionada por:
+
+- **Fabian-Schmidt (esphome-victron_ble):** Por el desarrollo del componente esencial que permite al ESP32 capturar los datos "Instant Readout" de Victron vía Bluetooth.
+- **DIY Electro Camper:** Por la lógica de control y la integración de la BMS en ESPHome que sirvió de inspiración para el proyecto.
+- **Syssi (GitHub):** Por su trabajo con el componente JBD-BMS.
+- **Comunidad ESPHome:** Por proporcionar el framework que une todas estas piezas.
+
 ## ⚖️ Licencia
 **MONITORIZACIÓN AUTOCARAVANA - &#127279; 2026 UZTURRE - Software Libre.**
 Este proyecto se distribuye con la esperanza de que sea útil para otros usuarios de autocaravanas. Se permite su uso, modificación y distribución siempre que se mantenga esta filosofía de libertad.
+
