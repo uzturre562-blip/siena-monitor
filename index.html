@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>SIENA-395 PRO - INTERFAZ VICTRON</title>
+    <title>SIENA395 MASTER ULTRA - Dashboard Victron</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,6 +26,8 @@
             --warning: #ff8c00;
             --sense: #6c63ff;
             --sense-light: #7d75ff;
+            --bms: #805ad5;
+            --bms-light: #9f7aea;
             --success: #00a651;
             --border: #d1d9e6;
             --radius: 12px;
@@ -50,6 +52,8 @@
             --warning: #ffa94d;
             --sense: #9d95ff;
             --sense-light: #8a7dff;
+            --bms: #a78bfa;
+            --bms-light: #c4b5fd;
             --success: #51cf66;
             --border: #374151;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -342,6 +346,7 @@
             letter-spacing: 0.3px;
         }
 
+        /* ANIMACIÓN ALARMA */
         @keyframes pulse-alarm {
             0% { color: var(--battery); }
             50% { color: var(--danger); transform: scale(1.03); }
@@ -353,6 +358,7 @@
             color: var(--danger) !important;
         }
 
+        /* LOG CARD */
         .log-card {
             background: var(--card);
             border-color: var(--sense);
@@ -397,19 +403,20 @@
             font-weight: 500;
         }
 
-        /* GRÁFICO HISTÓRICO - CORREGIDO CON ESPACIO ADECUADO */
+        /* GRÁFICO HISTÓRICO */
         .chart-container {
             position: relative;
-            height: 180px; /* Aumentado para mejor visibilidad */
-            padding: 16px 12px 16px 16px !important; /* Más padding izquierdo */
-            overflow: hidden; /* Previene desbordamiento */
+            height: 180px;
+            padding: 16px 12px 16px 16px !important;
+            overflow: hidden;
         }
 
         #histChart {
-            width: calc(100% - 5px) !important; /* Compensa el ancho del eje Y */
+            width: calc(100% - 5px) !important;
             height: 140px !important;
         }
 
+        /* BOTONES */
         .theme-toggle {
             background: rgba(0,0,0,0.05);
             border: 1px solid var(--border);
@@ -436,6 +443,7 @@
             color: var(--solar);
         }
 
+        /* FOOTER */
         footer {
             text-align: center;
             margin-top: 10px;
@@ -446,6 +454,7 @@
             padding-bottom: 16px;
         }
 
+        /* RESPONSIVE */
         @media (min-width: 768px) {
             .dashboard {
                 max-width: 800px;
@@ -456,6 +465,7 @@
             .mqtt-bar,
             .flow-section,
             .battery-main,
+            .bms-card,
             .chart-container {
                 grid-column: span 2;
             }
@@ -498,8 +508,8 @@
     <!-- HEADER -->
     <header class="dashboard-header">
         <div class="title-container">
-            <h1>SIENA-395 <span style="color:var(--accent)">PRO</span></h1>
-            <div class="subtitle">Interfaz de Monitorización Victron v1.0.5</div>
+            <h1>SIENA395 <span style="color:var(--accent)">ULTRA MASTER</span></h1>
+            <div class="subtitle">Dashboard de Monitorización Victron + BMS Ultimatron</div>
         </div>
         <div class="header-controls">
             <div class="status-badge">
@@ -523,7 +533,7 @@
             <div id="mqttDot" class="mqtt-dot"></div>
             <div>
                 <div id="mqttText" class="mqtt-text">MQTT: DESCONECTADO</div>
-                <div class="mqtt-topic">siena395_monitor_mikel_2026/sensor/#</div>
+                <div class="mqtt-topic">siena395_monitor_mikel_2026/sensor/# & bms/#</div>
             </div>
         </div>
         <div id="lastUpdate" class="mqtt-topic">--:--:--</div>
@@ -542,11 +552,31 @@
 
     <!-- BATERÍA PRINCIPAL -->
     <section class="card battery-main" id="batteryCard">
-        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Ultimatron LiFePO4 100Ah</div>
+        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Victron SmartShunt</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid">
             <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión Shunt</span></div>
             <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
+        </div>
+    </section>
+
+    <!-- BMS ULTIMATRON LiFePO4 -->
+    <section class="card bms-card" style="border-left: 4px solid var(--bms);">
+        <div class="card-title"><i class="fas fa-microchip" style="color:var(--bms)"></i> BMS Ultimatron LiFePO4 100Ah</div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" style="color:var(--bms)" id="bmsSoc">--%</span><span class="lab">SOC BMS</span></div>
+            <div class="stat-item"><span class="val" id="bmsV">--V</span><span class="lab">Tensión Celdas</span></div>
+            <div class="stat-item"><span class="val" id="bmsI">--A</span><span class="lab">Corriente BMS</span></div>
+            <div class="stat-item"><span class="val" id="bmsT">--°C</span><span class="lab">Temp. BMS</span></div>
+        </div>
+    </section>
+
+    <!-- VICTRON BATTERY SENSE -->
+    <section class="card">
+        <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--sense)"></i> Victron Battery Sense</div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
+            <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temperatura</span></div>
         </div>
     </section>
 
@@ -589,15 +619,6 @@
         </div>
     </section>
 
-    <!-- BATTERY SENSE -->
-    <section class="card">
-        <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--sense)"></i> Victron Battery Sense</div>
-        <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
-            <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temperatura</span></div>
-        </div>
-    </section>
-
     <!-- GRÁFICO HISTÓRICO -->
     <section class="card chart-container">
         <div class="card-title"><i class="fas fa-chart-line" style="color:var(--accent)"></i> Histórico SOC (Últimas 24h)</div>
@@ -617,7 +638,7 @@
 
     <!-- FOOTER -->
     <footer>
-        <p>MONITORIZACIÓN AUTOCARAVANA -COPILEFT &#127279; 2026 UZTURRE - Software Libre</p>
+        <p>MONITORIZACIÓN AUTOCARAVANA SIENA395 - &#127279; 2026 UZTURRE - Software Libre</p>
     </footer>
 </div>
 
@@ -627,7 +648,7 @@
     let lastUpdate = null;
     let logEntries = [];
 
-    // CONFIG GRÁFICO - CORREGIDO PARA QUE LAS ETIQUETAS NO SE SALGAN
+    // CONFIG GRÁFICO
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
@@ -773,6 +794,7 @@
         document.getElementById('mqttText').innerText = 'MQTT: CONECTADO';
         addLog('Conexión MQTT establecida');
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
+        client.subscribe('siena395_monitor_mikel_2026/bms/#');
     });
 
     client.on('reconnect', () => {
@@ -785,118 +807,178 @@
         addLog('Conexión MQTT perdida');
     });
 
-    // PROCESAR MENSAJES MQTT
+    // PROCESAR MENSAJES MQTT - SENSORES VICTRON
     client.on('message', (topic, msg) => {
         const valRaw = msg.toString();
         const val = parseFloat(valRaw);
-        const sensorName = topic.split('/')[2];
+        
+        if(topic.includes('/sensor/')) {
+            const sensorName = topic.split('/')[2];
 
-        if(sensorName === 'porcentaje_bateria') {
-            const el = document.getElementById('socValue');
-            const socValue = Math.round(val);
-            el.innerText = socValue + '%';
-            document.getElementById('socMini').innerText = socValue + '%';
+            if(sensorName === 'porcentaje_bateria') {
+                const el = document.getElementById('socValue');
+                const socValue = Math.round(val);
+                el.innerText = socValue + '%';
+                document.getElementById('socMini').innerText = socValue + '%';
+                
+                if(val < 20) {
+                    el.classList.add('critical');
+                    if(socValue < 15) addLog(`ALERTA: SOC crítico (${socValue}%)`);
+                } else {
+                    el.classList.remove('critical');
+                }
+                addData(val);
+                
+                if(socValue % 10 === 0 && socValue !== 0) {
+                    addLog(`SOC actual: ${socValue}%`);
+                }
+            }
+
+            if(sensorName === 'voltaje_bateria') {
+                const el = document.getElementById('vBat');
+                const voltage = val.toFixed(2);
+                el.innerText = voltage + 'V';
+                if(val < 12.1) {
+                    el.style.color = 'var(--danger)';
+                    addLog(`ALERTA: Voltaje bajo (${voltage}V)`);
+                } else if(val < 12.5) {
+                    el.style.color = 'var(--warning)';
+                } else {
+                    el.style.color = 'inherit';
+                }
+            }
+
+            if(sensorName === 'corriente_bateria') {
+                const el = document.getElementById('iBat');
+                const current = val.toFixed(1);
+                el.innerText = (val > 0 ? '+' : '') + current + 'A';
+                if(val > 0.1) {
+                    el.style.color = 'var(--battery)';
+                    addLog(`Cargando: +${current}A`);
+                } else if(val < -0.1) {
+                    el.style.color = 'var(--danger)';
+                    addLog(`Descargando: ${current}A`);
+                } else {
+                    el.style.color = 'inherit';
+                }
+                iBat = val;
+            }
+
+            if(sensorName === 'voltaje_bateria_sense') {
+                const el = document.getElementById('btsV');
+                el.innerText = val.toFixed(2) + 'V';
+                if(val < 12.1) el.style.color = 'var(--danger)';
+                else if(val < 12.5) el.style.color = 'var(--warning)';
+                else el.style.color = 'var(--sense)';
+            }
+
+            if(sensorName === 'temperatura_bateria') {
+                const el = document.getElementById('btsT');
+                const temp = val.toFixed(1);
+                el.innerText = temp + '°C';
+                if(val > 40) {
+                    el.style.color = 'var(--danger)';
+                    addLog(`ALERTA: Temperatura alta (${temp}°C)`);
+                } else if(val > 35) {
+                    el.style.color = 'var(--warning)';
+                } else {
+                    el.style.color = 'var(--sense)';
+                }
+            }
             
-            if(val < 20) {
-                el.classList.add('critical');
-                if(socValue < 15) addLog(`ALERTA: SOC crítico (${socValue}%)`);
-            } else {
-                el.classList.remove('critical');
+            if(sensorName === 'potencia_solar') {
+                const power = Math.round(val);
+                document.getElementById('solW').innerText = power + 'W';
+                pSolar = val;
+                if(power > 100) addLog(`Producción solar: ${power}W`);
             }
-            addData(val);
             
-            if(socValue % 10 === 0 && socValue !== 0) {
-                addLog(`SOC actual: ${socValue}%`);
+            if(sensorName === 'voltaje_bateria_mppt') {
+                document.getElementById('solV').innerText = val.toFixed(2) + 'V';
+            }
+            
+            if(sensorName === 'voltaje_entrada_orion') {
+                document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
+                if(val > 13) addLog('Alternador activo');
+            }
+            
+            if(sensorName === 'voltaje_salida_orion') {
+                document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
+                pOrion = val > 13.2 ? 300 : 0;
+                const stEl = document.getElementById('oriSt');
+                if(val > 13.2) {
+                    stEl.innerText = "CARGANDO";
+                    stEl.style.color = 'var(--battery)';
+                    addLog('Orion cargando batería');
+                } else {
+                    stEl.innerText = "STANDBY";
+                    stEl.style.color = 'inherit';
+                }
+            }
+            
+            if(sensorName === 'potencia_salida_phoenix') {
+                const power = Math.round(val);
+                document.getElementById('invVA').innerText = power + 'VA';
+                pInv = val;
+                if(power > 100) addLog(`Inversor activo: ${power}VA`);
             }
         }
 
-        if(sensorName === 'voltaje_bateria') {
-            const el = document.getElementById('vBat');
-            const voltage = val.toFixed(2);
-            el.innerText = voltage + 'V';
-            if(val < 12.1) {
-                el.style.color = 'var(--danger)';
-                addLog(`ALERTA: Voltaje bajo (${voltage}V)`);
-            } else if(val < 12.5) {
-                el.style.color = 'var(--warning)';
-            } else {
-                el.style.color = 'inherit';
+        // PROCESAR MENSAJES MQTT - BMS ULTMATRON
+        if(topic.includes('/bms/')) {
+            const bmsName = topic.split('/')[2];
+            
+            if(bmsName === 'soc') {
+                const el = document.getElementById('bmsSoc');
+                const bmsSoc = Math.round(val);
+                el.innerText = bmsSoc + '%';
+                el.style.color = 'var(--bms)';
+                
+                // Comparar SOC SmartShunt vs BMS
+                const shuntSoc = parseFloat(document.getElementById('socValue').innerText);
+                if(!isNaN(shuntSoc) && Math.abs(shuntSoc - bmsSoc) > 5) {
+                    addLog(`Diferencias SOC: SmartShunt ${shuntSoc}% vs BMS ${bmsSoc}%`);
+                }
             }
-        }
-
-        if(sensorName === 'corriente_bateria') {
-            const el = document.getElementById('iBat');
-            const current = val.toFixed(1);
-            el.innerText = (val > 0 ? '+' : '') + current + 'A';
-            if(val > 0.1) {
-                el.style.color = 'var(--battery)';
-                addLog(`Cargando: +${current}A`);
-            } else if(val < -0.1) {
-                el.style.color = 'var(--danger)';
-                addLog(`Descargando: ${current}A`);
-            } else {
-                el.style.color = 'inherit';
+            
+            if(bmsName === 'voltaje') {
+                const el = document.getElementById('bmsV');
+                el.innerText = val.toFixed(2) + 'V';
+                if(val < 12.0) {
+                    el.style.color = 'var(--danger)';
+                } else if(val < 12.5) {
+                    el.style.color = 'var(--warning)';
+                } else {
+                    el.style.color = 'var(--bms)';
+                }
             }
-            iBat = val;
-        }
-
-        if(sensorName === 'voltaje_bateria_sense') {
-            const el = document.getElementById('btsV');
-            el.innerText = val.toFixed(2) + 'V';
-            if(val < 12.1) el.style.color = 'var(--danger)';
-            else if(val < 12.5) el.style.color = 'var(--warning)';
-            else el.style.color = 'var(--sense)';
-        }
-
-        if(sensorName === 'temperatura_bateria') {
-            const el = document.getElementById('btsT');
-            const temp = val.toFixed(1);
-            el.innerText = temp + '°C';
-            if(val > 40) {
-                el.style.color = 'var(--danger)';
-                addLog(`ALERTA: Temperatura alta (${temp}°C)`);
-            } else if(val > 35) {
-                el.style.color = 'var(--warning)';
-            } else {
-                el.style.color = 'var(--sense)';
+            
+            if(bmsName === 'corriente') {
+                const el = document.getElementById('bmsI');
+                const current = val.toFixed(1);
+                el.innerText = (val > 0 ? '+' : '') + current + 'A';
+                if(val > 0.1) {
+                    el.style.color = 'var(--battery)';
+                } else if(val < -0.1) {
+                    el.style.color = 'var(--danger)';
+                } else {
+                    el.style.color = 'var(--bms)';
+                }
             }
-        }
-        
-        if(sensorName === 'potencia_solar') {
-            const power = Math.round(val);
-            document.getElementById('solW').innerText = power + 'W';
-            pSolar = val;
-            if(power > 100) addLog(`Producción solar: ${power}W`);
-        }
-        
-        if(sensorName === 'voltaje_bateria_mppt') {
-            document.getElementById('solV').innerText = val.toFixed(2) + 'V';
-        }
-        
-        if(sensorName === 'voltaje_entrada_orion') {
-            document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
-            if(val > 13) addLog('Alternador activo');
-        }
-        
-        if(sensorName === 'voltaje_salida_orion') {
-            document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
-            pOrion = val > 13.2 ? 300 : 0;
-            const stEl = document.getElementById('oriSt');
-            if(val > 13.2) {
-                stEl.innerText = "CARGANDO";
-                stEl.style.color = 'var(--battery)';
-                addLog('Orion cargando batería');
-            } else {
-                stEl.innerText = "STANDBY";
-                stEl.style.color = 'inherit';
+            
+            if(bmsName === 'temp') {
+                const el = document.getElementById('bmsT');
+                const temp = val.toFixed(1);
+                el.innerText = temp + '°C';
+                if(val > 45) {
+                    el.style.color = 'var(--danger)';
+                    addLog(`ALERTA BMS: Temperatura alta (${temp}°C)`);
+                } else if(val > 40) {
+                    el.style.color = 'var(--warning)';
+                } else {
+                    el.style.color = 'var(--bms)';
+                }
             }
-        }
-        
-        if(sensorName === 'potencia_salida_phoenix') {
-            const power = Math.round(val);
-            document.getElementById('invVA').innerText = power + 'VA';
-            pInv = val;
-            if(power > 100) addLog(`Inversor activo: ${power}VA`);
         }
     });
 
