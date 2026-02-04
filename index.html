@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>SIENA395 MASTER ULTRA - Dashboard Victron</title>
+    <title>SIENA-395 PRO - Interfaz Sistema Victron</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -494,6 +494,25 @@
                 height: 160px !important;
             }
         }
+        
+        /* Estilo para el panel de debug MQTT */
+        #mqttDebugPanel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 9999;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #00ff00;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -501,8 +520,8 @@
 <div class="dashboard">
     <header class="dashboard-header">
         <div class="title-container">
-            <h1>SIENA395 <span style="color:var(--accent)">ULTRA MASTER</span></h1>
-            <div class="subtitle">Dashboard de Monitorización Victron + BMS Ultimatron</div>
+            <h1>SIENA-395 <span style="color:var(--accent)">PRO</span></h1>
+            <div class="subtitle">Interfaz de Monitorización Victron + BMS Ultimatron v1.0.6</div>
         </div>
         <div class="header-controls">
             <div class="status-badge">
@@ -620,17 +639,18 @@
     </section>
 
     <footer>
-        <p>MONITORIZACIÓN AUTOCARAVANA SIENA395 - &#127279; 2026 UZTURRE - Software Libre</p>
+        <p>MONITORIZACIÓN AUTOCARAVANA -COPYLEFT &#127279; 2026 UZTURRE - Software Libre</p>
     </footer>
 </div>
 
 <script>
     // =============================================
-    // CONFIGURACIÓN SIMPLE - SIN SEGURIDAD
+    // CONFIGURACIÓN MQTT CON DEPURACIÓN
     // =============================================
     
-    // 1. Conexión directa al broker público
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    // Exponer cliente MQTT para depuración en consola (F12)
+    window.mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    const client = window.mqttClient; // Mantener compatibilidad
     
     let pSolar = 0, pOrion = 0, pInv = 0, iBat = 0;
     let lastUpdate = null;
@@ -728,7 +748,7 @@
         }
     });
 
-    // ACTUALIZAR COLORES DEL GRÁFICO
+    // ACTUALIZAR COLORES DEL GRÁFICO AL CAMBIAR TEMA
     function updateChartColors() {
         const isDark = document.body.classList.contains('dark-mode');
         socChart.options.scales.y.ticks.color = isDark ? '#e2e8f0' : '#4a5568';
@@ -781,30 +801,47 @@
         document.getElementById('mqttDot').classList.add('online');
         document.getElementById('mqttText').innerText = 'MQTT: CONECTADO';
         addLog('Conexión MQTT establecida');
-        
-        // Suscripción directa a tus topics
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
         client.subscribe('siena395_monitor_mikel_2026/bms/#');
         
-        console.log('✅ Conectado al broker público');
+        // Mostrar mensaje en consola
+        console.log('%c✅ MQTT CONECTADO', 'color: #00a651; font-weight: bold;');
+        console.log('Broker: wss://broker.emqx.io:8084/mqtt');
+        console.log('Topics suscritos: siena395_monitor_mikel_2026/sensor/#, siena395_monitor_mikel_2026/bms/#');
     });
 
     client.on('reconnect', () => {
         addLog('Reconectando a MQTT...');
+        console.log('🔄 Reconectando MQTT...');
     });
 
     client.on('offline', () => {
         document.getElementById('mqttDot').classList.remove('online');
         document.getElementById('mqttText').innerText = 'MQTT: DESCONECTADO';
         addLog('Conexión MQTT perdida');
+        console.log('❌ MQTT DESCONECTADO');
     });
 
-    // PROCESAR MENSAJES MQTT - SIN PROTECCIÓN
+    client.on('error', (error) => {
+        console.error('❌ Error MQTT:', error);
+        addLog('Error MQTT: ' + error.message);
+    });
+
+    // Variable para almacenar último mensaje (para depuración)
+    window.lastMqttMessage = null;
+
+    // PROCESAR MENSAJES MQTT - SENSORES VICTRON
     client.on('message', (topic, msg) => {
         const valRaw = msg.toString();
         const val = parseFloat(valRaw);
         
-        // Procesar directamente
+        // Guardar último mensaje para depuración
+        window.lastMqttMessage = {
+            topic: topic,
+            message: valRaw,
+            timestamp: new Date().toLocaleTimeString()
+        };
+        
         if(topic.includes('/sensor/')) {
             const sensorName = topic.split('/')[2];
 
@@ -917,7 +954,7 @@
             }
         }
 
-        // PROCESAR BMS
+        // PROCESAR MENSAJES MQTT - BMS ULTMATRON
         if(topic.includes('/bms/')) {
             const bmsName = topic.split('/')[2];
             
@@ -926,23 +963,37 @@
                 const bmsSoc = Math.round(val);
                 el.innerText = bmsSoc + '%';
                 el.style.color = 'var(--bms)';
+                
+                // Comparar SOC SmartShunt vs BMS
+                const shuntSoc = parseFloat(document.getElementById('socValue').innerText);
+                if(!isNaN(shuntSoc) && Math.abs(shuntSoc - bmsSoc) > 5) {
+                    addLog(`Diferencias SOC: SmartShunt ${shuntSoc}% vs BMS ${bmsSoc}%`);
+                }
             }
             
             if(bmsName === 'voltaje') {
                 const el = document.getElementById('bmsV');
                 el.innerText = val.toFixed(2) + 'V';
-                if(val < 12.0) el.style.color = 'var(--danger)';
-                else if(val < 12.5) el.style.color = 'var(--warning)';
-                else el.style.color = 'var(--bms)';
+                if(val < 12.0) {
+                    el.style.color = 'var(--danger)';
+                } else if(val < 12.5) {
+                    el.style.color = 'var(--warning)';
+                } else {
+                    el.style.color = 'var(--bms)';
+                }
             }
             
             if(bmsName === 'corriente') {
                 const el = document.getElementById('bmsI');
                 const current = val.toFixed(1);
                 el.innerText = (val > 0 ? '+' : '') + current + 'A';
-                if(val > 0.1) el.style.color = 'var(--battery)';
-                else if(val < -0.1) el.style.color = 'var(--danger)';
-                else el.style.color = 'var(--bms)';
+                if(val > 0.1) {
+                    el.style.color = 'var(--battery)';
+                } else if(val < -0.1) {
+                    el.style.color = 'var(--danger)';
+                } else {
+                    el.style.color = 'var(--bms)';
+                }
             }
             
             if(bmsName === 'temp') {
@@ -952,8 +1003,11 @@
                 if(val > 45) {
                     el.style.color = 'var(--danger)';
                     addLog(`ALERTA BMS: Temperatura alta (${temp}°C)`);
-                } else if(val > 40) el.style.color = 'var(--warning)';
-                else el.style.color = 'var(--bms)';
+                } else if(val > 40) {
+                    el.style.color = 'var(--warning)';
+                } else {
+                    el.style.color = 'var(--bms)';
+                }
             }
         }
     });
@@ -1027,6 +1081,171 @@
         updateChartColors();
     });
 
+    // =============================================
+    // FUNCIONES DE DEPURACIÓN PARA CONSOLA (F12)
+    // =============================================
+    
+    // Exponer funciones de debug
+    window.debugMQTT = {
+        // Ver estado de conexión
+        status: function() {
+            const status = {
+                connected: client.connected,
+                broker: client.options ? client.options.host : 'wss://broker.emqx.io:8084/mqtt',
+                clientId: client.options ? client.options.clientId : 'No disponible',
+                lastActivity: lastUpdate ? lastUpdate.toLocaleTimeString() : 'Nunca',
+                topics: ['siena395_monitor_mikel_2026/sensor/#', 'siena395_monitor_mikel_2026/bms/#'],
+                solarPower: pSolar + 'W',
+                batteryCurrent: iBat + 'A',
+                batterySOC: document.getElementById('socValue').innerText
+            };
+            console.table(status);
+            return status;
+        },
+        
+        // Forzar reconexión
+        reconnect: function() {
+            console.log('🔄 Forzando reconexión MQTT...');
+            addLog('Reconexión manual desde consola');
+            client.end(true, {}, function() {
+                setTimeout(function() {
+                    client.reconnect();
+                }, 1000);
+            });
+        },
+        
+        // Publicar mensaje de prueba
+        test: function(topic = 'siena395/debug', message = 'Test desde consola ' + Date.now()) {
+            if (client.connected) {
+                client.publish(topic, message);
+                console.log(`✅ Publicado en ${topic}: "${message}"`);
+                return true;
+            } else {
+                console.log('❌ No conectado para publicar');
+                return false;
+            }
+        },
+        
+        // Ver logs recientes
+        logs: function() {
+            console.log('📋 Últimos logs del sistema:');
+            logEntries.forEach((log, index) => {
+                console.log(`  ${index + 1}. ${log.time} - ${log.message}`);
+            });
+            return logEntries;
+        },
+        
+        // Ver datos actuales
+        data: function() {
+            const data = {
+                smartshunt: {
+                    soc: document.getElementById('socValue').innerText,
+                    voltage: document.getElementById('vBat').innerText,
+                    current: document.getElementById('iBat').innerText
+                },
+                bms: {
+                    soc: document.getElementById('bmsSoc').innerText,
+                    voltage: document.getElementById('bmsV').innerText,
+                    current: document.getElementById('bmsI').innerText,
+                    temperature: document.getElementById('bmsT').innerText
+                },
+                solar: {
+                    power: document.getElementById('solW').innerText,
+                    voltage: document.getElementById('solV').innerText
+                },
+                orion: {
+                    input: document.getElementById('oriIn').innerText,
+                    output: document.getElementById('oriOut').innerText,
+                    status: document.getElementById('oriSt').innerText
+                },
+                inverter: {
+                    power: document.getElementById('invVA').innerText
+                }
+            };
+            console.table(data);
+            return data;
+        }
+    };
+    
+    // Exponer otras variables útiles
+    window.mqttData = {
+        pSolar: () => pSolar,
+        pOrion: () => pOrion,
+        pInv: () => pInv,
+        iBat: () => iBat,
+        logEntries: () => logEntries,
+        lastUpdate: () => lastUpdate
+    };
+    
+    // Crear panel de debug flotante
+    function createDebugPanel() {
+        const panel = document.createElement('div');
+        panel.id = 'mqttDebugPanel';
+        panel.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="color: #00ff00;">MQTT DEBUG</strong>
+                <button onclick="document.getElementById('mqttDebugPanel').style.display='none'" 
+                        style="background: #ff0000; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px;">×</button>
+            </div>
+            <div id="debugContent">
+                <div>Estado: <span id="debugStatus" style="font-weight: bold;">--</span></div>
+                <div>Último: <span id="debugLastMsg" style="font-size: 11px;">--</span></div>
+                <div>Hora: <span id="debugTime">--:--:--</span></div>
+                <div style="margin-top: 8px; font-size: 11px; color: #aaa;">
+                    F12 → Console<br>
+                    debugMQTT.status()<br>
+                    debugMQTT.test()
+                </div>
+            </div>
+        `;
+        document.body.appendChild(panel);
+        
+        // Actualizar panel cada segundo
+        setInterval(() => {
+            if (panel.style.display !== 'none') {
+                const statusEl = document.getElementById('debugStatus');
+                const lastMsgEl = document.getElementById('debugLastMsg');
+                const timeEl = document.getElementById('debugTime');
+                
+                statusEl.textContent = client.connected ? '✅ CONECTADO' : '❌ DESCONECTADO';
+                statusEl.style.color = client.connected ? '#00ff00' : '#ff0000';
+                
+                if (window.lastMqttMessage) {
+                    const msg = window.lastMqttMessage;
+                    const shortTopic = msg.topic.split('/').pop();
+                    lastMsgEl.textContent = `${shortTopic}: ${msg.message.substring(0, 20)}${msg.message.length > 20 ? '...' : ''}`;
+                }
+                
+                timeEl.textContent = new Date().toLocaleTimeString();
+            }
+        }, 1000);
+        
+        // Atajo de teclado Ctrl+Shift+D para mostrar/ocultar
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+    }
+    
+    // Mensaje de ayuda en consola al cargar
+    setTimeout(() => {
+        console.log('%c🔧 MQTT DEBUG ACTIVADO', 'color: #00a651; font-weight: bold; font-size: 14px');
+        console.log('%cComandos disponibles en consola:', 'color: #3182ce; font-weight: bold');
+        console.log('  mqttClient.connected       // Estado de conexión (true/false)');
+        console.log('  debugMQTT.status()         // Información completa de conexión');
+        console.log('  debugMQTT.reconnect()      // Forzar reconexión manual');
+        console.log('  debugMQTT.test()           // Publicar mensaje de prueba');
+        console.log('  debugMQTT.logs()           // Ver logs del sistema');
+        console.log('  debugMQTT.data()           // Ver todos los datos actuales');
+        console.log('  window.lastMqttMessage     // Último mensaje MQTT recibido');
+        console.log('');
+        console.log('%cPresiona Ctrl+Shift+D para mostrar panel de debug', 'color: #ff9900; font-weight: bold');
+        
+        // Crear panel de debug
+        createDebugPanel();
+    }, 2000);
+
     // INICIALIZAR
     window.addEventListener('resize', () => {
         if (animationId) cancelAnimationFrame(animationId);
@@ -1038,6 +1257,7 @@
     drawFlow();
     addLog('Dashboard inicializado');
     
+    // Actualizar colores del gráfico al cargar
     setTimeout(updateChartColors, 100);
 </script>
 </body>
