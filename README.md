@@ -8,6 +8,7 @@ Este repositorio contiene el código del Dashboard web para la monitorización e
 - **Batería:** Ultimatron LiFePO4 100Ah.
 - **Cerebro:** ESP32 / ESP32-S3 (Recopilación de datos vía Bluetooth BLE).
 - **Equipos Victron:** SmartShunt, MPPT SmartSolar, Orion-Tr Smart y Phoenix Inverter.
+- **Configuración ESPHome:** [Ver archivo YAML](./siena395_bms.yaml)
 
 ## 🚀 Funcionalidades del Dashboard
 - **Flujos de energía:** Animación en tiempo real de la dirección de la corriente (Solar, Alternador, Consumos).
