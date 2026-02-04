@@ -3,55 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>SIENA-395 PRO - Interfaz Victron</title>
+    <title>SIENA-395 MASTER -PRO- - INTERFAZ Victron -v1.04-</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #f5f7fa;
-            --card: #ffffff;
-            --text: #1a202c;
-            --text-light: #4a5568;
-            --accent: #3182ce;
-            --accent-light: #4299e1;
-            --solar: #d69e2e;
-            --solar-light: #ed8936;
-            --battery: #38a169;
-            --battery-light: #48bb78;
-            --danger: #e53e3e;
-            --danger-light: #fc8181;
-            --warning: #dd6b20;
-            --sense: #805ad5;
-            --sense-light: #9f7aea;
-            --success: #38a169;
-            --border: #e2e8f0;
-            --radius: 14px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --bg: #f0f2f5;           /* Fondo general suave */
+            --card: #f8f9fa;         /* Color de tarjetas UNIFICADO - estilo Victron */
+            --card-dark: #ffffff;    /* Para hover */
+            --text: #2d3748;         /* Texto oscuro */
+            --text-light: #4a5568;   /* Texto secundario */
+            --accent: #0066cc;       /* Azul Victron */
+            --accent-light: #0077e6;
+            --solar: #ff9900;        /* Naranja solar Victron */
+            --solar-light: #ffaa33;
+            --battery: #00a651;      /* Verde batería Victron */
+            --battery-light: #00cc66;
+            --danger: #e63946;       /* Rojo alerta */
+            --danger-light: #ff6b6b;
+            --warning: #ff8c00;      /* Naranja advertencia */
+            --sense: #6c63ff;        /* Púrpura sense */
+            --sense-light: #7d75ff;
+            --success: #00a651;
+            --border: #d1d9e6;       /* Borde suave */
+            --radius: 12px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .dark-mode {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f1f5f9;
-            --text-light: #cbd5e1;
-            --accent: #60a5fa;
-            --accent-light: #3b82f6;
-            --solar: #fbbf24;
-            --solar-light: #f59e0b;
-            --battery: #34d399;
-            --battery-light: #10b981;
-            --danger: #f87171;
-            --danger-light: #ef4444;
-            --warning: #fb923c;
-            --sense: #a78bfa;
-            --sense-light: #8b5cf6;
-            --success: #34d399;
-            --border: #334155;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --bg: #1a1d28;
+            --card: #252a38;         /* Tarjetas oscuras estilo Victron */
+            --card-dark: #2d3444;
+            --text: #e2e8f0;
+            --text-light: #a0aec0;
+            --accent: #4dabf7;
+            --accent-light: #339af0;
+            --solar: #ffc046;
+            --solar-light: #ffa94d;
+            --battery: #51cf66;
+            --battery-light: #40c057;
+            --danger: #ff8787;
+            --danger-light: #ff6b6b;
+            --warning: #ffa94d;
+            --sense: #9d95ff;
+            --sense-light: #8a7dff;
+            --success: #51cf66;
+            --border: #374151;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         * {
@@ -76,26 +78,25 @@
             width: 100%;
             max-width: 500px;
             display: grid;
-            gap: 16px;
+            gap: 14px;
         }
 
-        /* HEADER PRO */
+        /* HEADER */
         .dashboard-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            margin-bottom: 4px;
+            padding: 10px 0;
         }
 
         .title-container h1 {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 900;
             letter-spacing: -0.3px;
         }
 
         .title-container .subtitle {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-light);
             margin-top: 2px;
             font-weight: 500;
@@ -103,133 +104,130 @@
 
         .header-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
         /* STATUS BADGE */
         .status-badge {
-            background: rgba(56, 161, 105, 0.1);
+            background: rgba(0, 166, 81, 0.1);
             color: var(--battery);
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            padding: 5px 8px;
+            border-radius: 16px;
+            font-size: 0.7rem;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 6px;
-            border: 1px solid rgba(56, 161, 105, 0.2);
+            gap: 4px;
+            border: 1px solid rgba(0, 166, 81, 0.2);
         }
 
-        /* TARJETAS PRO */
+        /* TARJETAS UNIFICADAS */
         .card {
             background: var(--card);
-            padding: 20px;
+            padding: 18px;
             border-radius: var(--radius);
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         .card:hover {
-            transform: translateY(-2px);
+            background: var(--card-dark);
             box-shadow: var(--shadow-lg);
         }
 
         .card-title {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 18px;
+            letter-spacing: 0.3px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             color: var(--text-light);
         }
 
         .card-title i {
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
-        /* MQTT BAR PRO */
+        /* MQTT BAR */
         .mqtt-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 18px;
-            background: linear-gradient(135deg, rgba(49, 130, 206, 0.05), rgba(56, 161, 105, 0.05));
+            padding: 12px 16px;
+            background: var(--card);
             border-left: 4px solid var(--accent);
         }
 
         .mqtt-status {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .mqtt-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: var(--danger);
-            position: relative;
         }
 
         .mqtt-dot.online {
             background: var(--battery);
-            box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.2);
+            box-shadow: 0 0 0 3px rgba(0, 166, 81, 0.2);
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0.4); }
-            70% { box-shadow: 0 0 0 8px rgba(56, 161, 105, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(0, 166, 81, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(0, 166, 81, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 166, 81, 0); }
         }
 
         .mqtt-text {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .mqtt-topic {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-light);
             font-family: 'Monaco', 'Consolas', monospace;
-            background: rgba(0,0,0,0.03);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
         }
 
-        /* FLOW SECTION PRO */
+        /* FLOW SECTION - CORREGIDO POSICIÓN */
         .flow-section {
-            height: 240px;
+            height: 220px;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(49, 130, 206, 0.02), rgba(214, 158, 46, 0.02));
-            border: 2px solid rgba(49, 130, 206, 0.1);
+            background: var(--card);
         }
 
         .flow-title {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            font-size: 0.8rem;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             color: var(--accent);
             background: rgba(255, 255, 255, 0.9);
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             border: 1px solid var(--border);
             z-index: 10;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .dark-mode .flow-title {
-            background: rgba(30, 41, 59, 0.9);
+            background: rgba(37, 42, 56, 0.9);
         }
 
         #flowCanvas {
@@ -243,143 +241,119 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 12px;
             border: 2px solid;
-            padding: 10px;
+            padding: 8px;
             z-index: 10;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
         }
 
         .dark-mode .node {
-            background: rgba(30, 41, 59, 0.9);
-        }
-
-        .node:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            background: rgba(45, 52, 68, 0.85);
         }
 
         .node i {
-            font-size: 1.6rem;
-            margin-bottom: 6px;
+            font-size: 1.3rem;
+            margin-bottom: 4px;
         }
 
         .node span {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 700;
-            line-height: 1.1;
+            line-height: 1;
         }
 
         .n-solar { 
-            top: 12%; 
+            top: 15%; 
             left: 10%; 
             border-color: var(--solar);
-            background: rgba(214, 158, 46, 0.1);
+            background: rgba(255, 153, 0, 0.1);
         }
         
         .n-orion { 
-            bottom: 12%; 
+            bottom: 15%; 
             left: 10%; 
             border-color: var(--accent);
-            background: rgba(49, 130, 206, 0.1);
+            background: rgba(0, 102, 204, 0.1);
         }
         
         .n-battery { 
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            width: 80px; 
-            height: 80px;
+            width: 70px; 
+            height: 70px;
             border-color: var(--battery);
-            background: rgba(56, 161, 105, 0.1);
+            background: rgba(0, 166, 81, 0.1);
         }
         
         .n-inverter { 
-            top: 12%; 
+            top: 15%; 
             right: 10%; 
             border-color: var(--accent);
-            background: rgba(49, 130, 206, 0.1);
+            background: rgba(0, 102, 204, 0.1);
         }
         
         .n-loads { 
-            bottom: 12%; 
+            bottom: 15%; 
             right: 10%; 
             border-color: var(--danger);
-            background: rgba(229, 62, 62, 0.1);
+            background: rgba(230, 57, 70, 0.1);
         }
 
         /* BATERÍA PRINCIPAL */
         .battery-main {
-            background: linear-gradient(135deg, rgba(56, 161, 105, 0.05), rgba(49, 130, 206, 0.05));
+            background: var(--card);
             border-color: var(--battery);
         }
 
         .soc-big {
-            font-size: 3.8rem;
+            font-size: 3.2rem;
             font-weight: 900;
             text-align: center;
-            margin: 15px 0;
+            margin: 12px 0;
             color: var(--battery);
             letter-spacing: -2px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
-        /* STATS GRID PRO */
+        /* STATS GRID */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
         .stat-item {
-            background: rgba(0,0,0,0.02);
-            padding: 14px 10px;
-            border-radius: 12px;
+            background: rgba(0,0,0,0.03);
+            padding: 12px 8px;
+            border-radius: 10px;
             text-align: center;
             border: 1px solid var(--border);
-            transition: all 0.2s ease;
-        }
-
-        .stat-item:hover {
-            background: rgba(0,0,0,0.04);
-            border-color: var(--accent-light);
         }
 
         .val {
             display: block;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: 800;
             margin-bottom: 4px;
         }
 
         .lab {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 700;
             text-transform: uppercase;
             color: var(--text-light);
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
-        /* ANIMACIÓN ALARMA PRO */
+        /* ANIMACIÓN ALARMA */
         @keyframes pulse-alarm {
-            0% { 
-                color: var(--battery); 
-                text-shadow: 0 0 0 rgba(229, 62, 62, 0);
-            }
-            50% { 
-                color: var(--danger); 
-                transform: scale(1.05);
-                text-shadow: 0 0 15px rgba(229, 62, 62, 0.5);
-            }
-            100% { 
-                color: var(--battery); 
-                text-shadow: 0 0 0 rgba(229, 62, 62, 0);
-            }
+            0% { color: var(--battery); }
+            50% { color: var(--danger); transform: scale(1.03); }
+            100% { color: var(--battery); }
         }
 
         .critical {
@@ -389,33 +363,33 @@
 
         /* LOG CARD */
         .log-card {
-            background: linear-gradient(135deg, rgba(133, 92, 213, 0.05), rgba(49, 130, 206, 0.05));
+            background: var(--card);
             border-color: var(--sense);
         }
 
         .log-container {
-            max-height: 120px;
+            max-height: 100px;
             overflow-y: auto;
-            font-size: 0.8rem;
-            padding-right: 8px;
+            font-size: 0.75rem;
+            padding-right: 6px;
         }
 
         .log-container::-webkit-scrollbar {
-            width: 4px;
+            width: 3px;
         }
 
         .log-container::-webkit-scrollbar-track {
             background: rgba(0,0,0,0.05);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .log-container::-webkit-scrollbar-thumb {
             background: var(--accent-light);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .log-entry {
-            padding: 6px 0;
+            padding: 5px 0;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -423,7 +397,7 @@
 
         .log-time {
             color: var(--text-light);
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-family: 'Monaco', 'Consolas', monospace;
         }
 
@@ -432,16 +406,16 @@
             font-weight: 500;
         }
 
-        /* GRÁFICO PRO - CORREGIDO */
+        /* GRÁFICO PRO - TOTALMENTE CORREGIDO */
         .chart-container {
             position: relative;
-            height: 180px;
-            padding: 20px !important;
+            height: 160px;
+            padding: 16px !important;
         }
 
         #histChart {
             width: 100% !important;
-            height: 140px !important;
+            height: 120px !important;
         }
 
         /* BOTONES */
@@ -449,13 +423,13 @@
             background: rgba(0,0,0,0.05);
             border: 1px solid var(--border);
             color: var(--text);
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
-            padding: 10px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            width: 42px;
-            height: 42px;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -463,12 +437,11 @@
 
         .theme-toggle:hover {
             background: rgba(0,0,0,0.1);
-            transform: rotate(15deg);
         }
 
         .version-btn {
-            background: rgba(214, 158, 46, 0.1);
-            border: 1px solid rgba(214, 158, 46, 0.3);
+            background: rgba(255, 153, 0, 0.1);
+            border: 1px solid rgba(255, 153, 0, 0.3);
             color: var(--solar);
         }
 
@@ -476,11 +449,11 @@
         footer {
             text-align: center;
             margin-top: 10px;
-            padding-top: 20px;
+            padding-top: 16px;
             border-top: 1px solid var(--border);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-light);
-            padding-bottom: 20px;
+            padding-bottom: 16px;
         }
 
         /* RESPONSIVE */
@@ -488,7 +461,7 @@
             .dashboard {
                 max-width: 800px;
                 grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
+                gap: 16px;
             }
             
             .mqtt-bar,
@@ -499,20 +472,25 @@
             }
             
             .flow-section {
-                height: 260px;
+                height: 240px;
             }
             
             .node {
-                width: 75px;
-                height: 75px;
+                width: 65px;
+                height: 65px;
             }
             
             .node i {
-                font-size: 1.8rem;
+                font-size: 1.4rem;
             }
             
             .soc-big {
-                font-size: 4.2rem;
+                font-size: 3.5rem;
+            }
+            
+            .flow-title {
+                font-size: 0.8rem;
+                top: 12px;
             }
         }
     </style>
@@ -523,7 +501,7 @@
     <!-- HEADER -->
     <header class="dashboard-header">
         <div class="title-container">
-            <h1>SIENA-395 <span style="color:var(--accent)">PRO -v1.0.3</span></h1>
+            <h1>SIENA-395 <span style="color:var(--accent)">-PRO-</span></h1>
             <div class="subtitle">Interfaz de Monitorización Victron</div>
         </div>
         <div class="header-controls">
@@ -554,15 +532,15 @@
         <div id="lastUpdate" class="mqtt-topic">--:--:--</div>
     </section>
 
-    <!-- FLOW SECTION PRO -->
+    <!-- FLOW SECTION - TÍTULO CENTRADO -->
     <section class="card flow-section">
         <div class="flow-title">Diagrama de Flujo de Energía</div>
         <canvas id="flowCanvas"></canvas>
-        <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>Panel Solar</span></div>
-        <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion DC-DC</span></div>
+        <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>Panel<br>Solar</span></div>
+        <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion<br>DC-DC</span></div>
         <div class="node n-battery"><i class="fas fa-car-battery" style="color:var(--battery)"></i><span id="socMini">--%</span></div>
-        <div class="node n-inverter"><i class="fas fa-plug" style="color:var(--accent)"></i><span>Phoenix 2000VA</span></div>
-        <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Cargas 12V</span></div>
+        <div class="node n-inverter"><i class="fas fa-plug" style="color:var(--accent)"></i><span>Phoenix<br>2000VA</span></div>
+        <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Cargas<br>12V</span></div>
     </section>
 
     <!-- BATERÍA PRINCIPAL -->
@@ -580,7 +558,7 @@
         <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> Victron SmartSolar</div>
         <div class="stats-grid">
             <div class="stat-item" style="grid-column: 1/-1;">
-                <span class="val" style="font-size: 1.9rem; color:var(--solar)" id="solW">--W</span>
+                <span class="val" style="font-size: 1.7rem; color:var(--solar)" id="solW">--W</span>
                 <span class="lab">Potencia Carga</span>
             </div>
             <div class="stat-item" style="grid-column: 1/-1;">
@@ -608,19 +586,28 @@
         <div class="card-title"><i class="fas fa-bolt" style="color:var(--accent)"></i> Phoenix 12V 2000VA</div>
         <div class="stats-grid">
             <div class="stat-item" style="grid-column:1/-1;">
-                <span class="val" style="font-size: 1.7rem;" id="invVA">--VA</span>
+                <span class="val" style="font-size: 1.5rem;" id="invVA">--VA</span>
                 <span class="lab">Potencia AC</span>
             </div>
         </div>
     </section>
 
-    <!-- GRÁFICO HISTÓRICO PRO -->
+    <!-- BATTERY SENSE (5º EQUIPO VICTRON) -->
+    <section class="card">
+        <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--sense)"></i> Victron Battery Sense</div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
+            <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temperatura</span></div>
+        </div>
+    </section>
+
+    <!-- GRÁFICO HISTÓRICO - TOTALMENTE CORREGIDO -->
     <section class="card chart-container">
         <div class="card-title"><i class="fas fa-chart-line" style="color:var(--accent)"></i> Histórico SOC (Últimas 24h)</div>
         <canvas id="histChart"></canvas>
     </section>
 
-    <!-- LOG CARD -->
+    <!-- LOG CARD (ÚLTIMA POSICIÓN) -->
     <section class="card log-card">
         <div class="card-title"><i class="fas fa-terminal" style="color:var(--sense)"></i> Log del Sistema</div>
         <div class="log-container" id="logContainer">
@@ -631,18 +618,9 @@
         </div>
     </section>
 
-    <!-- BATTERY SENSE (ÚLTIMA POSICIÓN) -->
-    <section class="card">
-        <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--sense)"></i> Victron Battery Sense</div>
-        <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
-            <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temperatura</span></div>
-        </div>
-    </section>
-
     <!-- FOOTER -->
     <footer>
-        <p>MONITORIZACIÓN AUTOCARAVANA  - &#127279; 2026 UZTURRE - Software Libre</p>
+        <p>MONITORIZACIÓN AUTOCARAVANA - &#127279; 2026 UZTURRE - Software Libre</p>
     </footer>
 </div>
 
@@ -652,7 +630,7 @@
     let lastUpdate = null;
     let logEntries = [];
 
-    // CONFIG GRÁFICO PRO - CORREGIDO
+    // CONFIG GRÁFICO - TOTALMENTE CORREGIDO
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
@@ -661,8 +639,8 @@
             datasets: [{
                 label: 'SOC %',
                 data: [],
-                borderColor: '#38a169',
-                backgroundColor: 'rgba(56, 161, 105, 0.1)',
+                borderColor: '#00a651',
+                backgroundColor: 'rgba(0, 166, 81, 0.1)',
                 tension: 0.4,
                 fill: true,
                 borderWidth: 2,
@@ -678,10 +656,10 @@
                 tooltip: {
                     mode: 'index',
                     intersect: false,
-                    backgroundColor: 'rgba(26, 32, 44, 0.9)',
+                    backgroundColor: 'rgba(45, 55, 72, 0.95)',
                     titleColor: '#f7fafc',
                     bodyColor: '#f7fafc',
-                    borderColor: '#38a169',
+                    borderColor: '#00a651',
                     borderWidth: 1
                 }
             },
@@ -692,17 +670,31 @@
                     ticks: {
                         stepSize: 20,
                         font: {
-                            size: 10
+                            size: 10,
+                            family: "'Inter', sans-serif"
                         },
-                        color: 'var(--text-light)',
-                        padding: 5
+                        color: function(context) {
+                            // CORRECCIÓN: Color blanco en modo oscuro
+                            return document.body.classList.contains('dark-mode') ? '#e2e8f0' : '#4a5568';
+                        },
+                        padding: 2,
+                        callback: function(value) {
+                            return value + '%';
+                        }
                     },
                     grid: {
-                        color: 'rgba(0,0,0,0.05)',
-                        drawBorder: false
+                        color: function(context) {
+                            return document.body.classList.contains('dark-mode') ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+                        },
+                        drawBorder: false,
+                        drawTicks: false
                     },
                     border: {
                         display: false
+                    },
+                    // CORRECCIÓN: Padding interno para que no se salga
+                    afterFit: function(scale) {
+                        scale.width += 5; // Espacio extra para el %
                     }
                 },
                 x: {
@@ -715,13 +707,26 @@
             layout: {
                 padding: {
                     left: 0,
-                    right: 0,
+                    right: 5,  // Espacio para el %
                     top: 0,
                     bottom: 0
+                }
+            },
+            elements: {
+                line: {
+                    tension: 0.4
                 }
             }
         }
     });
+
+    // ACTUALIZAR COLORES DEL GRÁFICO AL CAMBIAR TEMA
+    function updateChartColors() {
+        const isDark = document.body.classList.contains('dark-mode');
+        socChart.options.scales.y.ticks.color = isDark ? '#e2e8f0' : '#4a5568';
+        socChart.options.scales.y.grid.color = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+        socChart.update();
+    }
 
     // FUNCIÓN PARA AÑADIR LOG
     function addLog(message) {
@@ -760,7 +765,7 @@
             socChart.data.datasets[0].data.shift();
         }
         
-        socChart.update();
+        socChart.update('none');
     }
 
     // MQTT CONNECT
@@ -837,13 +842,25 @@
         }
 
         if(sensorName === 'voltaje_bateria_sense') {
-            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
+            const el = document.getElementById('btsV');
+            el.innerText = val.toFixed(2) + 'V';
+            if(val < 12.1) el.style.color = 'var(--danger)';
+            else if(val < 12.5) el.style.color = 'var(--warning)';
+            else el.style.color = 'var(--sense)';
         }
 
         if(sensorName === 'temperatura_bateria') {
+            const el = document.getElementById('btsT');
             const temp = val.toFixed(1);
-            document.getElementById('btsT').innerText = temp + '°C';
-            if(val > 40) addLog(`ALERTA: Temperatura alta (${temp}°C)`);
+            el.innerText = temp + '°C';
+            if(val > 40) {
+                el.style.color = 'var(--danger)';
+                addLog(`ALERTA: Temperatura alta (${temp}°C)`);
+            } else if(val > 35) {
+                el.style.color = 'var(--warning)';
+            } else {
+                el.style.color = 'var(--sense)';
+            }
         }
         
         if(sensorName === 'potencia_solar') {
@@ -884,7 +901,7 @@
         }
     });
 
-    // ANIMACIÓN FLUJO PRO
+    // ANIMACIÓN FLUJO
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let nodes = {};
@@ -903,7 +920,7 @@
         };
     }
 
-    function drawFlowLine(from, to, time, color, width = 3) {
+    function drawFlowLine(from, to, time, color, width = 2.5) {
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
         ctx.lineTo(to.x, to.y);
@@ -911,38 +928,19 @@
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
         ctx.lineCap = 'round';
-        ctx.setLineDash([6, 12]);
-        ctx.lineDashOffset = -time * 25;
-        
-        // Efecto brillo
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 10;
+        ctx.setLineDash([5, 10]);
+        ctx.lineDashOffset = -time * 20;
         ctx.stroke();
-        ctx.shadowBlur = 0;
     }
 
     function drawFlow() {
         const time = Date.now() * 0.002;
-        
-        // Fondo degradado
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Líneas de flujo
-        if (pSolar > 5) {
-            drawFlowLine(nodes.solar, nodes.battery, time, 'var(--solar)', 3.5);
-        }
-        
-        if (pOrion > 0) {
-            drawFlowLine(nodes.orion, nodes.battery, time, 'var(--accent)', 3.5);
-        }
-        
-        if (pInv > 10 || iBat < -1.5) {
-            drawFlowLine(nodes.battery, nodes.inverter, time, 'var(--accent)', 3);
-        }
-        
-        if (iBat < -0.4) {
-            drawFlowLine(nodes.battery, nodes.loads, time, 'var(--danger)', 3);
-        }
+        if (pSolar > 5) drawFlowLine(nodes.solar, nodes.battery, time, 'var(--solar)', 3);
+        if (pOrion > 0) drawFlowLine(nodes.orion, nodes.battery, time, 'var(--accent)', 3);
+        if (pInv > 10 || iBat < -1.5) drawFlowLine(nodes.battery, nodes.inverter, time, 'var(--accent)', 2.5);
+        if (iBat < -0.4) drawFlowLine(nodes.battery, nodes.loads, time, 'var(--text)', 2.5);
         
         animationId = requestAnimationFrame(drawFlow);
     }
@@ -953,6 +951,7 @@
     if(savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
         themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        updateChartColors();
     } else {
         themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
     }
@@ -968,6 +967,7 @@
             themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
             addLog('Modo claro activado');
         }
+        updateChartColors();
     });
 
     // INICIALIZAR
@@ -980,6 +980,9 @@
     resizeCanvas();
     drawFlow();
     addLog('Dashboard inicializado');
+    
+    // Actualizar colores del gráfico al cargar
+    setTimeout(updateChartColors, 100);
 </script>
 </body>
 </html>
