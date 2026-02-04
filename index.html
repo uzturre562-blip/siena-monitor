@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>SIENA-395 MASTER -PRO- -INTERFAZ Victron v1.04-</title>
+    <title>SIENA-395 PRO - INTERFAZ VICTRON</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #f0f2f5;           /* Fondo general suave */
-            --card: #f8f9fa;         /* Color de tarjetas UNIFICADO - estilo Victron */
-            --card-dark: #ffffff;    /* Para hover */
-            --text: #2d3748;         /* Texto oscuro */
-            --text-light: #4a5568;   /* Texto secundario */
-            --accent: #0066cc;       /* Azul Victron */
+            --bg: #f0f2f5;
+            --card: #f8f9fa;
+            --card-dark: #ffffff;
+            --text: #2d3748;
+            --text-light: #4a5568;
+            --accent: #0066cc;
             --accent-light: #0077e6;
-            --solar: #ff9900;        /* Naranja solar Victron */
+            --solar: #ff9900;
             --solar-light: #ffaa33;
-            --battery: #00a651;      /* Verde batería Victron */
+            --battery: #00a651;
             --battery-light: #00cc66;
-            --danger: #e63946;       /* Rojo alerta */
+            --danger: #e63946;
             --danger-light: #ff6b6b;
-            --warning: #ff8c00;      /* Naranja advertencia */
-            --sense: #6c63ff;        /* Púrpura sense */
+            --warning: #ff8c00;
+            --sense: #6c63ff;
             --sense-light: #7d75ff;
             --success: #00a651;
-            --border: #d1d9e6;       /* Borde suave */
+            --border: #d1d9e6;
             --radius: 12px;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -35,7 +35,7 @@
 
         .dark-mode {
             --bg: #1a1d28;
-            --card: #252a38;         /* Tarjetas oscuras estilo Victron */
+            --card: #252a38;
             --card-dark: #2d3444;
             --text: #e2e8f0;
             --text-light: #a0aec0;
@@ -81,7 +81,6 @@
             gap: 14px;
         }
 
-        /* HEADER */
         .dashboard-header {
             display: flex;
             justify-content: space-between;
@@ -108,7 +107,6 @@
             align-items: center;
         }
 
-        /* STATUS BADGE */
         .status-badge {
             background: rgba(0, 166, 81, 0.1);
             color: var(--battery);
@@ -122,7 +120,6 @@
             border: 1px solid rgba(0, 166, 81, 0.2);
         }
 
-        /* TARJETAS UNIFICADAS */
         .card {
             background: var(--card);
             padding: 18px;
@@ -153,7 +150,6 @@
             font-size: 1rem;
         }
 
-        /* MQTT BAR */
         .mqtt-bar {
             display: flex;
             align-items: center;
@@ -199,7 +195,6 @@
             font-family: 'Monaco', 'Consolas', monospace;
         }
 
-        /* FLOW SECTION - CORREGIDO POSICIÓN */
         .flow-section {
             height: 220px;
             position: relative;
@@ -304,7 +299,6 @@
             background: rgba(230, 57, 70, 0.1);
         }
 
-        /* BATERÍA PRINCIPAL */
         .battery-main {
             background: var(--card);
             border-color: var(--battery);
@@ -319,7 +313,6 @@
             letter-spacing: -2px;
         }
 
-        /* STATS GRID */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -349,7 +342,6 @@
             letter-spacing: 0.3px;
         }
 
-        /* ANIMACIÓN ALARMA */
         @keyframes pulse-alarm {
             0% { color: var(--battery); }
             50% { color: var(--danger); transform: scale(1.03); }
@@ -361,7 +353,6 @@
             color: var(--danger) !important;
         }
 
-        /* LOG CARD */
         .log-card {
             background: var(--card);
             border-color: var(--sense);
@@ -406,19 +397,19 @@
             font-weight: 500;
         }
 
-        /* GRÁFICO PRO - TOTALMENTE CORREGIDO */
+        /* GRÁFICO HISTÓRICO - CORREGIDO CON ESPACIO ADECUADO */
         .chart-container {
             position: relative;
-            height: 160px;
-            padding: 16px !important;
+            height: 180px; /* Aumentado para mejor visibilidad */
+            padding: 16px 12px 16px 16px !important; /* Más padding izquierdo */
+            overflow: hidden; /* Previene desbordamiento */
         }
 
         #histChart {
-            width: 100% !important;
-            height: 120px !important;
+            width: calc(100% - 5px) !important; /* Compensa el ancho del eje Y */
+            height: 140px !important;
         }
 
-        /* BOTONES */
         .theme-toggle {
             background: rgba(0,0,0,0.05);
             border: 1px solid var(--border);
@@ -445,7 +436,6 @@
             color: var(--solar);
         }
 
-        /* FOOTER */
         footer {
             text-align: center;
             margin-top: 10px;
@@ -456,7 +446,6 @@
             padding-bottom: 16px;
         }
 
-        /* RESPONSIVE */
         @media (min-width: 768px) {
             .dashboard {
                 max-width: 800px;
@@ -492,6 +481,14 @@
                 font-size: 0.8rem;
                 top: 12px;
             }
+            
+            .chart-container {
+                height: 200px;
+            }
+            
+            #histChart {
+                height: 160px !important;
+            }
         }
     </style>
 </head>
@@ -501,8 +498,8 @@
     <!-- HEADER -->
     <header class="dashboard-header">
         <div class="title-container">
-            <h1>SIENA-395 <span style="color:var(--accent)">-PRO-</span></h1>
-            <div class="subtitle">Interfaz de Monitorización Victron-v.1.0.4</div>
+            <h1>SIENA-395 <span style="color:var(--accent)">PRO</span></h1>
+            <div class="subtitle">Interfaz de Monitorización Victron v1.0.5</div>
         </div>
         <div class="header-controls">
             <div class="status-badge">
@@ -532,7 +529,7 @@
         <div id="lastUpdate" class="mqtt-topic">--:--:--</div>
     </section>
 
-    <!-- FLOW SECTION - TÍTULO CENTRADO -->
+    <!-- FLOW SECTION -->
     <section class="card flow-section">
         <div class="flow-title">Diagrama de Flujo de Energía</div>
         <canvas id="flowCanvas"></canvas>
@@ -592,7 +589,7 @@
         </div>
     </section>
 
-    <!-- BATTERY SENSE (5º EQUIPO VICTRON) -->
+    <!-- BATTERY SENSE -->
     <section class="card">
         <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--sense)"></i> Victron Battery Sense</div>
         <div class="stats-grid">
@@ -601,13 +598,13 @@
         </div>
     </section>
 
-    <!-- GRÁFICO HISTÓRICO - TOTALMENTE CORREGIDO -->
+    <!-- GRÁFICO HISTÓRICO -->
     <section class="card chart-container">
         <div class="card-title"><i class="fas fa-chart-line" style="color:var(--accent)"></i> Histórico SOC (Últimas 24h)</div>
         <canvas id="histChart"></canvas>
     </section>
 
-    <!-- LOG CARD (ÚLTIMA POSICIÓN) -->
+    <!-- LOG CARD -->
     <section class="card log-card">
         <div class="card-title"><i class="fas fa-terminal" style="color:var(--sense)"></i> Log del Sistema</div>
         <div class="log-container" id="logContainer">
@@ -620,7 +617,7 @@
 
     <!-- FOOTER -->
     <footer>
-        <p>MONITORIZACIÓN AUTOCARAVANA -COPYLEFT &#127279; 2026 UZTURRE - Software Libre</p>
+        <p>MONITORIZACIÓN AUTOCARAVANA -COPILEFT &#127279; 2026 UZTURRE - Software Libre</p>
     </footer>
 </div>
 
@@ -630,7 +627,7 @@
     let lastUpdate = null;
     let logEntries = [];
 
-    // CONFIG GRÁFICO - TOTALMENTE CORREGIDO
+    // CONFIG GRÁFICO - CORREGIDO PARA QUE LAS ETIQUETAS NO SE SALGAN
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
@@ -671,13 +668,13 @@
                         stepSize: 20,
                         font: {
                             size: 10,
-                            family: "'Inter', sans-serif"
+                            family: "'Inter', sans-serif",
+                            weight: '600'
                         },
                         color: function(context) {
-                            // CORRECCIÓN: Color blanco en modo oscuro
                             return document.body.classList.contains('dark-mode') ? '#e2e8f0' : '#4a5568';
                         },
-                        padding: 2,
+                        padding: 10,
                         callback: function(value) {
                             return value + '%';
                         }
@@ -687,29 +684,31 @@
                             return document.body.classList.contains('dark-mode') ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
                         },
                         drawBorder: false,
-                        drawTicks: false
+                        drawTicks: false,
+                        tickLength: 0
                     },
                     border: {
                         display: false
                     },
-                    // CORRECCIÓN: Padding interno para que no se salga
-                    afterFit: function(scale) {
-                        scale.width += 5; // Espacio extra para el %
+                    afterFit: function(axis) {
+                        axis.width = 35;
+                        axis.paddingLeft = 5;
                     }
                 },
                 x: {
                     display: false,
                     grid: {
                         display: false
-                    }
+                    },
+                    offset: true
                 }
             },
             layout: {
                 padding: {
                     left: 0,
-                    right: 5,  // Espacio para el %
-                    top: 0,
-                    bottom: 0
+                    right: 10,
+                    top: 5,
+                    bottom: 5
                 }
             },
             elements: {
