@@ -2,10 +2,11 @@
 # Proyecto: Monitor de Batería BMS con ESP32 (Bluetooth) y WIFI
 # Descripción: Conexión Bluetooth a BMS. 
 # Led parpadeo rápido antes de conectar bluetooth y cada 3 segundos establecida la conexión
-# Autor: DIY Electro Camper
+# Autor: UZTURRE
 # Fecha de Creación: 2025-03-04
 # Última Modificación: 2025-03-04
 # Versión: 1.0.1
+# 🄯 COPYLEFT
 # --------------------------------------------------------------------------------
 substitutions:
   name: jbd-bms-ble-wifi
@@ -271,3 +272,4 @@ switch:
       name: "${name} charging"
     discharging:
       name: "${name} discharging"
+
