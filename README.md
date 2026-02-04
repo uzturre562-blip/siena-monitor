@@ -12,7 +12,7 @@ Este repositorio contiene el código del Dashboard web para la monitorización e
 
 ## 🚀 Funcionalidades del Dashboard
 - **Flujos de energía:** Animación en tiempo real de la dirección de la corriente (Solar, Alternador, Consumos).
-- **Indicadores de salud:** Alertas visuales si la batería baja del 20% o la tensión cae de 12.1V.
+- **Monitorización de Límites Operativos:** Sistema de alertas dinámicas basado en la curva de descarga de la Ultimatron, con avisos críticos por debajo de 12.1V o 20% de capacidad residual.
 - **Corriente dinámica:** Los valores de Amperios cambian a verde (carga) o rojo (descarga) automáticamente.
 - **Histórico dinámico:** Gráfico de evolución del SOC (%) generado en tiempo real.
 - **Diseño Ultra:** Interfaz optimizada para móviles y tablets con modo oscuro.
