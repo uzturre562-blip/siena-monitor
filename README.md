@@ -2,12 +2,12 @@
 
 ![Dashboard de la Siena](dashboard.png)
 
-Este repositorio contiene el código del Dashboard web para la monitorización en tiempo real de la autocaravana **Siena 395**. El sistema permite visualizar el estado energético de la vivienda desde cualquier lugar del mundo.
+Este repositorio contiene el código del Dashboard/Interfaz web para la monitorización en tiempo real en autocaravana, camper, furgo, etc. con equipamiento de equipos victron. El sistema permite visualizar el estado energético del vehículo desde cualquier lugar del mundo. 
 
 ## 🔋 Hardware del Sistema
 - **Batería:** Ultimatron LiFePO4 100Ah.
 - **Cerebro:** ESP32 / ESP32-S3 (Recopilación de datos vía Bluetooth BLE).
-- **Equipos Victron:** SmartShunt, MPPT SmartSolar, Orion-Tr Smart y Phoenix Inverter.
+- **Equipos Victron:** SmartShunt, MPPT SmartSolar, Orion-Tr Smart, Phoenix Inverter y Battery Sense.
 - **Configuración ESPHome:** [Ver archivo YAML](./siena395_bms.yaml)
 
 ## 🚀 Funcionalidades del Dashboard
