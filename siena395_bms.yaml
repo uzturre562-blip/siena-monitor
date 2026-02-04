@@ -3,10 +3,11 @@
 # Descripción: Conexión Bluetooth a BMS. 
 # Led parpadeo rápido antes de conectar bluetooth y cada 3 segundos establecida la conexión
 # Autor: UZTURRE
+# Basado en el trabajo original de: DIY Electro Camper
 # Fecha de Creación: 2025-03-04
-# Última Modificación: 2025-03-04
-# Versión: 1.0.1
-# 🄯 COPYLEFT
+# Última Modificación: 2026-02-04
+# Versión: 1.0.2
+# 🄯 COPYLEFT -2026-
 # --------------------------------------------------------------------------------
 substitutions:
   name: jbd-bms-ble-wifi
@@ -272,5 +273,6 @@ switch:
       name: "${name} charging"
     discharging:
       name: "${name} discharging"
+
 
 
