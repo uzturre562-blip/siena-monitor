@@ -20,7 +20,7 @@ Este repositorio contiene el código del Dashboard/Interfaz web para la monitori
 ## 📡 Arquitectura de Datos (MQTT)
 - **Broker:** `wss://broker.emqx.io:8084/mqtt`
   
-- ## 🤝 Agradecimientos y Origen del Proyecto
+## 🤝 Agradecimientos y Origen del Proyecto
 Este ecosistema de monitorización no habría sido posible sin la base técnica proporcionada por:
 - **Fabian-Schmidt (esphome-victron_ble):** Por el desarrollo del componente esencial que permite al ESP32 capturar los datos "Instant Readout" de Victron vía Bluetooth.
 - **DIY Electro Camper:** Por la lógica de control y la integración de la BMS en ESPHome que sirvió de inspiración para el proyecto.
