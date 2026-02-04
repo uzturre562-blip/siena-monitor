@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>SIENA-395 PRO - Interfaz Victron</title>
+    <title>SIENA395 MASTER ULTRA - Dashboard Victron</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -501,8 +501,8 @@
 <div class="dashboard">
     <header class="dashboard-header">
         <div class="title-container">
-            <h1>SIENA-395 <span style="color:var(--accent)">PRO</span></h1>
-            <div class="subtitle">Interfaz de Monitorización Victron + BMS Ultimatron v1.0.7</div>
+            <h1>SIENA395 <span style="color:var(--accent)">ULTRA MASTER</span></h1>
+            <div class="subtitle">Dashboard de Monitorización Victron + BMS Ultimatron</div>
         </div>
         <div class="header-controls">
             <div class="status-badge">
@@ -525,8 +525,7 @@
             <div id="mqttDot" class="mqtt-dot"></div>
             <div>
                 <div id="mqttText" class="mqtt-text">MQTT: DESCONECTADO</div>
-                <!-- OCULTADO: No mostrar topic públicamente -->
-                <div class="mqtt-topic">Sistema privado Siena395 - Monitorización segura</div>
+                <div class="mqtt-topic">siena395_monitor_mikel_2026/sensor/# & bms/#</div>
             </div>
         </div>
         <div id="lastUpdate" class="mqtt-topic">--:--:--</div>
@@ -621,40 +620,21 @@
     </section>
 
     <footer>
-        <p>MONITORIZACIÓN AUTOCARAVANA - COPYLEFT &#127279; 2026 UZTURRE - Software Libre</p>
+        <p>MONITORIZACIÓN AUTOCARAVANA SIENA395 - &#127279; 2026 UZTURRE - Software Libre</p>
     </footer>
 </div>
 
 <script>
     // =============================================
-    // CONFIGURACIÓN SEGURA
+    // CONFIGURACIÓN SIMPLE - SIN SEGURIDAD
     // =============================================
     
-    // 1. Exponer cliente para depuración
-    window.mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-    const client = window.mqttClient;
+    // 1. Conexión directa al broker público
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     
     let pSolar = 0, pOrion = 0, pInv = 0, iBat = 0;
     let lastUpdate = null;
     let logEntries = [];
-    
-    // 2. Lista blanca de topics PERMITIDOS (solo los tuyos)
-    const TOPICS_PERMITIDOS = [
-        'siena395_monitor_mikel_2026/sensor/porcentaje_bateria',
-        'siena395_monitor_mikel_2026/sensor/voltaje_bateria',
-        'siena395_monitor_mikel_2026/sensor/corriente_bateria',
-        'siena395_monitor_mikel_2026/sensor/voltaje_bateria_sense',
-        'siena395_monitor_mikel_2026/sensor/temperatura_bateria',
-        'siena395_monitor_mikel_2026/sensor/potencia_solar',
-        'siena395_monitor_mikel_2026/sensor/voltaje_bateria_mppt',
-        'siena395_monitor_mikel_2026/sensor/voltaje_entrada_orion',
-        'siena395_monitor_mikel_2026/sensor/voltaje_salida_orion',
-        'siena395_monitor_mikel_2026/sensor/potencia_salida_phoenix',
-        'siena395_monitor_mikel_2026/bms/soc',
-        'siena395_monitor_mikel_2026/bms/voltaje',
-        'siena395_monitor_mikel_2026/bms/corriente',
-        'siena395_monitor_mikel_2026/bms/temp'
-    ];
 
     // CONFIG GRÁFICO
     const ctxChart = document.getElementById('histChart').getContext('2d');
@@ -748,7 +728,7 @@
         }
     });
 
-    // ACTUALIZAR COLORES DEL GRÁFICO AL CAMBIAR TEMA
+    // ACTUALIZAR COLORES DEL GRÁFICO
     function updateChartColors() {
         const isDark = document.body.classList.contains('dark-mode');
         socChart.options.scales.y.ticks.color = isDark ? '#e2e8f0' : '#4a5568';
@@ -801,8 +781,12 @@
         document.getElementById('mqttDot').classList.add('online');
         document.getElementById('mqttText').innerText = 'MQTT: CONECTADO';
         addLog('Conexión MQTT establecida');
+        
+        // Suscripción directa a tus topics
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
         client.subscribe('siena395_monitor_mikel_2026/bms/#');
+        
+        console.log('✅ Conectado al broker público');
     });
 
     client.on('reconnect', () => {
@@ -815,60 +799,15 @@
         addLog('Conexión MQTT perdida');
     });
 
-    // =============================================
-    // PROTECCIÓN DE SEGURIDAD - MENSAJES MQTT
-    // =============================================
+    // PROCESAR MENSAJES MQTT - SIN PROTECCIÓN
     client.on('message', (topic, msg) => {
         const valRaw = msg.toString();
-        
-        // 1. VERIFICACIÓN DE SEGURIDAD: Topic permitido
-        if (!TOPICS_PERMITIDOS.includes(topic)) {
-            console.warn('🚫 Topic bloqueado (no permitido):', topic);
-            addLog('Intento de acceso no autorizado bloqueado');
-            return; // Ignorar mensaje
-        }
-        
-        // 2. VERIFICACIÓN: Mensaje debe ser número
         const val = parseFloat(valRaw);
-        if (isNaN(val)) {
-            console.warn('🚫 Mensaje no numérico bloqueado:', valRaw);
-            return;
-        }
         
-        // 3. VERIFICACIÓN: Rangos lógicos
-        if (topic.includes('porcentaje') || topic.includes('soc')) {
-            if (val < 0 || val > 100) {
-                console.warn('🚫 SOC fuera de rango bloqueado:', val);
-                return;
-            }
-        }
-        
-        if (topic.includes('voltaje')) {
-            if (val < 0 || val > 50) {
-                console.warn('🚫 Voltaje imposible bloqueado:', val);
-                return;
-            }
-        }
-        
-        if (topic.includes('temperatura') || topic.includes('temp')) {
-            if (val < -20 || val > 100) {
-                console.warn('🚫 Temperatura imposible bloqueada:', val);
-                return;
-            }
-        }
-        
-        if (topic.includes('corriente')) {
-            if (val < -100 || val > 100) {
-                console.warn('🚫 Corriente imposible bloqueada:', val);
-                return;
-            }
-        }
-        
-        // 4. TODO OK - Procesar mensaje
-        const sensorName = topic.split('/')[2];
-        
-        // PROCESAR SENSORES VICTRON
+        // Procesar directamente
         if(topic.includes('/sensor/')) {
+            const sensorName = topic.split('/')[2];
+
             if(sensorName === 'porcentaje_bateria') {
                 const el = document.getElementById('socValue');
                 const socValue = Math.round(val);
@@ -978,58 +917,43 @@
             }
         }
 
-        // PROCESAR BMS ULTIMATRON
+        // PROCESAR BMS
         if(topic.includes('/bms/')) {
-            if(sensorName === 'soc') {
+            const bmsName = topic.split('/')[2];
+            
+            if(bmsName === 'soc') {
                 const el = document.getElementById('bmsSoc');
                 const bmsSoc = Math.round(val);
                 el.innerText = bmsSoc + '%';
                 el.style.color = 'var(--bms)';
-                
-                // Comparar SOC SmartShunt vs BMS
-                const shuntSoc = parseFloat(document.getElementById('socValue').innerText);
-                if(!isNaN(shuntSoc) && Math.abs(shuntSoc - bmsSoc) > 5) {
-                    addLog(`Diferencias SOC: SmartShunt ${shuntSoc}% vs BMS ${bmsSoc}%`);
-                }
             }
             
-            if(sensorName === 'voltaje') {
+            if(bmsName === 'voltaje') {
                 const el = document.getElementById('bmsV');
                 el.innerText = val.toFixed(2) + 'V';
-                if(val < 12.0) {
-                    el.style.color = 'var(--danger)';
-                } else if(val < 12.5) {
-                    el.style.color = 'var(--warning)';
-                } else {
-                    el.style.color = 'var(--bms)';
-                }
+                if(val < 12.0) el.style.color = 'var(--danger)';
+                else if(val < 12.5) el.style.color = 'var(--warning)';
+                else el.style.color = 'var(--bms)';
             }
             
-            if(sensorName === 'corriente') {
+            if(bmsName === 'corriente') {
                 const el = document.getElementById('bmsI');
                 const current = val.toFixed(1);
                 el.innerText = (val > 0 ? '+' : '') + current + 'A';
-                if(val > 0.1) {
-                    el.style.color = 'var(--battery)';
-                } else if(val < -0.1) {
-                    el.style.color = 'var(--danger)';
-                } else {
-                    el.style.color = 'var(--bms)';
-                }
+                if(val > 0.1) el.style.color = 'var(--battery)';
+                else if(val < -0.1) el.style.color = 'var(--danger)';
+                else el.style.color = 'var(--bms)';
             }
             
-            if(sensorName === 'temp') {
+            if(bmsName === 'temp') {
                 const el = document.getElementById('bmsT');
                 const temp = val.toFixed(1);
                 el.innerText = temp + '°C';
                 if(val > 45) {
                     el.style.color = 'var(--danger)';
                     addLog(`ALERTA BMS: Temperatura alta (${temp}°C)`);
-                } else if(val > 40) {
-                    el.style.color = 'var(--warning)';
-                } else {
-                    el.style.color = 'var(--bms)';
-                }
+                } else if(val > 40) el.style.color = 'var(--warning)';
+                else el.style.color = 'var(--bms)';
             }
         }
     });
@@ -1103,45 +1027,6 @@
         updateChartColors();
     });
 
-    // =============================================
-    // FUNCIONES DE DEPURACIÓN PARA CONSOLA (F12)
-    // =============================================
-    window.debugMQTT = {
-        status: function() {
-            const status = {
-                connected: client.connected,
-                broker: 'wss://broker.emqx.io:8084/mqtt',
-                lastActivity: lastUpdate ? lastUpdate.toLocaleTimeString() : 'Nunca',
-                topicsPermitidos: TOPICS_PERMITIDOS.length,
-                protectionActive: '✅ Activada',
-                blockedCount: 'Usa console para ver'
-            };
-            console.table(status);
-            return status;
-        },
-        
-        reconnect: function() {
-            console.log('🔄 Forzando reconexión MQTT...');
-            addLog('Reconexión manual desde consola');
-            client.end(true, {}, function() {
-                setTimeout(function() {
-                    client.reconnect();
-                }, 1000);
-            });
-        },
-        
-        test: function() {
-            if (client.connected) {
-                client.publish('siena395_monitor_mikel_2026/debug', 'Test ' + Date.now());
-                console.log('✅ Publicado mensaje de prueba');
-                return true;
-            } else {
-                console.log('❌ No conectado');
-                return false;
-            }
-        }
-    };
-
     // INICIALIZAR
     window.addEventListener('resize', () => {
         if (animationId) cancelAnimationFrame(animationId);
@@ -1151,17 +1036,9 @@
 
     resizeCanvas();
     drawFlow();
-    addLog('Dashboard inicializado con protección de seguridad');
+    addLog('Dashboard inicializado');
     
-    // Actualizar colores del gráfico
     setTimeout(updateChartColors, 100);
-    
-    // Mensaje de seguridad en consola
-    setTimeout(() => {
-        console.log('%c🔒 PROTECCIÓN MQTT ACTIVADA', 'color: #00a651; font-weight: bold;');
-        console.log('%cSolo se aceptan topics autorizados:', 'color: #3182ce;');
-        TOPICS_PERMITIDOS.forEach(t => console.log('  📡 ' + t));
-    }, 2000);
 </script>
 </body>
 </html>
