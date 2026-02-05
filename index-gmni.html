@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena-395 PRO -v1.0.7-</title>
+    <title>Siena-395 -PRO- -v1.0.8-</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -57,6 +57,9 @@
         .lab { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
         .card-title { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
+        /* Estilo para que la gráfica no crezca */
+        .chart-container { position: relative; height: 180px; width: 100%; }
+
         #logContainer { 
             background: #1a202c; color: #48bb78; font-family: 'Courier New', monospace; font-size: 0.65rem; 
             height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; border: 1px solid #4a5568; 
@@ -70,8 +73,8 @@
 
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">PRO -v1.0.7-</span></h1>
-        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
+        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">-PRO- -v1.0.8-</span></h1>
+        <button onclick="updateChartColors(); document.body.classList.toggle('dark-mode');" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </header>
 
     <section class="card" style="grid-column: 1/-1; border-left:none; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px;">
@@ -130,7 +133,9 @@
 
     <section class="card" style="grid-column: 1 / -1; border-left-color: var(--battery);">
         <div class="card-title"><i class="fas fa-chart-line"></i> Histórico SOC % (Tiempo Real)</div>
-        <canvas id="histChart" height="100"></canvas>
+        <div class="chart-container">
+            <canvas id="histChart"></canvas>
+        </div>
     </section>
 
     <section class="card c-logs" style="grid-column: 1 / -1;">
@@ -141,7 +146,7 @@
         <div id="logContainer">Esperando datos...</div>
     </section>
 
-    <footer>MONITORIZACION AUTOCARAVANA [SISTEMA VICTRON] - Copyleft &#127279 2026 *UZTURRE* - Software Libre -</footer>
+    <footer>MONITORIZACION AUTOCARAVANA [SISTEMA VICTRON] - <span style="font-size: 1.1rem;">🄯</span> Copyleft 2026 <b>UZTURRE</b> - Software Libre -</footer>
 </div>
 
 <script>
@@ -164,46 +169,35 @@
         if (container.children.length > 25) container.lastChild.remove();
     }
 
+    // Configuración Gráfica con Colores Adaptativos
     const ctxChart = document.getElementById('histChart').getContext('2d');
-   const socChart = new Chart(ctxChart, {
-    type: 'line',
-    data: { 
-        labels: [], 
-        datasets: [{ 
-            label: 'SOC %', 
-            data: [], 
-            borderColor: '#38a169', 
-            borderWidth: 4, // Más gruesa
-            tension: 0.3, 
-            fill: true, 
-            backgroundColor: 'rgba(56, 161, 105, 0.2)',
-            pointRadius: 0 
-        }] 
-    },
-    options: { 
-        responsive: true, 
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } }, 
-        scales: { 
-            y: { 
-                min: 0, 
-                max: 100,
-                grid: { color: 'rgba(0, 0, 0, 0.05)' }, 
-                ticks: { 
-                    color: '#1a202c', // Color muy oscuro para que resalte
-                    font: { size: 11, weight: 'bold' },
-                    callback: function(value) { return value + '%'; }
-                } 
-            }, 
-            x: { display: false } 
-        } 
+    const socChart = new Chart(ctxChart, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'SOC %', data: [], borderColor: '#38a169', borderWidth: 3, tension: 0.3, fill: true, backgroundColor: 'rgba(56, 161, 105, 0.1)', pointRadius: 0 }] },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                y: { min: 0, max: 100, ticks: { font: { weight: 'bold' } } }, 
+                x: { display: false } 
+            } 
+        }
+    });
+
+    function updateChartColors() {
+        const isDark = !document.body.classList.contains('dark-mode');
+        const color = isDark ? '#f7fafc' : '#1a202c'; // Invertimos porque el toggle ocurre después
+        socChart.options.scales.y.ticks.color = color;
+        socChart.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+        socChart.update();
     }
-});
+    updateChartColors(); // Ejecución inicial
 
     client.on('connect', () => {
         document.getElementById('mqttDot').style.background = '#48bb78';
         document.getElementById('mqttText').innerText = 'MQTT: SIENA395 ONLINE';
-        addLog("SISTEMA", "Conectado al Broker correctamente");
+        addLog("SISTEMA", "Conectado");
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
@@ -212,52 +206,31 @@
         const sensor = topic.split('/')[2];
         addLog(sensor, val);
 
-        // MAPEO DE SENSORES BASADO EN TU LOG
         if(sensor === 'porcentaje_bateria' || sensor === 'soc_bateria__dash_') {
             document.getElementById('socValue').innerText = Math.round(val) + '%';
             document.getElementById('socMini').innerText = Math.round(val) + '%';
             socChart.data.labels.push(""); socChart.data.datasets[0].data.push(val);
-            if(socChart.data.labels.length > 20) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
+            if(socChart.data.labels.length > 50) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
             socChart.update();
         }
         
         if(sensor === 'voltaje_bateria' || sensor === 'voltaje_bateria__dash_') {
             document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
-            document.getElementById('btsV').innerText = val.toFixed(2) + 'V'; // Comparten el mismo nombre en tu log
+            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         }
 
-        if(sensor === 'corriente_bateria') { 
-            document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; 
-            iBat = val; 
-        }
-
-        if(sensor === 'potencia_solar') { 
-            document.getElementById('solW').innerText = Math.round(val) + 'W'; 
-            pSolar = val; 
-        }
-
-        if(sensor === 'voltaje_bateria_mppt') {
-            document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
-        }
-
-        if(sensor === 'temperatura_bateria') {
-            document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
-        }
-
-        if(sensor === 'voltaje_entrada_orion') {
-            document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
-        }
-
+        if(sensor === 'corriente_bateria') { document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; iBat = val; }
+        if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
+        if(sensor === 'voltaje_paneles') { document.getElementById('solV').innerText = val.toFixed(1) + 'V'; }
+        if(sensor === 'voltaje_bateria_mppt') { document.getElementById('solVbat').innerText = val.toFixed(2) + 'V'; }
+        if(sensor === 'temperatura_bateria') { document.getElementById('btsT').innerText = val.toFixed(1) + '°C'; }
+        if(sensor === 'voltaje_entrada_orion') { document.getElementById('oriIn').innerText = val.toFixed(1) + 'V'; }
         if(sensor === 'voltaje_salida_orion') {
             document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
             pOrion = val > 13.2 ? 300 : 0;
             document.getElementById('oriSt').innerText = val > 13.2 ? "CARGANDO" : "STANDBY";
         }
-
-        if(sensor === 'potencia_salida_phoenix') { 
-            document.getElementById('invVA').innerText = Math.round(val) + 'VA'; 
-            pInv = val; 
-        }
+        if(sensor === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
     });
 
     const canvas = document.getElementById('flowCanvas');
@@ -268,9 +241,7 @@
     function animate() {
         ctx.clearRect(0, 0, w, h);
         const time = Date.now() * 0.002;
-        // Obtenemos el color de línea dinámico del CSS (blanco en oscuro, negro en claro)
         const colorFlow = getComputedStyle(document.documentElement).getPropertyValue('--flow-line').trim();
-        
         const pts = {
             sol: {x: w*0.15+35, y: h*0.1+35}, ori: {x: w*0.15+35, y: h*0.9-35},
             bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.85-35, y: h*0.1+35}, loa: {x: w*0.85-35, y: h*0.9-35}
