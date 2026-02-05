@@ -191,25 +191,47 @@
             if(socChart.data.labels.length > 20) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
             socChart.update();
         }
-        if(sensor === 'voltaje_bateria') document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
-        if(sensor === 'corriente_bateria') { document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; iBat = val; }
-        if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
-        if(sensor === 'voltaje_paneles') document.getElementById('solV').innerText = val.toFixed(1) + 'V';
-        if(sensor === 'voltaje_bateria_mppt') document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
         
-        // --- AQUÍ ES DONDE TIENES QUE CAMBIAR EL NOMBRE SI NO COINCIDE ---
-        if(sensor === 'voltaje_bateria_sense') document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
-        if(sensor === 'temperatura_bateria') document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
-        // ----------------------------------------------------------------
+        // El Shunt y el Battery Sense parecen enviar el mismo nombre, 
+        // usaremos 'voltaje_bateria' para ambos por ahora
+        if(sensor === 'voltaje_bateria') {
+            document.getElementById('vBat').innerText = val.toFixed(2) + 'V'; // Tarjeta principal
+            document.getElementById('btsV').innerText = val.toFixed(2) + 'V'; // Tarjeta Battery Sense
+        }
 
-        if(sensor === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
+        if(sensor === 'corriente_bateria') { 
+            document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; 
+            iBat = val; 
+        }
+
+        if(sensor === 'potencia_solar') { 
+            document.getElementById('solW').innerText = Math.round(val) + 'W'; 
+            pSolar = val; 
+        }
+
+        if(sensor === 'voltaje_bateria_mppt') {
+            document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
+        }
+
+        // Corregimos el nombre según tu log
+        if(sensor === 'temperatura_bateria') {
+            document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
+        }
+
+        if(sensor === 'voltaje_entrada_orion') {
+            document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
+        }
+
         if(sensor === 'voltaje_salida_orion') {
             document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
             pOrion = val > 13.2 ? 300 : 0;
             document.getElementById('oriSt').innerText = val > 13.2 ? "CARGANDO" : "STANDBY";
         }
-        if(sensor === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
-    });
+
+        if(sensor === 'potencia_salida_phoenix') { 
+            document.getElementById('invVA').innerText = Math.round(val) + 'VA'; 
+            pInv = val; 
+        }
 
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
