@@ -147,11 +147,19 @@
 <script>
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     let pSolar = 0, pOrion = 0, pInv = 0, iBat = 0;
+    let isPaused = false; // Variable para pausar el log
 
-    function addLog(msg) {
+    function togglePause() {
+        isPaused = !isPaused;
+        document.getElementById('pauseBtn').innerText = isPaused ? "REANUDAR LOG" : "PAUSAR LOG";
+        document.getElementById('pauseBtn').style.background = isPaused ? "var(--danger)" : "var(--accent)";
+    }
+
+    function addLog(sensor, val) {
+        if (isPaused) return; // Si está pausado, no añadimos más líneas visuales
         const container = document.getElementById('logContainer');
         const now = new Date().toLocaleTimeString();
-        container.innerHTML = `<div class="log-entry"><span style="color:#718096">[${now}]</span> ${msg}</div>` + container.innerHTML;
+        container.innerHTML = `<div class="log-entry"><span style="color:#718096">[${now}]</span> <b>${sensor}</b>: <span style="color:#fff">${val}</span></div>` + container.innerHTML;
         if (container.children.length > 30) container.lastChild.remove();
     }
 
@@ -165,14 +173,16 @@
     client.on('connect', () => {
         document.getElementById('mqttDot').style.background = '#48bb78';
         document.getElementById('mqttText').innerText = 'MQTT: SIENA395 ONLINE';
-        addLog("Conectado al broker.");
+        addLog("SISTEMA", "Conectado al broker");
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
     client.on('message', (topic, msg) => {
         const val = parseFloat(msg.toString());
         const sensor = topic.split('/')[2];
-        addLog(`${sensor}: ${val}`);
+        
+        // Mandamos al log el nombre del sensor y el valor
+        addLog(sensor, val);
 
         if(sensor === 'porcentaje_bateria') {
             document.getElementById('socValue').innerText = Math.round(val) + '%';
@@ -186,8 +196,12 @@
         if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
         if(sensor === 'voltaje_paneles') document.getElementById('solV').innerText = val.toFixed(1) + 'V';
         if(sensor === 'voltaje_bateria_mppt') document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
+        
+        // --- AQUÍ ES DONDE TIENES QUE CAMBIAR EL NOMBRE SI NO COINCIDE ---
         if(sensor === 'voltaje_bateria_sense') document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         if(sensor === 'temperatura_bateria') document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
+        // ----------------------------------------------------------------
+
         if(sensor === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
         if(sensor === 'voltaje_salida_orion') {
             document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
@@ -224,5 +238,3 @@
     }
     window.addEventListener('resize', resize); resize(); animate();
 </script>
-</body>
-</html>
