@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena-395 -PRO- -v1.0.9-</title>
+    <title>SIENA-395 -PRO- -v1.0.10-</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -78,7 +78,7 @@
 
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">PRO -v1.0.9-</span></h1>
+        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">PRO -v1.0.10-</span></h1>
         <button onclick="updateChartColors(); document.body.classList.toggle('dark-mode');" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </header>
 
@@ -97,7 +97,7 @@
     </section>
 
     <section class="card c-battery">
-        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Shunt Victron</div>
+        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Shunt Smart</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid">
             <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión Shunt</span></div>
@@ -166,7 +166,7 @@
         <div id="logContainer">Esperando datos...</div>
     </section>
 
-    <footer>MONITORIZACIÓN AUTOCARAVANA [SISTEMA VICTRON + BMS]- <span style="font-size: 1.1rem;">🄯</span> Copyleft 2026 <b>UZTURRE</b> - Software Libre -</footer>
+    <footer>MONITORIZACIÓN AUTOCARAVANA [SISTEMA VICTRON + BMS] - <span style="font-size: 1.1rem;">🄯</span> Copyleft 2026 <b>UZTURRE</b> - Software Libre -</footer>
 </div>
 
 <script>
@@ -189,16 +189,11 @@
         if (container.children.length > 25) container.lastChild.remove();
     }
 
-    // Configuración Gráfica
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
         data: { labels: [], datasets: [{ label: 'SOC %', data: [], borderColor: '#38a169', borderWidth: 3, tension: 0.3, fill: true, backgroundColor: 'rgba(56, 161, 105, 0.1)', pointRadius: 0 }] },
-        options: { 
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } }, 
-            scales: { y: { min: 0, max: 100, ticks: { font: { weight: 'bold' } } }, x: { display: false } } 
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { font: { weight: 'bold' } } }, x: { display: false } } }
     });
 
     function updateChartColors() {
@@ -222,55 +217,57 @@
         const sensor = topic.split('/')[2];
         addLog(sensor, rawVal);
 
-        // --- PROCESAMIENTO DE SENSORES ---
-        
-        // SOC (Batería, Mini y BMS)
+        // --- LÓGICA DE ACTUALIZACIÓN ---
+
+        // 1. SHUNT & GRÁFICA (Referencia principal)
         if(sensor === 'porcentaje_bateria' || sensor === 'soc_bateria__dash_') {
-            const displaySoc = Math.round(val) + '%';
-            document.getElementById('socValue').innerText = displaySoc;
-            document.getElementById('socMini').innerText = displaySoc;
-            document.getElementById('bmsSocValue').innerText = displaySoc;
-            
+            document.getElementById('socValue').innerText = Math.round(val) + '%';
+            document.getElementById('socMini').innerText = Math.round(val) + '%';
             socChart.data.labels.push(""); 
             socChart.data.datasets[0].data.push(val);
             if(socChart.data.labels.length > 50) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
             socChart.update();
         }
-        
-        // Voltajes (Shunt, BMS y Sense)
+
+        // 2. SOC ESPECÍFICO DE LA BMS (Lo que pedías)
+        if(sensor === 'soc_bms' || sensor === 'bms_soc' || sensor === 'soc_ultimatron') {
+            document.getElementById('bmsSocValue').innerText = Math.round(val) + '%';
+        }
+
+        // 3. VOLTAJES
         if(sensor === 'voltaje_bateria' || sensor === 'voltaje_bateria__dash_') {
             document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
-            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
             document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         }
-
-        // Corriente (Shunt y BMS)
-        if(sensor === 'corriente_bateria' || sensor === 'corriente_bateria__dash_') { 
-            document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; 
-            document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
-            iBat = val; 
+        if(sensor === 'voltaje_bms' || sensor === 'bms_v') {
+             document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
         }
 
-        // Temperatura (BMS y Sense)
-        if(sensor === 'temperatura_bateria') {
+        // 4. CORRIENTES
+        if(sensor === 'corriente_bateria' || sensor === 'corriente_bateria__dash_') { 
+            document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; 
+            iBat = val; 
+        }
+        if(sensor === 'corriente_bms' || sensor === 'bms_i') {
+            document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
+        }
+
+        // 5. TEMPERATURAS
+        if(sensor === 'temperatura_bateria' || sensor === 'bms_t') {
             document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
             document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
         }
 
-        // SmartSolar MPPT
+        // OTROS EQUIPOS (Solar, Inversor, Orion) permanecen igual...
         if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
         if(sensor === 'voltaje_paneles') document.getElementById('solV').innerText = val.toFixed(1) + 'V';
         if(sensor === 'voltaje_bateria_mppt') document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
-
-        // Phoenix Inverter
         if(sensor === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
         if(sensor === 'modo_inversor') {
             const el = document.getElementById('invMode');
             el.innerText = rawVal;
             el.className = 'badge ' + (rawVal === 'ON' ? 'bg-on' : (rawVal === 'ECO' ? 'bg-eco' : 'bg-off'));
         }
-
-        // Orion DC-DC
         if(sensor === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
         if(sensor === 'voltaje_salida_orion') {
             document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
@@ -279,26 +276,17 @@
         }
     });
 
-    // Animación de Flujo
+    // Animación de flujo (Sin cambios)
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let w, h;
     function resize() { w = canvas.width = canvas.offsetWidth; h = canvas.height = canvas.offsetHeight; }
-    
     function animate() {
         ctx.clearRect(0, 0, w, h);
         const time = Date.now() * 0.002;
         const colorFlow = getComputedStyle(document.documentElement).getPropertyValue('--flow-line').trim();
-        const pts = {
-            sol: {x: w*0.15+35, y: h*0.1+35}, ori: {x: w*0.15+35, y: h*0.9-35},
-            bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.85-35, y: h*0.1+35}, loa: {x: w*0.85-35, y: h*0.9-35}
-        };
-        function draw(f, t, act, col) {
-            if(!act) return;
-            ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(t.x, t.y);
-            ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash([5, 10]);
-            ctx.lineDashOffset = -time * 20; ctx.stroke();
-        }
+        const pts = {sol: {x: w*0.15+35, y: h*0.1+35}, ori: {x: w*0.15+35, y: h*0.9-35}, bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.85-35, y: h*0.1+35}, loa: {x: w*0.85-35, y: h*0.9-35}};
+        function draw(f, t, act, col) { if(!act) return; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(t.x, t.y); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash([5, 10]); ctx.lineDashOffset = -time * 20; ctx.stroke(); }
         draw(pts.sol, pts.bat, pSolar > 5, 'var(--solar)');
         draw(pts.ori, pts.bat, pOrion > 0, 'var(--accent)');
         draw(pts.bat, pts.inv, pInv > 10 || iBat < -2, 'var(--danger)');
