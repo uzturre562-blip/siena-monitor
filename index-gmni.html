@@ -33,10 +33,9 @@
         .card.c-battery { border-left-color: var(--battery); }
         .card.c-solar { border-left-color: var(--solar); }
         .card.c-sense { border-left-color: var(--danger); }
-        .card.c-bms { border-left-color: #805ad5; } /* Color Púrpura para BMS */
+        .card.c-bms { border-left-color: #805ad5; } 
         .card.c-logs { border-left-color: #2d3748; }
 
-        /* Estados Inversor */
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 900; color: white; text-transform: uppercase; }
         .bg-on { background: var(--battery); }
         .bg-off { background: var(--danger); }
@@ -98,20 +97,23 @@
     </section>
 
     <section class="card c-battery">
-        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Ultimatron 100Ah</div>
+        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Shunt Victron</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión</span></div>
-            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
+            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión Shunt</span></div>
+            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente Shunt</span></div>
         </div>
     </section>
 
     <section class="card c-bms">
-        <div class="card-title"><i class="fas fa-microchip" style="color:#805ad5"></i> Info BMS Interna</div>
+        <div class="card-title" style="justify-content: space-between;">
+            <span><i class="fas fa-microchip" style="color:#805ad5"></i> BMS Ultimatron</span>
+            <span id="bmsSoc" style="font-weight: 900; color:#805ad5">--%</span>
+        </div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="bmsCycles">--</span><span class="lab">Ciclos</span></div>
-            <div class="stat-item"><span class="val" id="bmsHealth">--%</span><span class="lab">Salud (SOH)</span></div>
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" id="bmsStatus">ESPERANDO...</span><span class="lab">Estado Protección</span></div>
+            <div class="stat-item"><span class="val" id="bmsV">--V</span><span class="lab">Tensión Celdas</span></div>
+            <div class="stat-item"><span class="val" id="bmsI">--A</span><span class="lab">Corriente BMS</span></div>
+            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" id="bmsT">--°C</span><span class="lab">Temp. BMS</span></div>
         </div>
     </section>
 
@@ -219,30 +221,37 @@
         const sensor = topic.split('/')[2];
         addLog(sensor, rawVal);
 
-        // BATERÍA & SHUNT
+        // MAPEO DE SENSORES (BASADO EN TU LISTADO ANTERIOR)
         if(sensor === 'porcentaje_bateria' || sensor === 'soc_bateria__dash_') {
             document.getElementById('socValue').innerText = Math.round(val) + '%';
             document.getElementById('socMini').innerText = Math.round(val) + '%';
+            document.getElementById('bmsSoc').innerText = Math.round(val) + '%';
             socChart.data.labels.push(""); socChart.data.datasets[0].data.push(val);
             if(socChart.data.labels.length > 50) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
             socChart.update();
         }
+        
         if(sensor === 'voltaje_bateria' || sensor === 'voltaje_bateria__dash_') {
             document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
+            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
             document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         }
-        if(sensor === 'corriente_bateria') { document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; iBat = val; }
+
+        if(sensor === 'corriente_bateria' || sensor === 'corriente_bateria__dash_') { 
+            document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; 
+            document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
+            iBat = val; 
+        }
+
+        if(sensor === 'temperatura_bateria') {
+            document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
+            document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
+        }
 
         // MPPT
         if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
         if(sensor === 'voltaje_paneles') document.getElementById('solV').innerText = val.toFixed(1) + 'V';
         if(sensor === 'voltaje_bateria_mppt') document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
-
-        // SENSE & BMS
-        if(sensor === 'temperatura_bateria') document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
-        if(sensor === 'bms_ciclos') document.getElementById('bmsCycles').innerText = val;
-        if(sensor === 'bms_salud') document.getElementById('bmsHealth').innerText = val + '%';
-        if(sensor === 'bms_estado') document.getElementById('bmsStatus').innerText = rawVal;
 
         // INVERSOR
         if(sensor === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
