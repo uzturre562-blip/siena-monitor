@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena-395 -PRO- -v1.0.8-</title>
+    <title>Siena395 MASTER ULTRA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -33,7 +33,14 @@
         .card.c-battery { border-left-color: var(--battery); }
         .card.c-solar { border-left-color: var(--solar); }
         .card.c-sense { border-left-color: var(--danger); }
+        .card.c-bms { border-left-color: #805ad5; } /* Color Púrpura para BMS */
         .card.c-logs { border-left-color: #2d3748; }
+
+        /* Estados Inversor */
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 900; color: white; text-transform: uppercase; }
+        .bg-on { background: var(--battery); }
+        .bg-off { background: var(--danger); }
+        .bg-eco { background: var(--accent); }
 
         .flow-section { grid-column: 1 / -1; height: 320px; position: relative; overflow: hidden; background: var(--card); border-left: none !important; }
         #flowCanvas { width: 100%; height: 100%; }
@@ -57,7 +64,6 @@
         .lab { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
         .card-title { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
-        /* Estilo para que la gráfica no crezca */
         .chart-container { position: relative; height: 180px; width: 100%; }
 
         #logContainer { 
@@ -73,7 +79,7 @@
 
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">-PRO- -v1.0.8-</span></h1>
+        <h1 style="font-size: 1.2rem;">SIENA395 <span style="color:var(--accent)">ULTRA MASTER</span></h1>
         <button onclick="updateChartColors(); document.body.classList.toggle('dark-mode');" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </header>
 
@@ -100,12 +106,29 @@
         </div>
     </section>
 
+    <section class="card c-bms">
+        <div class="card-title"><i class="fas fa-microchip" style="color:#805ad5"></i> Info BMS Interna</div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="bmsCycles">--</span><span class="lab">Ciclos</span></div>
+            <div class="stat-item"><span class="val" id="bmsHealth">--%</span><span class="lab">Salud (SOH)</span></div>
+            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" id="bmsStatus">ESPERANDO...</span><span class="lab">Estado Protección</span></div>
+        </div>
+    </section>
+
     <section class="card c-sense">
         <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--danger)"></i> Battery Sense</div>
         <div class="stats-grid">
             <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
             <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temperatura</span></div>
         </div>
+    </section>
+
+    <section class="card" style="border-left-color: var(--accent);">
+        <div class="card-title" style="justify-content: space-between;">
+            <span><i class="fas fa-bolt" style="color:var(--accent)"></i> Phoenix Inverter</span>
+            <span id="invMode" class="badge bg-off">OFF</span>
+        </div>
+        <div class="stat-item" style="width:100%"><span class="val" style="font-size: 1.8rem;" id="invVA">--VA</span><span class="lab">Consumo AC</span></div>
     </section>
 
     <section class="card c-solar">
@@ -126,11 +149,6 @@
         </div>
     </section>
 
-    <section class="card" style="border-left-color: var(--accent);">
-        <div class="card-title"><i class="fas fa-bolt" style="color:var(--accent)"></i> Phoenix Inverter</div>
-        <div class="stat-item" style="width:100%"><span class="val" style="font-size: 1.8rem;" id="invVA">--VA</span><span class="lab">Consumo AC</span></div>
-    </section>
-
     <section class="card" style="grid-column: 1 / -1; border-left-color: var(--battery);">
         <div class="card-title"><i class="fas fa-chart-line"></i> Histórico SOC % (Tiempo Real)</div>
         <div class="chart-container">
@@ -146,7 +164,7 @@
         <div id="logContainer">Esperando datos...</div>
     </section>
 
-    <footer>MONITORIZACION AUTOCARAVANA [SISTEMA VICTRON] - <span style="font-size: 1.1rem;">🄯</span> Copyleft 2026 <b>UZTURRE</b> - Software Libre -</footer>
+    <footer>Siena395 Master Ultra - <span style="font-size: 1.1rem;">🄯</span> Copyleft 2026 <b>UZTURRE</b> - Software Libre</footer>
 </div>
 
 <script>
@@ -169,43 +187,39 @@
         if (container.children.length > 25) container.lastChild.remove();
     }
 
-    // Configuración Gráfica con Colores Adaptativos
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
         data: { labels: [], datasets: [{ label: 'SOC %', data: [], borderColor: '#38a169', borderWidth: 3, tension: 0.3, fill: true, backgroundColor: 'rgba(56, 161, 105, 0.1)', pointRadius: 0 }] },
         options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } }, 
-            scales: { 
-                y: { min: 0, max: 100, ticks: { font: { weight: 'bold' } } }, 
-                x: { display: false } 
-            } 
+            scales: { y: { min: 0, max: 100, ticks: { font: { weight: 'bold' } } }, x: { display: false } } 
         }
     });
 
     function updateChartColors() {
         const isDark = !document.body.classList.contains('dark-mode');
-        const color = isDark ? '#f7fafc' : '#1a202c'; // Invertimos porque el toggle ocurre después
+        const color = isDark ? '#f7fafc' : '#1a202c';
         socChart.options.scales.y.ticks.color = color;
         socChart.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
         socChart.update();
     }
-    updateChartColors(); // Ejecución inicial
+    updateChartColors();
 
     client.on('connect', () => {
         document.getElementById('mqttDot').style.background = '#48bb78';
         document.getElementById('mqttText').innerText = 'MQTT: SIENA395 ONLINE';
-        addLog("SISTEMA", "Conectado");
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
     client.on('message', (topic, msg) => {
         const val = parseFloat(msg.toString());
+        const rawVal = msg.toString();
         const sensor = topic.split('/')[2];
-        addLog(sensor, val);
+        addLog(sensor, rawVal);
 
+        // BATERÍA & SHUNT
         if(sensor === 'porcentaje_bateria' || sensor === 'soc_bateria__dash_') {
             document.getElementById('socValue').innerText = Math.round(val) + '%';
             document.getElementById('socMini').innerText = Math.round(val) + '%';
@@ -213,24 +227,38 @@
             if(socChart.data.labels.length > 50) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
             socChart.update();
         }
-        
         if(sensor === 'voltaje_bateria' || sensor === 'voltaje_bateria__dash_') {
             document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
             document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         }
-
         if(sensor === 'corriente_bateria') { document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; iBat = val; }
+
+        // MPPT
         if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
-        if(sensor === 'voltaje_paneles') { document.getElementById('solV').innerText = val.toFixed(1) + 'V'; }
-        if(sensor === 'voltaje_bateria_mppt') { document.getElementById('solVbat').innerText = val.toFixed(2) + 'V'; }
-        if(sensor === 'temperatura_bateria') { document.getElementById('btsT').innerText = val.toFixed(1) + '°C'; }
-        if(sensor === 'voltaje_entrada_orion') { document.getElementById('oriIn').innerText = val.toFixed(1) + 'V'; }
+        if(sensor === 'voltaje_paneles') document.getElementById('solV').innerText = val.toFixed(1) + 'V';
+        if(sensor === 'voltaje_bateria_mppt') document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
+
+        // SENSE & BMS
+        if(sensor === 'temperatura_bateria') document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
+        if(sensor === 'bms_ciclos') document.getElementById('bmsCycles').innerText = val;
+        if(sensor === 'bms_salud') document.getElementById('bmsHealth').innerText = val + '%';
+        if(sensor === 'bms_estado') document.getElementById('bmsStatus').innerText = rawVal;
+
+        // INVERSOR
+        if(sensor === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
+        if(sensor === 'modo_inversor') {
+            const el = document.getElementById('invMode');
+            el.innerText = rawVal;
+            el.className = 'badge ' + (rawVal === 'ON' ? 'bg-on' : (rawVal === 'ECO' ? 'bg-eco' : 'bg-off'));
+        }
+
+        // ORION
+        if(sensor === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
         if(sensor === 'voltaje_salida_orion') {
             document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
             pOrion = val > 13.2 ? 300 : 0;
             document.getElementById('oriSt').innerText = val > 13.2 ? "CARGANDO" : "STANDBY";
         }
-        if(sensor === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
     });
 
     const canvas = document.getElementById('flowCanvas');
