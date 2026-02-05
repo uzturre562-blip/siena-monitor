@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>INTERFAZ Siena-395 PRO</title>
+    <title>Siena-395 PRO</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,42 +20,62 @@
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; max-width: 1200px; width: 100%; }
 
         header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 5px; }
-        .card { background: var(--card); border-radius: var(--radius); padding: 18px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        .flow-section { grid-column: 1 / -1; height: 300px; position: relative; overflow: hidden; background: var(--card); }
+        /* Tarjetas con borde lateral de color */
+        .card { 
+            background: var(--card); border-radius: var(--radius); padding: 18px; 
+            border: 1px solid var(--border); border-left: 6px solid var(--accent);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
+        }
+        .card.c-battery { border-left-color: var(--battery); }
+        .card.c-solar { border-left-color: var(--solar); }
+        .card.c-danger { border-left-color: var(--danger); }
+        .card.c-logs { border-left-color: #2d3748; }
+
+        .flow-section { grid-column: 1 / -1; height: 320px; position: relative; overflow: hidden; background: var(--card); border-left: none !important; }
         #flowCanvas { width: 100%; height: 100%; }
 
-        .node { position: absolute; display: flex; flex-direction: column; align-items: center; font-size: 0.65rem; font-weight: 800; text-align: center; width: 65px; z-index: 2; }
-        .node i { font-size: 1.3rem; margin-bottom: 3px; }
-        .n-solar { top: 10%; left: 10%; } .n-orion { bottom: 10%; left: 10%; }
-        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9rem; color: var(--battery); }
-        .n-inverter { top: 10%; right: 10%; } .n-loads { bottom: 10%; right: 10%; }
+        /* Nodos circulares del flujo */
+        .node { 
+            position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.6rem; font-weight: 800; text-align: center; width: 70px; height: 70px; 
+            z-index: 2; border-radius: 50%; background: var(--card); border: 3px solid var(--border);
+        }
+        .node i { font-size: 1.2rem; margin-bottom: 2px; }
+        .n-solar { top: 10%; left: 15%; border-color: var(--solar); } 
+        .n-orion { bottom: 10%; left: 15%; border-color: var(--accent); }
+        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: var(--battery); width: 90px; height: 90px; font-size: 0.8rem; }
+        .n-inverter { top: 10%; right: 15%; border-color: var(--accent); } 
+        .n-loads { bottom: 10%; right: 15%; border-color: var(--danger); }
 
-        .soc-big { font-size: 3.5rem; font-weight: 900; text-align: center; margin: 10px 0; color: var(--battery); letter-spacing: -2px; }
+        .soc-big { font-size: 3.5rem; font-weight: 900; text-align: center; margin: 5px 0; color: var(--battery); letter-spacing: -2px; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-item { background: rgba(0,0,0,0.05); padding: 12px; border-radius: 12px; text-align: center; }
-        .val { display: block; font-size: 1.2rem; font-weight: 900; }
-        .lab { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
-        .card-title { font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .stat-item { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 12px; text-align: center; }
+        .val { display: block; font-size: 1.1rem; font-weight: 900; }
+        .lab { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
+        .card-title { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
-        /* Estilo para los LOGS */
-        #logContainer { background: #000; color: #00ff00; font-family: 'Courier New', monospace; font-size: 0.7rem; height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-        .log-entry { margin-bottom: 2px; border-bottom: 1px solid #222; }
+        /* Consola de Logs */
+        #logContainer { 
+            background: #1a202c; color: #48bb78; font-family: 'Courier New', monospace; font-size: 0.65rem; 
+            height: 100px; overflow-y: auto; padding: 10px; border-radius: 8px; border: 1px solid #4a5568; 
+        }
+        .log-entry { border-bottom: 1px solid #2d3748; padding: 2px 0; }
 
-        footer { grid-column: 1 / -1; text-align: center; margin-top: 10px; font-size: 0.75rem; opacity: 0.6; padding-bottom: 20px; }
+        footer { grid-column: 1 / -1; text-align: center; font-size: 0.75rem; opacity: 0.7; padding: 20px 0; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">PRO v1.0.5</span></h1>
+        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">PRO v1.0.6</span></h1>
         <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </header>
 
-    <section class="card" style="grid-column: 1/-1; display: flex; align-items: center; justify-content: center; gap: 15px; font-weight: 800; font-size: 0.9rem;">
+    <section class="card" style="grid-column: 1/-1; border-left:none; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px;">
         <div id="mqttDot" style="width:12px; height:12px; background:var(--danger); border-radius:50%;"></div>
-        <span id="mqttText">MQTT: DESCONECTADO</span>
+        <span id="mqttText" style="font-weight:900; font-size:0.8rem;">MQTT: DESCONECTADO</span>
     </section>
 
     <section class="card flow-section">
@@ -67,19 +87,19 @@
         <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Cargas</span></div>
     </section>
 
-    <section class="card">
+    <section class="card c-battery">
         <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Ultimatron 100Ah</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Voltaje</span></div>
-            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Amperios</span></div>
+            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión</span></div>
+            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
         </div>
     </section>
 
-    <section class="card">
+    <section class="card c-solar">
         <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> SmartSolar MPPT</div>
         <div class="stats-grid">
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 1.8rem; color:var(--solar)" id="solW">--W</span><span class="lab">Potencia</span></div>
+            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 1.8rem; color:var(--solar)" id="solW">--W</span><span class="lab">Carga Solar</span></div>
             <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">V. Paneles</span></div>
             <div class="stat-item"><span class="val" id="solVbat">--V</span><span class="lab">V. Batería</span></div>
         </div>
@@ -88,48 +108,41 @@
     <section class="card">
         <div class="card-title"><i class="fas fa-shuttle-van" style="color:var(--accent)"></i> Orion DC-DC</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Alternador</span></div>
+            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Entrada</span></div>
             <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">Salida</span></div>
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" id="oriSt">STANDBY</span><span class="lab">Estado</span></div>
+            <div class="stat-item" style="grid-column: 1 / -1;"><span class="val" id="oriSt">STANDBY</span><span class="lab">Estado</span></div>
         </div>
     </section>
 
-    <section class="card">
+    <section class="card c-danger">
         <div class="card-title"><i class="fas fa-bolt" style="color:var(--accent)"></i> Phoenix Inverter</div>
-        <div class="stats-grid">
-            <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 1.8rem;" id="invVA">--VA</span><span class="lab">Carga AC</span></div>
-        </div>
+        <div class="stat-item" style="width:100%"><span class="val" style="font-size: 1.8rem;" id="invVA">--VA</span><span class="lab">Consumo AC</span></div>
     </section>
 
-    <section class="card" style="grid-column: 1 / -1;">
-        <div class="card-title"><i class="fas fa-chart-line"></i> Histórico SOC %</div>
+    <section class="card" style="grid-column: 1 / -1; border-left-color: var(--battery);">
+        <div class="card-title"><i class="fas fa-chart-line"></i> Histórico SOC % (Tiempo Real)</div>
         <canvas id="histChart" height="100"></canvas>
     </section>
 
-    <section class="card" style="grid-column: 1 / -1;">
+    <section class="card c-logs" style="grid-column: 1 / -1;">
         <div class="card-title"><i class="fas fa-terminal"></i> Logs del Sistema & MQTT</div>
-        <div id="logContainer">Esperando datos...</div>
+        <div id="logContainer">Esperando conexión...</div>
     </section>
 
-    <footer>MONITORIZACIÓN SISTEMA VICTRON AUTOCARAVANA (PRO) - Copyleft 2026 *UZTURRE* - Software Libre</footer>
+    <footer>MONITORIZACION SISTEMA VICTRON AUTOCARAVANA - Copyleft 2026 UZTURRE - Software Libre</footer>
 </div>
 
 <script>
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     let pSolar = 0, pOrion = 0, pInv = 0, iBat = 0;
 
-    // Lógica de Logs
     function addLog(msg) {
-        const logContainer = document.getElementById('logContainer');
+        const container = document.getElementById('logContainer');
         const now = new Date().toLocaleTimeString();
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.innerHTML = `<span style="color:#888">[${now}]</span> ${msg}`;
-        logContainer.prepend(entry);
-        if (logContainer.childNodes.length > 50) logContainer.removeChild(logContainer.lastChild);
+        container.innerHTML = `<div class="log-entry"><span style="color:#718096">[${now}]</span> ${msg}</div>` + container.innerHTML;
+        if (container.children.length > 30) container.lastChild.remove();
     }
 
-    // Gráfica Real
     const ctxChart = document.getElementById('histChart').getContext('2d');
     const socChart = new Chart(ctxChart, {
         type: 'line',
@@ -140,14 +153,14 @@
     client.on('connect', () => {
         document.getElementById('mqttDot').style.background = '#48bb78';
         document.getElementById('mqttText').innerText = 'MQTT: SIENA-395 ONLINE';
-        addLog("Conectado al Broker MQTT correctamente.");
+        addLog("Sistema conectado al broker EMQX.");
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
     client.on('message', (topic, msg) => {
         const val = parseFloat(msg.toString());
         const sensor = topic.split('/')[2];
-        addLog(`Recibido: ${sensor} -> ${val}`);
+        addLog(`Dato: ${sensor} = ${val}`);
 
         if(sensor === 'porcentaje_bateria') {
             document.getElementById('socValue').innerText = Math.round(val) + '%';
@@ -159,7 +172,6 @@
         if(sensor === 'voltaje_bateria') document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
         if(sensor === 'corriente_bateria') { document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; iBat = val; }
         if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
-        if(sensor === 'voltaje_paneles') document.getElementById('solV').innerText = val.toFixed(1) + 'V';
         if(sensor === 'voltaje_salida_orion') {
             document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
             pOrion = val > 13.2 ? 300 : 0;
@@ -168,7 +180,6 @@
         if(sensor === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
     });
 
-    // Diagrama de Flujo
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let w, h;
@@ -178,8 +189,8 @@
         ctx.clearRect(0, 0, w, h);
         const time = Date.now() * 0.002;
         const pts = {
-            sol: {x: w*0.1+32, y: h*0.1+32}, ori: {x: w*0.1+32, y: h*0.9-32},
-            bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.9-32, y: h*0.1+32}, loa: {x: w*0.9-32, y: h*0.9-32}
+            sol: {x: w*0.15+35, y: h*0.1+35}, ori: {x: w*0.15+35, y: h*0.9-35},
+            bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.85-35, y: h*0.1+35}, loa: {x: w*0.85-35, y: h*0.9-35}
         };
         function draw(f, t, act, col) {
             if(!act) return;
