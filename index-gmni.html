@@ -165,11 +165,40 @@
     }
 
     const ctxChart = document.getElementById('histChart').getContext('2d');
-    const socChart = new Chart(ctxChart, {
-        type: 'line',
-        data: { labels: [], datasets: [{ label: 'SOC %', data: [], borderColor: '#38a169', tension: 0.3, fill: true, backgroundColor: 'rgba(56, 161, 105, 0.1)' }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 }, x: { display: false } } }
-    });
+   const socChart = new Chart(ctxChart, {
+    type: 'line',
+    data: { 
+        labels: [], 
+        datasets: [{ 
+            label: 'SOC %', 
+            data: [], 
+            borderColor: '#38a169', 
+            borderWidth: 4, // Más gruesa
+            tension: 0.3, 
+            fill: true, 
+            backgroundColor: 'rgba(56, 161, 105, 0.2)',
+            pointRadius: 0 
+        }] 
+    },
+    options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }, 
+        scales: { 
+            y: { 
+                min: 0, 
+                max: 100,
+                grid: { color: 'rgba(0, 0, 0, 0.05)' }, 
+                ticks: { 
+                    color: '#1a202c', // Color muy oscuro para que resalte
+                    font: { size: 11, weight: 'bold' },
+                    callback: function(value) { return value + '%'; }
+                } 
+            }, 
+            x: { display: false } 
+        } 
+    }
+});
 
     client.on('connect', () => {
         document.getElementById('mqttDot').style.background = '#48bb78';
