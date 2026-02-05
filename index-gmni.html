@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena-395 PRO</title>
+    <title>Siena-395 PRO v1.0.7</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,9 +11,13 @@
     <style>
         :root {
             --bg: #a0aec0; --card: #cbd5e0; --text: #1a202c; --accent: #3182ce;
-            --solar: #d69e2e; --battery: #38a169; --danger: #e53e3e; --border: #718096; --radius: 18px;
+            --solar: #d69e2e; --battery: #38a169; --danger: #e53e3e; --border: #718096; 
+            --radius: 18px; --flow-line: #1a202c;
         }
-        .dark-mode { --bg: #1a202c; --card: #2d3748; --text: #f7fafc; --border: #4a5568; }
+        .dark-mode { 
+            --bg: #1a202c; --card: #2d3748; --text: #f7fafc; --border: #4a5568; 
+            --flow-line: #ffffff; 
+        }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: 0.3s; }
         body { background-color: var(--bg); color: var(--text); padding: 15px; display: flex; justify-content: center; }
@@ -21,7 +25,6 @@
 
         header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 5px; }
         
-        /* Tarjetas con borde lateral de color */
         .card { 
             background: var(--card); border-radius: var(--radius); padding: 18px; 
             border: 1px solid var(--border); border-left: 6px solid var(--accent);
@@ -29,13 +32,12 @@
         }
         .card.c-battery { border-left-color: var(--battery); }
         .card.c-solar { border-left-color: var(--solar); }
-        .card.c-danger { border-left-color: var(--danger); }
+        .card.c-sense { border-left-color: var(--danger); }
         .card.c-logs { border-left-color: #2d3748; }
 
         .flow-section { grid-column: 1 / -1; height: 320px; position: relative; overflow: hidden; background: var(--card); border-left: none !important; }
         #flowCanvas { width: 100%; height: 100%; }
 
-        /* Nodos circulares del flujo */
         .node { 
             position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-size: 0.6rem; font-weight: 800; text-align: center; width: 70px; height: 70px; 
@@ -55,7 +57,6 @@
         .lab { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
         .card-title { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
-        /* Consola de Logs */
         #logContainer { 
             background: #1a202c; color: #48bb78; font-family: 'Courier New', monospace; font-size: 0.65rem; 
             height: 100px; overflow-y: auto; padding: 10px; border-radius: 8px; border: 1px solid #4a5568; 
@@ -69,7 +70,7 @@
 
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">PRO v1.0.6</span></h1>
+        <h1 style="font-size: 1.2rem;">SIENA-395 <span style="color:var(--accent)">PRO -v1.0.7-</span></h1>
         <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </header>
 
@@ -96,12 +97,20 @@
         </div>
     </section>
 
+    <section class="card c-sense">
+        <div class="card-title"><i class="fas fa-thermometer-half" style="color:var(--danger)"></i> Battery Sense</div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje Real</span></div>
+            <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temperatura</span></div>
+        </div>
+    </section>
+
     <section class="card c-solar">
         <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> SmartSolar MPPT</div>
         <div class="stats-grid">
             <div class="stat-item" style="grid-column: 1/-1;"><span class="val" style="font-size: 1.8rem; color:var(--solar)" id="solW">--W</span><span class="lab">Carga Solar</span></div>
             <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">V. Paneles</span></div>
-            <div class="stat-item"><span class="val" id="solVbat">--V</span><span class="lab">V. Batería</span></div>
+            <div class="stat-item"><span class="val" id="solVbat">--V</span><span class="lab">V. MPPT Bat</span></div>
         </div>
     </section>
 
@@ -114,7 +123,7 @@
         </div>
     </section>
 
-    <section class="card c-danger">
+    <section class="card" style="border-left-color: var(--accent);">
         <div class="card-title"><i class="fas fa-bolt" style="color:var(--accent)"></i> Phoenix Inverter</div>
         <div class="stat-item" style="width:100%"><span class="val" style="font-size: 1.8rem;" id="invVA">--VA</span><span class="lab">Consumo AC</span></div>
     </section>
@@ -129,7 +138,7 @@
         <div id="logContainer">Esperando conexión...</div>
     </section>
 
-    <footer>MONITORIZACION SISTEMA VICTRON AUTOCARAVANA - Copyleft 2026 UZTURRE - Software Libre</footer>
+    <footer>MONITORIZACION AUTOCARAVANA SISTEMA VICTRON - Copyleft &#127279 2026 -UZTURRE- - Software Libre-</footer>
 </div>
 
 <script>
@@ -152,15 +161,15 @@
 
     client.on('connect', () => {
         document.getElementById('mqttDot').style.background = '#48bb78';
-        document.getElementById('mqttText').innerText = 'MQTT: SIENA-395 ONLINE';
-        addLog("Sistema conectado al broker EMQX.");
+        document.getElementById('mqttText').innerText = 'MQTT: SIENA395 ONLINE';
+        addLog("Conectado al broker.");
         client.subscribe('siena395_monitor_mikel_2026/sensor/#');
     });
 
     client.on('message', (topic, msg) => {
         const val = parseFloat(msg.toString());
         const sensor = topic.split('/')[2];
-        addLog(`Dato: ${sensor} = ${val}`);
+        addLog(`${sensor}: ${val}`);
 
         if(sensor === 'porcentaje_bateria') {
             document.getElementById('socValue').innerText = Math.round(val) + '%';
@@ -172,6 +181,11 @@
         if(sensor === 'voltaje_bateria') document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
         if(sensor === 'corriente_bateria') { document.getElementById('iBat').innerText = val.toFixed(1) + 'A'; iBat = val; }
         if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
+        if(sensor === 'voltaje_paneles') document.getElementById('solV').innerText = val.toFixed(1) + 'V';
+        if(sensor === 'voltaje_bateria_mppt') document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
+        if(sensor === 'voltaje_bateria_sense') document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
+        if(sensor === 'temperatura_bateria') document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
+        if(sensor === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
         if(sensor === 'voltaje_salida_orion') {
             document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
             pOrion = val > 13.2 ? 300 : 0;
@@ -188,6 +202,7 @@
     function animate() {
         ctx.clearRect(0, 0, w, h);
         const time = Date.now() * 0.002;
+        const colorFlow = getComputedStyle(document.documentElement).getPropertyValue('--flow-line').trim();
         const pts = {
             sol: {x: w*0.15+35, y: h*0.1+35}, ori: {x: w*0.15+35, y: h*0.9-35},
             bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.85-35, y: h*0.1+35}, loa: {x: w*0.85-35, y: h*0.9-35}
@@ -201,7 +216,7 @@
         draw(pts.sol, pts.bat, pSolar > 5, 'var(--solar)');
         draw(pts.ori, pts.bat, pOrion > 0, 'var(--accent)');
         draw(pts.bat, pts.inv, pInv > 10 || iBat < -2, 'var(--danger)');
-        draw(pts.bat, pts.loa, iBat < -0.5, 'var(--text)');
+        draw(pts.bat, pts.loa, iBat < -0.5, colorFlow);
         requestAnimationFrame(animate);
     }
     window.addEventListener('resize', resize); resize(); animate();
