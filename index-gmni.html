@@ -106,9 +106,9 @@
     </section>
 
     <section class="card c-bms">
-        <div class="card-title" style="justify-content: space-between;">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span><i class="fas fa-microchip" style="color:#805ad5"></i> BMS Ultimatron</span>
-            <span id="bmsSoc" style="font-weight: 900; color:#805ad5">--%</span>
+            <span id="bmsSocValue" style="font-size: 1.2rem; font-weight: 900; color:#805ad5">--%</span>
         </div>
         <div class="stats-grid">
             <div class="stat-item"><span class="val" id="bmsV">--V</span><span class="lab">Tensión Celdas</span></div>
@@ -223,11 +223,17 @@
 
         // MAPEO DE SENSORES (BASADO EN TU LISTADO ANTERIOR)
         if(sensor === 'porcentaje_bateria' || sensor === 'soc_bateria__dash_') {
-            document.getElementById('socValue').innerText = Math.round(val) + '%';
-            document.getElementById('socMini').innerText = Math.round(val) + '%';
-            document.getElementById('bmsSoc').innerText = Math.round(val) + '%';
-            socChart.data.labels.push(""); socChart.data.datasets[0].data.push(val);
-            if(socChart.data.labels.length > 50) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
+            const displaySoc = Math.round(val) + '%';
+            document.getElementById('socValue').innerText = displaySoc;
+            document.getElementById('socMini').innerText = displaySoc;
+            document.getElementById('bmsSocValue').innerText = displaySoc; // Actualiza el 100% de la BMS
+            
+            socChart.data.labels.push(""); 
+            socChart.data.datasets[0].data.push(val);
+            if(socChart.data.labels.length > 50) { 
+                socChart.data.labels.shift(); 
+                socChart.data.datasets[0].data.shift(); 
+            }
             socChart.update();
         }
         
