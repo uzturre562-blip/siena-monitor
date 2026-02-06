@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena395 MASTER ULTRA</title>
+    <title>Siena395 MASTER ULTRA v1.0.23</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -120,7 +120,7 @@
         </div>
     </section>
 
-    <section class="card" style="border-left-color: var(--danger);">
+    <section class="card" style="border-left-color: #4fd1c5;">
         <div class="card-title"><i class="fas fa-thermometer-half"></i> Battery Sense</div>
         <div class="stats-grid-4">
             <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Voltaje</span></div>
@@ -160,7 +160,7 @@
 
     <section class="card c-logs" style="grid-column: 1 / -1;">
         <div class="card-title" style="justify-content: space-between;">
-            <span><i class="fas fa-terminal"></i> Terminal Datos BLE</span>
+            <span><i class="fas fa-terminal"></i> Terminal Datos MQTT</span>
             <button id="pauseBtn" onclick="togglePause()" style="background:var(--accent); color:white; border:none; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.6rem; font-weight:800;">PAUSAR LOG</button>
         </div>
         <div id="logContainer">Esperando flujo de datos...</div>
@@ -171,9 +171,8 @@
 
 <script>
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-    let pSolar = 0, pInv = 0, iBat = 0, isPaused = false;
+    let pSolar = 0, pInv = 0, isPaused = false;
 
-    // Pintar filas de celdas
     const cellList = document.getElementById('cellList');
     for(let i=1; i<=4; i++) {
         cellList.innerHTML += `<div class="cell-row"><div class="cell-label" style="font-size:0.6rem; font-weight:800; width:40px;">C${i}</div><div class="cell-bar-bg"><div id="bar${i}" class="cell-bar-fill"></div></div><div id="vCell${i}" class="cell-val">-.---V</div></div>`;
@@ -203,68 +202,66 @@
     client.on('connect', () => { 
         document.getElementById('mqttStatus').innerText = "CONECTADO";
         document.getElementById('mqttStatus').className = "badge bg-on";
-        client.subscribe('siena395_monitor_mikel_2026/sensor/#'); 
-    });
-
-    client.on('offline', () => {
-        document.getElementById('mqttStatus').innerText = "DESCONECTADO";
-        document.getElementById('mqttStatus').className = "badge bg-off";
+        client.subscribe('siena395_monitor_mikel_2026/#'); 
     });
 
     client.on('message', (topic, msg) => {
         const val = parseFloat(msg.toString());
-        const sensor = topic.split('/')[2];
+        const t = topic.toLowerCase();
         const raw = msg.toString();
 
         if (!isPaused) {
             const container = document.getElementById('logContainer');
-            container.innerHTML = `<div>[${new Date().toLocaleTimeString()}] <b>${sensor}</b>: ${raw}</div>` + container.innerHTML;
+            container.innerHTML = `<div>[${new Date().toLocaleTimeString()}] <b>${topic.split('/').pop()}</b>: ${raw}</div>` + container.innerHTML;
             if (container.children.length > 8) container.lastChild.remove();
         }
 
-        // --- MAPEADO DE SENSORES DINÁMICO (Viendo tus logs) ---
-        if(sensor === 'porcentaje_bateria' || sensor === 'soc_bateria__dash_') {
-            const s = Math.round(val) + '%';
-            document.getElementById('socValue').innerText = s;
-            document.getElementById('socMini').innerText = s;
-            document.getElementById('bmsSoc').innerText = s;
+        // --- SMART SHUNT ---
+        if(t.includes('porcentaje_bateria')) {
+            document.getElementById('socValue').innerText = Math.round(val) + '%';
+            document.getElementById('socMini').innerText = Math.round(val) + '%';
             socChart.data.labels.push(""); socChart.data.datasets[0].data.push(val);
             if(socChart.data.labels.length > 50) { socChart.data.labels.shift(); socChart.data.datasets[0].data.shift(); }
             socChart.update();
         }
+        if(t.includes('voltaje_bateria') && !t.includes('sense') && !t.includes('mppt')) document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
+        if(t.includes('corriente_bateria')) document.getElementById('iBat').innerText = val.toFixed(1) + 'A';
 
-        if(sensor === 'voltaje_bateria' || sensor === 'voltaje_bateria__dash_') {
-            document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
-            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
-            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
-        }
+        // --- BATTERY SENSE ---
+        if(t.includes('voltaje_sense')) document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
+        if(t.includes('temperatura_bateria')) document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
 
-        if(sensor === 'corriente_bateria' || sensor === 'corriente_bateria__dash_') {
-            document.getElementById('iBat').innerText = val.toFixed(1) + 'A';
-            iBat = val;
-        }
-
-        if(sensor === 'bms_corriente') document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
-        if(sensor.includes('temperatura')) {
-            document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
-            document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
-        }
-
-        if(sensor.includes('cell_voltage_')) {
-            const n = sensor.match(/\d+/);
-            if(n && n[0] <= 4) {
-                document.getElementById(`vCell${n[0]}`).innerText = val.toFixed(3) + 'V';
+        // --- BMS ULTIMATRON ---
+        if(t.includes('bms/soc')) document.getElementById('bmsSoc').innerText = Math.round(val) + '%';
+        if(t.includes('bms/voltaje')) document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
+        if(t.includes('bms/corriente')) document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
+        if(t.includes('bms/temp')) document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
+        if(t.includes('celda_')) {
+            const n = t.split('_').pop();
+            if(n >= 1 && n <= 4) {
+                document.getElementById(`vCell${n}`).innerText = val.toFixed(3) + 'V';
                 const pct = ((val - 2.8) / (3.65 - 2.8)) * 100;
-                document.getElementById(`bar${n[0]}`).style.width = Math.min(Math.max(pct, 0), 100) + '%';
+                document.getElementById(`bar${n}`).style.width = Math.min(Math.max(pct, 0), 100) + '%';
             }
         }
 
-        if(sensor.includes('potencia_solar')) { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
-        if(sensor.includes('voltaje_paneles')) document.getElementById('solV').innerText = val.toFixed(1) + 'V';
-        if(sensor.includes('voltaje_bateria_mppt')) document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
-        if(sensor === 'potencia_salida_phoenix') { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
-        if(sensor.includes('voltaje_entrada_orion')) document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
-        if(sensor === 'voltaje_salida_orion') document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
+        // --- SOLAR ---
+        if(t.includes('potencia_solar')) { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
+        if(t.includes('voltaje_solar')) document.getElementById('solV').innerText = val.toFixed(1) + 'V';
+        if(t.includes('voltaje_bateria_mppt')) document.getElementById('solVbat').innerText = val.toFixed(2) + 'V';
+
+        // --- INVERSOR ---
+        if(t.includes('potencia_salida_phoenix')) { 
+            document.getElementById('invVA').innerText = Math.round(val) + 'VA'; 
+            pInv = val;
+            const mode = document.getElementById('invMode');
+            mode.innerText = val > 8 ? "ON" : "OFF";
+            mode.className = val > 8 ? "badge bg-on" : "badge bg-off";
+        }
+
+        // --- ORION ---
+        if(t.includes('voltaje_entrada_orion')) document.getElementById('oriIn').innerText = val.toFixed(1) + 'V';
+        if(t.includes('voltaje_salida_orion')) document.getElementById('oriOut').innerText = val.toFixed(1) + 'V';
     });
 
     const canvas = document.getElementById('flowCanvas');
@@ -274,10 +271,15 @@
     function animate() {
         ctx.clearRect(0, 0, w, h);
         const time = Date.now() * 0.002;
-        const pts = { sol: {x: w*0.15+35, y: h*0.1+35}, ori: {x: w*0.15+35, y: h*0.9-35}, bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.85-35, y: h*0.1+35}, loa: {x: w*0.85-35, y: h*0.9-35} };
-        function draw(f, t, act, col) { if(!act) return; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(t.x, t.y); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash([5, 10]); ctx.lineDashOffset = -time * 20; ctx.stroke(); }
-        draw(pts.sol, pts.bat, pSolar > 5, 'var(--solar)');
-        draw(pts.bat, pts.inv, pInv > 10, 'var(--danger)');
+        const pts = { sol: {x: w*0.15+35, y: h*0.1+35}, bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.85-35, y: h*0.1+35} };
+        function drawLine(f, t, act, col) { 
+            if(!act) return; 
+            ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(t.x, t.y); 
+            ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash([5, 10]); 
+            ctx.lineDashOffset = -time * 20; ctx.stroke(); 
+        }
+        drawLine(pts.sol, pts.bat, pSolar > 5, 'var(--solar)');
+        drawLine(pts.bat, pts.inv, pInv > 10, 'var(--danger)');
         requestAnimationFrame(animate);
     }
     window.addEventListener('resize', resize); resize(); animate();
