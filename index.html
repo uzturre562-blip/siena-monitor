@@ -69,13 +69,32 @@
             margin-bottom: 10px;
         }
         
-        header h1 { 
-            font-size: 1.2rem; 
-            font-weight: 900;
+        .header-left {
+            display: flex;
+            flex-direction: column;
         }
         
-        header h1 span { 
+        .header-left h1 { 
+            font-size: 1.2rem; 
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+        
+        .header-left h1 span { 
             color: var(--accent); 
+        }
+        
+        .header-left .subtitle {
+            font-size: 0.7rem;
+            color: var(--text);
+            opacity: 0.8;
+            font-weight: 600;
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         
         .theme-btn {
@@ -87,10 +106,25 @@
             padding: 8px;
             border-radius: 10px;
             transition: background 0.2s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .theme-btn:hover {
             background: rgba(0,0,0,0.05);
+        }
+        
+        .version-btn {
+            background: rgba(255, 153, 0, 0.1);
+            border: 1px solid rgba(255, 153, 0, 0.3);
+            color: var(--solar);
+        }
+        
+        .version-btn:hover {
+            background: rgba(255, 153, 0, 0.2);
         }
 
         /* ========== TARJETAS ========== */
@@ -368,13 +402,18 @@
             
             header {
                 flex-direction: column;
-                gap: 10px;
+                gap: 15px;
                 align-items: flex-start;
                 padding-bottom: 10px;
             }
             
-            header h1 {
+            .header-left h1 {
                 font-size: 1.1rem;
+            }
+            
+            .header-controls {
+                width: 100%;
+                justify-content: flex-end;
             }
             
             .flow-section {
@@ -451,6 +490,16 @@
             .val {
                 font-size: 1rem;
             }
+            
+            .header-controls {
+                gap: 5px;
+            }
+            
+            .theme-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1.1rem;
+            }
         }
 
         /* ========== ANIMACIONES ========== */
@@ -471,8 +520,20 @@
 <div class="dashboard">
     <!-- HEADER -->
     <header>
-        <h1>MONITORIZACIÓN AUTOCARAVANA<span>    -PRO-     #v1.0.12#</span></h1>
-        <button class="theme-btn" onclick="toggleTheme()"><i class="fas fa-adjust"></i></button>
+        <div class="header-left">
+            <h1>MONITORIZACIÓN AUTOCARAVANA<span>    -PRO-     #v1.0.12#</span></h1>
+            <div class="subtitle">Dashboard de Monitorización Victron + BMS</div>
+        </div>
+        <div class="header-controls">
+            <a href="index-gmni.html" style="text-decoration: none;">
+                <button class="theme-btn version-btn" title="Versión anterior">
+                    <i class="fas fa-clock-rotate-left"></i>
+                </button>
+            </a>
+            <button class="theme-btn" id="themeToggle" title="Cambiar tema">
+                <i class="fas fa-adjust"></i>
+            </button>
+        </div>
     </header>
 
     <!-- ESTADO MQTT -->
@@ -1026,6 +1087,9 @@
         const savedTheme = localStorage.getItem('siena395_theme');
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-mode');
+            document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
         }
         
         // Actualizar colores del gráfico si existe
@@ -1037,16 +1101,22 @@
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
         
-        // Guardar preferencia
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('siena395_theme', isDark ? 'dark' : 'light');
+        // Actualizar icono del botón
+        const themeToggle = document.getElementById('themeToggle');
+        if (document.body.classList.contains('dark-mode')) {
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            localStorage.setItem('siena395_theme', 'dark');
+        } else {
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            localStorage.setItem('siena395_theme', 'light');
+        }
         
         // Actualizar colores del gráfico
         if (socChart) {
             updateChartColors();
         }
         
-        addLog(`Tema ${isDark ? 'oscuro' : 'claro'} activado`);
+        addLog(`Tema ${document.body.classList.contains('dark-mode') ? 'oscuro' : 'claro'} activado`);
     }
 
     function updateChartColors() {
