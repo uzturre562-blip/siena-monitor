@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SIENA395 MASTER PRO v1.0.20</title>
+    <title>SIENA395 MASTER PRO v1.0.22</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
             --bg: #a0aec0; --card: #cbd5e0; --item-bg: rgba(255,255,255,0.4); 
-            --text: #1a202c; --accent: #3182ce;
-            --solar: #d69e2e; --battery: #38a169; --danger: #e53e3e; --border: #718096; 
+            --text: #1a202c; --accent: #3182ce; --solar: #d69e2e; 
+            --battery: #38a169; --danger: #e53e3e; --border: #718096; 
             --radius: 18px; --shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
         .dark-mode { 
@@ -33,103 +33,110 @@
         .c-bms::before { background: #805ad5; }
         .c-sense::before { background: #4fd1c5; }
 
-        /* FLUJO ANIMADO */
-        .flow-card { grid-column: 1 / -1; height: 300px; position: relative; background: var(--card); overflow: hidden; }
+        /* FLUJO ANIMADO RECONSTRUIDO */
+        .flow-card { grid-column: 1 / -1; height: 320px; position: relative; background: var(--card); overflow: hidden; border-left: none; }
         #flowCanvas { width: 100%; height: 100%; }
-        .node { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; width: 80px; height: 80px; z-index: 2; border-radius: 50%; background: var(--card); border: 3px solid var(--border); box-shadow: var(--shadow); }
-        .n-solar { top: 10%; left: 10%; border-color: var(--solar); } 
-        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: var(--battery); width: 100px; height: 100px; }
-        .n-inv { top: 10%; right: 10%; border-color: var(--danger); }
-        .n-orion { bottom: 10%; left: 10%; border-color: var(--accent); }
+        .node { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; width: 85px; height: 85px; z-index: 2; border-radius: 50%; background: var(--card); border: 3px solid var(--border); box-shadow: var(--shadow); text-align: center; }
+        .n-solar { top: 10%; left: 15%; border-color: var(--solar); } 
+        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: var(--battery); width: 110px; height: 110px; }
+        .n-inv { top: 10%; right: 15%; border-color: var(--danger); }
+        .n-orion { bottom: 10%; left: 15%; border-color: var(--accent); }
+        .n-loads { bottom: 10%; right: 15%; border-color: #718096; }
 
-        .soc-big { font-size: 4rem; font-weight: 900; text-align: center; color: var(--battery); letter-spacing: -3px; line-height: 1; }
+        .soc-big { font-size: 4.5rem; font-weight: 900; text-align: center; color: var(--battery); letter-spacing: -4px; line-height: 1; margin: 10px 0; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .stat-item { background: var(--item-bg); padding: 15px; border-radius: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
-        .val { display: block; font-size: 1.4rem; font-weight: 900; }
+        .val { display: block; font-size: 1.5rem; font-weight: 900; }
         .lab { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; margin-top: 4px; display: block; }
 
-        .cell-list { margin-top: 15px; background: rgba(0,0,0,0.1); padding: 12px; border-radius: 12px; }
-        .cell-row { display: flex; align-items: center; margin-bottom: 6px; font-size: 0.75rem; }
-        .cell-bar-bg { flex-grow: 1; height: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; margin: 0 10px; }
-        .cell-bar-fill { height: 100%; width: 0%; background: var(--battery); border-radius: 5px; transition: width 1s; }
+        /* CELDAS BMS CON DEGRADADO */
+        .cell-list { margin-top: 15px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 14px; }
+        .cell-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.8rem; }
+        .cell-bar-bg { flex-grow: 1; height: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; margin: 0 12px; position: relative; }
+        .cell-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--battery), #48bb78); border-radius: 6px; transition: width 1s ease-in-out; }
+        .cell-v { font-weight: 900; width: 60px; text-align: right; }
 
-        .badge { padding: 5px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 900; color: white; }
+        .badge { padding: 6px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 900; color: white; }
         .bg-on { background: var(--battery); } .bg-off { background: var(--danger); }
 
-        #logContainer { background: #1a202c; color: #48bb78; font-family: monospace; font-size: 0.75rem; height: 150px; overflow-y: auto; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
-        .btn-log { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+        /* LOG PROFESIONAL */
+        .log-section { grid-column: 1 / -1; }
+        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        #logContainer { background: #1a202c; color: #48bb78; font-family: 'Courier New', monospace; font-size: 0.75rem; height: 160px; overflow-y: auto; padding: 15px; border-radius: 12px; border: 1px solid var(--border); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        .btn-log { background: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body class="dark-mode">
 
     <header>
         <h1 style="font-weight:900">SIENA395 <span style="color:var(--accent)">MASTER PRO</span></h1>
-        <div style="display:flex; align-items:center; gap:15px;">
-            <div id="mqttStatus" class="badge bg-off">DESCONECTADO</div>
-            <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; font-size:1.4rem;"><i class="fas fa-adjust"></i></button>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <div id="mqttStatus" class="badge bg-off">CONECTANDO...</div>
+            <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; font-size:1.5rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
         </div>
     </header>
 
     <div class="dashboard">
         <section class="card flow-card">
             <canvas id="flowCanvas"></canvas>
-            <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>SOLAR</span></div>
-            <div class="node n-battery"><span id="socMini" style="font-size:1.5rem">--%</span><span>BATERÍA</span></div>
-            <div class="node n-inv"><i class="fas fa-plug" style="color:var(--danger)"></i><span>230V</span></div>
-            <div class="node n-orion"><i class="fas fa-truck" style="color:var(--accent)"></i><span>MOTOR</span></div>
+            <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar); font-size:1.5rem"></i><span>SOLAR</span><span id="fSol" style="font-size:0.6rem">0W</span></div>
+            <div class="node n-battery"><span id="socMini" style="font-size:1.8rem; font-weight:900">--%</span><span>BATERÍA</span></div>
+            <div class="node n-inv"><i class="fas fa-plug" style="color:var(--danger); font-size:1.5rem"></i><span>230V</span><span id="fInv" style="font-size:0.6rem">0VA</span></div>
+            <div class="node n-orion"><i class="fas fa-truck" style="color:var(--accent); font-size:1.5rem"></i><span>MOTOR</span></div>
+            <div class="node n-loads"><i class="fas fa-bolt" style="color:#718096; font-size:1.5rem"></i><span>DC</span></div>
         </section>
 
         <section class="card c-battery">
-            <div style="font-size:0.8rem; font-weight:800; margin-bottom:10px">SMARTSHUNT 500A</div>
+            <div class="card-title" style="font-weight:800; opacity:0.8"><i class="fas fa-shield-alt"></i> VICTRON SMARTSHUNT</div>
             <div id="socBig" class="soc-big">--%</div>
             <div class="stats-grid">
-                <div class="stat-item"><span class="val" id="vShunt">--</span><span class="lab">Tensión</span></div>
-                <div class="stat-item"><span class="val" id="iShunt">--</span><span class="lab">Corriente</span></div>
+                <div class="stat-item"><span class="val" id="vShunt">--</span><span class="lab">Voltaje Shunt</span></div>
+                <div class="stat-item"><span class="val" id="iShunt">--</span><span class="lab">Amperios</span></div>
             </div>
         </section>
 
         <section class="card c-sense">
-            <div style="font-size:0.8rem; font-weight:800; margin-bottom:10px">BATTERY SENSE</div>
+            <div class="card-title" style="font-weight:800; opacity:0.8"><i class="fas fa-thermometer-half"></i> BATTERY SENSE</div>
             <div class="stats-grid">
                 <div class="stat-item"><span class="val" id="vSense">--</span><span class="lab">V. Bornes</span></div>
-                <div class="stat-item"><span class="val" id="tSense">--</span><span class="lab">Temp. Bat</span></div>
+                <div class="stat-item"><span class="val" id="tSense">--</span><span class="lab">Temp. Real</span></div>
             </div>
         </section>
 
         <section class="card c-bms">
-            <div style="font-size:0.8rem; font-weight:800; margin-bottom:10px">BMS ULTIMATRON</div>
+            <div class="card-title" style="font-weight:800; opacity:0.8"><i class="fas fa-microchip"></i> BMS ULTIMATRON 100AH</div>
             <div class="stats-grid">
                 <div class="stat-item"><span class="val" id="bmsSoc">--</span><span class="lab">SOC BMS</span></div>
-                <div class="stat-item"><span class="val" id="bmsV">--</span><span class="lab">V. BMS</span></div>
-                <div class="stat-item"><span class="val" id="bmsI">--</span><span class="lab">Amp BMS</span></div>
-                <div class="stat-item"><span class="val" id="bmsT">--</span><span class="lab">T. BMS</span></div>
+                <div class="stat-item"><span class="val" id="bmsV">--</span><span class="lab">Voltaje</span></div>
+                <div class="stat-item"><span class="val" id="bmsI">--</span><span class="lab">Amperios</span></div>
+                <div class="stat-item"><span class="val" id="bmsT">--</span><span class="lab">Temp BMS</span></div>
             </div>
             <div class="cell-list" id="cellList"></div>
         </section>
 
         <section class="card c-solar">
-            <div style="font-size:0.8rem; font-weight:800; margin-bottom:10px">SMARTSOLAR MPPT</div>
+            <div class="card-title" style="font-weight:800; opacity:0.8"><i class="fas fa-sun"></i> VICTRON SMARTSOLAR</div>
             <div class="stats-grid">
-                <div class="stat-item" style="grid-column: span 2;"><span class="val" id="solW" style="color:var(--solar)">0W</span><span class="lab">Potencia</span></div>
+                <div class="stat-item" style="grid-column: span 2;"><span class="val" id="solW" style="color:var(--solar); font-size:2rem">0W</span><span class="lab">Carga Actual</span></div>
                 <div class="stat-item"><span class="val" id="solV">--</span><span class="lab">V. Panel</span></div>
                 <div class="stat-item"><span class="val" id="solY">--</span><span class="lab">Hoy (kWh)</span></div>
             </div>
         </section>
 
         <section class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-                <span style="font-size:0.8rem; font-weight:800">PHOENIX 12/1200</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <span style="font-weight:800; font-size:0.9rem">PHOENIX 12/1200</span>
                 <span id="invStatus" class="badge bg-off">OFF</span>
             </div>
-            <div class="stat-item"><span class="val" id="invVA">0VA</span><span class="lab">Consumo AC</span></div>
+            <div class="stat-item" style="width:100%"><span class="val" id="invVA">0VA</span><span class="lab">Carga de Salida</span></div>
         </section>
 
-        <section class="card" style="grid-column:1/-1">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-                <span style="font-weight:800">TERMINAL MQTT</span>
-                <button id="btnLog" class="btn-log" onclick="logActive = !logActive; this.innerText=logActive?'PARAR LOG':'ACTIVAR LOG'">PARAR LOG</button>
+        <section class="log-section">
+            <div class="log-header">
+                <span style="font-weight:900; font-size:0.8rem; text-transform:uppercase">Consola de Depuración MQTT</span>
+                <button id="btnLog" class="btn-log" onclick="logActive=!logActive; this.innerText=logActive?'PARAR LOG':'ACTIVAR LOG'">PARAR LOG</button>
             </div>
-            <div id="logContainer">Esperando...</div>
+            <div id="logContainer">Conectando al servidor...</div>
         </section>
     </div>
 
@@ -139,7 +146,7 @@
 
     const cellContainer = document.getElementById('cellList');
     for(let i=1; i<=4; i++) {
-        cellContainer.innerHTML += `<div class="cell-row"><span style="width:25px">C${i}</span><div class="cell-bar-bg"><div id="bar${i}" class="cell-bar-fill"></div></div><span id="vCell${i}" style="width:55px; font-weight:900">-.---V</span></div>`;
+        cellContainer.innerHTML += `<div class="cell-row"><span style="width:30px; font-weight:800">C${i}</span><div class="cell-bar-bg"><div id="bar${i}" class="cell-bar-fill"></div></div><span id="vCell${i}" class="cell-v">-.---V</span></div>`;
     }
 
     client.on('connect', () => {
@@ -151,13 +158,15 @@
     client.on('message', (topic, msg) => {
         const val = parseFloat(msg.toString());
         const t = topic.toLowerCase();
+        const raw = msg.toString();
 
         if(logActive) {
             const log = document.getElementById('logContainer');
-            log.innerHTML = `<div>[${new Date().toLocaleTimeString()}] <b>${topic.split('/').pop()}</b>: ${msg.toString()}</div>` + log.innerHTML;
-            if(log.children.length > 5) log.lastChild.remove();
+            log.innerHTML = `<div><span style="color:#718096">[${new Date().toLocaleTimeString()}]</span> <b>${topic.split('/').pop()}</b>: ${raw}</div>` + log.innerHTML;
+            if(log.children.length > 8) log.lastChild.remove();
         }
 
+        // --- PROCESAMIENTO DE DATOS ---
         if(t.includes('porcentaje_bateria')) { document.getElementById('socBig').innerText = Math.round(val)+'%'; document.getElementById('socMini').innerText = Math.round(val)+'%'; }
         if(t.includes('voltaje_bateria')) document.getElementById('vShunt').innerText = val.toFixed(2)+'V';
         if(t.includes('corriente_bateria')) document.getElementById('iShunt').innerText = val.toFixed(1)+'A';
@@ -170,25 +179,27 @@
         if(t.includes('bms/corriente')) document.getElementById('bmsI').innerText = val.toFixed(1)+'A';
         if(t.includes('bms/temp')) document.getElementById('bmsT').innerText = val.toFixed(1)+'°C';
 
-        if(t.includes('potencia_solar')) { document.getElementById('solW').innerText = Math.round(val)+'W'; pSol = val; }
+        if(t.includes('potencia_solar')) { document.getElementById('solW').innerText = Math.round(val)+'W'; document.getElementById('fSol').innerText = Math.round(val)+'W'; pSol = val; }
         if(t.includes('voltaje_solar')) document.getElementById('solV').innerText = val.toFixed(1)+'V';
         if(t.includes('rendimiento_hoy')) document.getElementById('solY').innerText = val.toFixed(2)+'kWh';
 
         if(t.includes('potencia_salida_phoenix')) { 
-            document.getElementById('invVA').innerText = Math.round(val)+'VA'; pInv = val;
-            document.getElementById('invStatus').innerText = val > 10 ? 'ON' : 'OFF';
-            document.getElementById('invStatus').className = val > 10 ? 'badge bg-on' : 'badge bg-off';
+            document.getElementById('invVA').innerText = Math.round(val)+'VA'; document.getElementById('fInv').innerText = Math.round(val)+'VA'; pInv = val;
+            const s = document.getElementById('invStatus');
+            s.innerText = val > 8 ? 'ON' : 'OFF'; s.className = val > 8 ? 'badge bg-on' : 'badge bg-off';
         }
 
         if(t.includes('celda_')) {
             const n = t.split('_').pop();
             if(n>=1 && n<=4) {
                 document.getElementById(`vCell${n}`).innerText = val.toFixed(3)+'V';
-                document.getElementById(`bar${n}`).style.width = ((val-2.8)/(3.65-2.8)*100)+'%';
+                const pct = ((val - 2.8) / (3.65 - 2.8)) * 100;
+                document.getElementById(`bar${n}`).style.width = Math.min(Math.max(pct,0),100)+'%';
             }
         }
     });
 
+    // SISTEMA DE ANIMACIÓN DE FLUJO
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let w, h;
@@ -198,15 +209,26 @@
     function draw() {
         ctx.clearRect(0,0,w,h);
         const time = Date.now()*0.003;
-        const p = { s:{x:w*0.1+40, y:h*0.1+40}, b:{x:w*0.5, y:h*0.5}, i:{x:w*0.9-40, y:h*0.1+40} };
+        const p = { 
+            s: {x:w*0.15+42, y:h*0.1+42}, 
+            b: {x:w*0.5, y:h*0.5}, 
+            i: {x:w*0.85-42, y:h*0.1+42},
+            o: {x:w*0.15+42, y:h*0.9-42} 
+        };
         
-        function line(f,t,act,col) {
-            if(act<5) return;
-            ctx.beginPath(); ctx.setLineDash([10,15]); ctx.lineDashOffset=-time*30;
-            ctx.strokeStyle=col; ctx.lineWidth=4; ctx.moveTo(f.x,f.y); ctx.lineTo(t.x,t.y); ctx.stroke();
+        function animateLine(from, to, active, color) {
+            if(active < 5) return;
+            ctx.beginPath();
+            ctx.setLineDash([12, 18]);
+            ctx.lineDashOffset = -time * 40;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 5;
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.stroke();
         }
-        line(p.s, p.b, pSol, '#d69e2e');
-        line(p.b, p.i, pInv, '#e53e3e');
+        animateLine(p.s, p.b, pSol, '#d69e2e');
+        animateLine(p.b, p.i, pInv, '#e53e3e');
         requestAnimationFrame(draw);
     }
     draw();
