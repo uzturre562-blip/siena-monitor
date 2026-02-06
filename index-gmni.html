@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MONITORIZACIÓN AUTOCARAVANA -PRO- #v1.0.12#</title>
+    <title>MONITORIZACIÓN AUTOCARAVANA     -PRO-     #v1.0.12#</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -80,7 +80,7 @@
 
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.2rem;">MONITORIZACIÓN AUTOCARAVANA<span style="color:var(--accent)">-PRO- #v1.0.12#</span></h1>
+        <h1 style="font-size: 1.2rem;">MONITORIZACIÓN AUTOCARAVANA<span style="color:var(--accent)">    -PRO-     #v1.0.12#</span></h1>
         <button onclick="toggleTheme()" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </header>
 
@@ -101,7 +101,7 @@
     </section>
 
     <section class="card c-battery">
-        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Shunt Victron</div>
+        <div class="card-title"><i class="fas fa-car-battery" style="color:var(--battery)"></i> Shunt Victron 300A</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid-4">
             <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión</span></div>
@@ -133,14 +133,14 @@
 
     <section class="card" style="border-left-color: var(--accent);">
         <div class="card-title" style="justify-content: space-between;">
-            <span><i class="fas fa-bolt"></i> Inversor</span>
+            <span><i class="fas fa-bolt"></i> Inversor 12V-2000VA</span>
             <span id="invMode" class="badge bg-off">OFF</span>
         </div>
         <div class="stat-item" style="width:100%"><span class="val" id="invVA">--VA</span><span class="lab">Consumo AC</span></div>
     </section>
 
     <section class="card c-solar">
-        <div class="card-title"><i class="fas fa-sun"></i> SmartSolar</div>
+        <div class="card-title"><i class="fas fa-sun"></i> SmartSolar 75/15</div>
         <div class="stats-grid-4">
             <div class="stat-item" style="grid-column: 1/-1;"><span class="val" id="solW">--W</span><span class="lab">Solar W</span></div>
             <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">Paneles</span></div>
@@ -149,7 +149,7 @@
     </section>
 
     <section class="card">
-        <div class="card-title"><i class="fas fa-shuttle-van"></i> Orion DC-DC 30A</div>
+        <div class="card-title"><i class="fas fa-shuttle-van"></i> Orion DC-DC 12V-30A</div>
         <div class="stats-grid-4">
             <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">Entrada</span></div>
             <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">Salida</span></div>
@@ -277,7 +277,7 @@
             }
         }
 
-        // --- OTROS VICRON ---
+        // --- OTROS VICTRON ---
         if(sensor.includes('potencia_solar')) { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
         if(sensor.includes('voltaje_paneles')) document.getElementById('solV').innerText = val.toFixed(1) + 'V';
         if(sensor.includes('potencia_salida_phoenix')) { document.getElementById('invVA').innerText = Math.round(val) + 'VA'; pInv = val; }
