@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MONITORIZACIÓN AUTOCARAVANA -PRO- (v1.0.12)</title>
+    <title>SIENA395 MASTER PRO (v1.0.13)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -22,9 +22,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: 0.2s; }
         body { background-color: var(--bg); color: var(--text); padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Información de Proyecto */
         .project-info { max-width: 1200px; width: 100%; font-size: 0.7rem; opacity: 0.7; margin-bottom: 5px; display: flex; justify-content: space-between; font-weight: 700; text-transform: uppercase; }
-
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; max-width: 1200px; width: 100%; }
 
         header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--card); border-radius: 12px; margin-bottom: 5px; border: 1px solid var(--border); }
@@ -34,12 +32,12 @@
         .card.c-solar { border-left-color: var(--solar); }
         .card.c-orion { border-left-color: #3182ce; }
         .card.c-bms { border-left-color: #805ad5; } 
+        .card.c-sense { border-left-color: #4fd1c5; }
 
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 900; color: white; text-transform: uppercase; }
         .bg-on { background: var(--battery); }
         .bg-off { background: var(--danger); }
 
-        /* FLUJO */
         .flow-section { grid-column: 1 / -1; height: 350px; position: relative; overflow: hidden; background: var(--card); border-left: none !important; }
         #flowCanvas { width: 100%; height: 100%; }
         .node { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 800; text-align: center; width: 75px; height: 75px; z-index: 2; border-radius: 50%; background: var(--card); border: 3px solid var(--border); }
@@ -58,14 +56,12 @@
         .lab { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
         .card-title { font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 
-        /* CELDAS */
         .cell-container { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
         .cell-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
         .cell-bar-bg { flex-grow: 1; height: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
         .cell-bar-fill { height: 100%; width: 0%; background: var(--battery); transition: 1s; }
         .cell-val { font-size: 0.75rem; font-weight: 800; width: 55px; text-align: right; }
 
-        /* LOG */
         .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         #logContainer { background: #1a202c; color: #48bb78; font-family: monospace; font-size: 0.7rem; height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; }
         .btn-stop { background: var(--danger); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.6rem; cursor: pointer; font-weight: 800; }
@@ -74,14 +70,14 @@
 <body class="dark-mode">
 
 <div class="project-info">
-    <span>Proyecto: MONITORIZACIÓN AUTOCARAVANA [SISTEMA VICTRON + BMS] (v1.0.12)</span>
-    <span>Autor: UZTURRE</span>
-    <span>Licencia: COPYLEFT &#127279 2026 (CC BY-NC-SA)</span>
+    <span>Proyecto: SIENA395 MONITOR v1.0.13</span>
+    <span>Autor: UZTURRE / MIKEL</span>
+    <span>Licencia: COPYLEFT 2026 (CC BY-NC-SA)</span>
 </div>
 
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.1rem;">MONITORIZACIÓN AUTOCARAVANA <span style="color:var(--accent)">-PRO- (v1.0.12)</span></h1>
+        <h1 style="font-size: 1.1rem;">MONITORIZACIÓN <span style="color:var(--accent)">SIENA395</span></h1>
         <div id="mqttStatus" class="badge bg-off">CONECTANDO...</div>
         <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; font-size: 1.2rem;"><i class="fas fa-adjust"></i></button>
     </header>
@@ -96,13 +92,19 @@
     </section>
 
     <section class="card c-battery">
-        <div class="card-title"><i class="fas fa-bolt"></i> SmartShunt + Battery Sense</div>
+        <div class="card-title"><i class="fas fa-bolt"></i> SmartShunt 500A</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Voltaje</span></div>
-            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
-            <div class="stat-item"><span class="val" id="vSense">--V</span><span class="lab">V. Sense</span></div>
-            <div class="stat-item"><span class="val" id="tSense">--°C</span><span class="lab">Temp. Sense</span></div>
+            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Voltaje Batería</span></div>
+            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente Neta</span></div>
+        </div>
+    </section>
+
+    <section class="card c-sense">
+        <div class="card-title"><i class="fas fa-temperature-high"></i> Victron Battery Sense</div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="vSense">--V</span><span class="lab">V. en Bornes</span></div>
+            <div class="stat-item"><span class="val" id="tSense">--°C</span><span class="lab">Temperatura</span></div>
         </div>
     </section>
 
@@ -111,47 +113,47 @@
         <div class="stats-grid">
             <div class="stat-item"><span class="val" id="bmsSoc">--%</span><span class="lab">SOC BMS</span></div>
             <div class="stat-item"><span class="val" id="bmsV">--V</span><span class="lab">BMS Total</span></div>
-            <div class="stat-item"><span class="val" id="bmsI">--A</span><span class="lab">Amperios</span></div>
-            <div class="stat-item"><span class="val" id="bmsT">--°C</span><span class="lab">Temp BMS</span></div>
+            <div class="stat-item"><span class="val" id="bmsI">--A</span><span class="lab">Carga/Desc.</span></div>
+            <div class="stat-item"><span class="val" id="bmsT">--°C</span><span class="lab">Temp. BMS</span></div>
         </div>
         <div class="cell-container" id="cellList"></div>
     </section>
 
     <section class="card c-solar">
-        <div class="card-title"><i class="fas fa-sun"></i> SmartSolar MPPT 75/15</div>
+        <div class="card-title"><i class="fas fa-sun"></i> SmartSolar MPPT</div>
         <div class="stats-grid">
             <div class="stat-item"><span class="val" id="solW">0W</span><span class="lab">Potencia</span></div>
             <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">V. Paneles</span></div>
             <div class="stat-item"><span class="val" id="solY">--kWh</span><span class="lab">Rend. Hoy</span></div>
-            <div class="stat-item"><span class="val" id="solState">--</span><span class="lab">Modo Carga</span></div>
+            <div class="stat-item"><span class="val" id="solState">--</span><span class="lab">Estado</span></div>
         </div>
     </section>
 
     <section class="card c-orion">
-        <div class="card-title"><i class="fas fa-truck-moving"></i> Orion-Tr Smart DC-DC </div>
+        <div class="card-title"><i class="fas fa-truck-moving"></i> Orion-Tr Smart</div>
         <div class="stats-grid">
-            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">V. Alternador</span></div>
+            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">V. Motor</span></div>
             <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">V. Salida</span></div>
-            <div class="stat-item" style="grid-column: span 2;"><span class="val" id="oriState">OFF</span><span class="lab">Estado</span></div>
+            <div class="stat-item" style="grid-column: span 2;"><span class="val" id="oriState">--</span><span class="lab">Detección Alternador</span></div>
         </div>
     </section>
 
     <section class="card">
         <div class="card-title" style="justify-content: space-between;">
-            <span><i class="fas fa-plug"></i> Inversor Phoenix 12V 2000VA</span>
+            <span><i class="fas fa-plug"></i> Phoenix Inverter</span>
             <span id="invStatus" class="badge bg-off">OFF</span>
         </div>
         <div class="stat-item" style="width:100%;">
-            <span class="val" id="invVA">0VA</span><span class="lab">Consumo AC</span>
+            <span class="val" id="invVA">0VA</span><span class="lab">Consumo 230V</span>
         </div>
     </section>
 
     <section class="card" style="grid-column: 1 / -1; border-left:none;">
         <div class="log-header">
-            <span class="card-title" style="margin:0">Terminal Datos MQTT</span>
+            <span class="card-title" style="margin:0">Depuración Sistema</span>
             <button id="btnLog" class="btn-stop" onclick="toggleLog()">PARAR LOG</button>
         </div>
-        <div id="logContainer">Conectando...</div>
+        <div id="logContainer">Esperando flujo de datos...</div>
     </section>
 </div>
 
@@ -159,6 +161,7 @@
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     let pSolar = 0, pInv = 0, pOrion = 0, logActive = true;
 
+    // Crear barras de celdas
     const cellList = document.getElementById('cellList');
     for(let i=1; i<=4; i++) {
         cellList.innerHTML += `
@@ -191,8 +194,13 @@
             if(log.children.length > 8) log.lastChild.remove();
         }
 
-        // --- MAPEO COMPLETO ---
-        if(sensor === 'porcentaje_bateria') { document.getElementById('socValue').innerText = Math.round(val)+'%'; document.getElementById('socMini').innerText = Math.round(val)+'%'; document.getElementById('bmsSoc').innerText = Math.round(val)+'%'; }
+        // --- MAPEO DE SENSORES ---
+        // Shunt (Corregido)
+        if(sensor === 'porcentaje_bateria') { 
+            document.getElementById('socValue').innerText = Math.round(val)+'%'; 
+            document.getElementById('socMini').innerText = Math.round(val)+'%'; 
+            document.getElementById('bmsSoc').innerText = Math.round(val)+'%'; 
+        }
         if(sensor === 'voltaje_bateria') document.getElementById('vBat').innerText = val.toFixed(2)+'V';
         if(sensor === 'corriente_bateria') document.getElementById('iBat').innerText = val.toFixed(1)+'A';
         
@@ -211,7 +219,7 @@
         if(sensor === 'voltaje_salida_orion') { 
             document.getElementById('oriOut').innerText = val.toFixed(2)+'V'; 
             pOrion = (val > 13.0) ? 300 : 0;
-            document.getElementById('oriState').innerText = val > 13.2 ? "CARGANDO" : "STANDBY";
+            document.getElementById('oriState').innerText = val > 13.2 ? "MOTOR ON" : "MOTOR OFF";
         }
 
         // Phoenix
@@ -222,7 +230,7 @@
             document.getElementById('invStatus').className = val > 10 ? "badge bg-on" : "badge bg-off";
         }
 
-        // Battery Sense
+        // Battery Sense (Tarjeta propia)
         if(sensor === 'voltaje_sense') document.getElementById('vSense').innerText = val.toFixed(2)+'V';
         if(sensor === 'temperatura_sense') document.getElementById('tSense').innerText = val.toFixed(1)+'°C';
 
@@ -237,6 +245,7 @@
         }
     });
 
+    // Animación de flujo
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let w, h;
