@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena395 MASTER PRO</title>
+    <title>MONITORIZACIÓN AUTOCARAVANA -PRO- (v1.0.12)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -14,43 +14,35 @@
             --solar: #d69e2e; --battery: #38a169; --danger: #e53e3e; --border: #718096; 
             --radius: 18px;
         }
-        /* MODO OSCURO - CASILLAS MÁS CLARAS PARA CONTRASTE */
         .dark-mode { 
-            --bg: #1a202c; 
-            --card: #2d3748; 
-            --item-bg: #3d495d; /* Color gris-azulado más claro para las cajas de datos */
-            --text: #f7fafc; 
-            --border: #4a5568; 
+            --bg: #1a202c; --card: #2d3748; --item-bg: #3d495d; 
+            --text: #f7fafc; --border: #4a5568; 
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: 0.2s; }
-        body { background-color: var(--bg); color: var(--text); padding: 15px; display: flex; justify-content: center; }
+        body { background-color: var(--bg); color: var(--text); padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Información de Proyecto */
+        .project-info { max-width: 1200px; width: 100%; font-size: 0.7rem; opacity: 0.7; margin-bottom: 5px; display: flex; justify-content: space-between; font-weight: 700; text-transform: uppercase; }
+
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; max-width: 1200px; width: 100%; }
 
-        header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 10px; }
+        header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--card); border-radius: 12px; margin-bottom: 5px; border: 1px solid var(--border); }
         
-        .card { 
-            background: var(--card); border-radius: var(--radius); padding: 18px; 
-            border: 1px solid var(--border); border-left: 6px solid var(--accent);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
-        }
+        .card { background: var(--card); border-radius: var(--radius); padding: 18px; border: 1px solid var(--border); border-left: 6px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .card.c-battery { border-left-color: var(--battery); }
         .card.c-solar { border-left-color: var(--solar); }
+        .card.c-orion { border-left-color: #3182ce; }
         .card.c-bms { border-left-color: #805ad5; } 
 
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 900; color: white; text-transform: uppercase; }
         .bg-on { background: var(--battery); }
         .bg-off { background: var(--danger); }
 
-        /* FLUJO DE ENERGÍA */
+        /* FLUJO */
         .flow-section { grid-column: 1 / -1; height: 350px; position: relative; overflow: hidden; background: var(--card); border-left: none !important; }
         #flowCanvas { width: 100%; height: 100%; }
-
-        .node { 
-            position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 0.65rem; font-weight: 800; text-align: center; width: 75px; height: 75px; 
-            z-index: 2; border-radius: 50%; background: var(--card); border: 3px solid var(--border);
-        }
+        .node { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 800; text-align: center; width: 75px; height: 75px; z-index: 2; border-radius: 50%; background: var(--card); border: 3px solid var(--border); }
         .node i { font-size: 1.4rem; margin-bottom: 3px; }
         .n-solar { top: 10%; left: 15%; border-color: var(--solar); } 
         .n-orion { bottom: 10%; left: 15%; border-color: var(--accent); }
@@ -60,101 +52,127 @@
 
         .soc-big { font-size: 3.5rem; font-weight: 900; text-align: center; margin: 5px 0; color: var(--battery); letter-spacing: -2px; }
         
-        /* CASILLAS DE DATOS */
-        .stats-grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-item { 
-            background: var(--item-bg); 
-            padding: 12px; 
-            border-radius: 12px; 
-            text-align: center; 
-            border: 1px solid rgba(255,255,255,0.05);
-        }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-item { background: var(--item-bg); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
         .val { display: block; font-size: 1.2rem; font-weight: 900; }
         .lab { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
         .card-title { font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 
-        /* BARRAS CELDAS */
-        .cell-container { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
-        .cell-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-        .cell-label { font-size: 0.65rem; font-weight: 800; width: 35px; }
-        .cell-bar-bg { flex-grow: 1; height: 14px; background: rgba(0,0,0,0.2); border-radius: 7px; overflow: hidden; border: 1px solid var(--border); }
-        .cell-bar-fill { height: 100%; width: 0%; background: var(--battery); transition: 1s ease-in-out; }
-        .cell-val { font-size: 0.8rem; font-weight: 900; width: 60px; text-align: right; }
+        /* CELDAS */
+        .cell-container { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+        .cell-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .cell-bar-bg { flex-grow: 1; height: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; overflow: hidden; }
+        .cell-bar-fill { height: 100%; width: 0%; background: var(--battery); transition: 1s; }
+        .cell-val { font-size: 0.75rem; font-weight: 800; width: 55px; text-align: right; }
 
-        #logContainer { background: #1a202c; color: #48bb78; font-family: monospace; font-size: 0.7rem; height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; margin-top: 10px;}
+        /* LOG */
+        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        #logContainer { background: #1a202c; color: #48bb78; font-family: monospace; font-size: 0.7rem; height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; }
+        .btn-stop { background: var(--danger); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.6rem; cursor: pointer; font-weight: 800; }
     </style>
 </head>
 <body class="dark-mode">
 
+<div class="project-info">
+    <span>Proyecto: MONITORIZACIÓN AUTOCARAVANA [SISTEMA VICTRON + BMS] (v1.0.12)</span>
+    <span>Autor: UZTURRE</span>
+    <span>Licencia: COPYLEFT &#127279 2026 (CC BY-NC-SA)</span>
+</div>
+
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.2rem;">SIENA395 <span style="color:var(--accent)">PRO MASTER</span></h1>
-        <div id="mqttStatus" class="badge bg-off">MQTT: ESPERANDO</div>
-        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
+        <h1 style="font-size: 1.1rem;">MONITORIZACIÓN AUTOCARAVANA <span style="color:var(--accent)">-PRO- (v1.0.12)</span></h1>
+        <div id="mqttStatus" class="badge bg-off">CONECTANDO...</div>
+        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; font-size: 1.2rem;"><i class="fas fa-adjust"></i></button>
     </header>
 
     <section class="card flow-section">
         <canvas id="flowCanvas"></canvas>
         <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>Solar</span></div>
         <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion</span></div>
-        <div class="node n-battery"><i class="fas fa-car-battery" style="color:var(--battery)"></i><span id="socMini" style="font-size:1.4rem">--%</span></div>
+        <div class="node n-battery"><i class="fas fa-car-battery" style="color:var(--battery)"></i><span id="socMini">--%</span></div>
         <div class="node n-inverter"><i class="fas fa-plug" style="color:var(--accent)"></i><span>Phoenix</span></div>
         <div class="node n-loads"><i class="fas fa-lightbulb" style="color:var(--danger)"></i><span>Cargas</span></div>
     </section>
 
     <section class="card c-battery">
-        <div class="card-title"><i class="fas fa-bolt" style="color:var(--battery)"></i> SmartShunt Victron</div>
+        <div class="card-title"><i class="fas fa-bolt"></i> SmartShunt + Battery Sense</div>
         <div id="socValue" class="soc-big">--%</div>
-        <div class="stats-grid-4">
+        <div class="stats-grid">
             <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Voltaje</span></div>
-            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Amperios</span></div>
+            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
+            <div class="stat-item"><span class="val" id="vSense">--V</span><span class="lab">V. Sense</span></div>
+            <div class="stat-item"><span class="val" id="tSense">--°C</span><span class="lab">Temp. Sense</span></div>
         </div>
     </section>
 
     <section class="card c-bms">
         <div class="card-title"><i class="fas fa-microchip"></i> BMS Ultimatron 100Ah</div>
-        <div class="stats-grid-4">
+        <div class="stats-grid">
             <div class="stat-item"><span class="val" id="bmsSoc">--%</span><span class="lab">SOC BMS</span></div>
             <div class="stat-item"><span class="val" id="bmsV">--V</span><span class="lab">BMS Total</span></div>
-            <div class="stat-item"><span class="val" id="bmsI">--A</span><span class="lab">BMS Amps</span></div>
-            <div class="stat-item"><span class="val" id="bmsT">--°C</span><span class="lab">BMS Temp</span></div>
+            <div class="stat-item"><span class="val" id="bmsI">--A</span><span class="lab">Amperios</span></div>
+            <div class="stat-item"><span class="val" id="bmsT">--°C</span><span class="lab">Temp BMS</span></div>
         </div>
         <div class="cell-container" id="cellList"></div>
     </section>
 
-    <section class="card" style="border-left-color: var(--accent);">
-        <div class="card-title" style="justify-content: space-between;">
-            <span><i class="fas fa-plug"></i> Inversor Phoenix</span>
-            <span id="invStatus" class="badge bg-off">OFF</span>
-        </div>
-        <div class="stat-item" style="width:100%; margin-bottom:10px;">
-            <span class="val" id="invVA">0VA</span><span class="lab">Potencia AC</span>
-        </div>
-        <div class="card-title"><i class="fas fa-sun" style="color:var(--solar)"></i> SmartSolar MPPT</div>
-        <div class="stats-grid-4">
-            <div class="stat-item"><span class="val" id="solW">0W</span><span class="lab">Solar Carga</span></div>
-            <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">V. Orion</span></div>
+    <section class="card c-solar">
+        <div class="card-title"><i class="fas fa-sun"></i> SmartSolar MPPT 75/15</div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="solW">0W</span><span class="lab">Potencia</span></div>
+            <div class="stat-item"><span class="val" id="solV">--V</span><span class="lab">V. Paneles</span></div>
+            <div class="stat-item"><span class="val" id="solY">--kWh</span><span class="lab">Rend. Hoy</span></div>
+            <div class="stat-item"><span class="val" id="solState">--</span><span class="lab">Modo Carga</span></div>
         </div>
     </section>
 
-    <section class="card" style="grid-column: 1 / -1; border-left-color: #2d3748;">
-        <div class="card-title">Monitor Sistema (MQTT)</div>
-        <div id="logContainer">Esperando...</div>
+    <section class="card c-orion">
+        <div class="card-title"><i class="fas fa-truck-moving"></i> Orion-Tr Smart DC-DC </div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="val" id="oriIn">--V</span><span class="lab">V. Alternador</span></div>
+            <div class="stat-item"><span class="val" id="oriOut">--V</span><span class="lab">V. Salida</span></div>
+            <div class="stat-item" style="grid-column: span 2;"><span class="val" id="oriState">OFF</span><span class="lab">Estado</span></div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-title" style="justify-content: space-between;">
+            <span><i class="fas fa-plug"></i> Inversor Phoenix 12V 2000VA</span>
+            <span id="invStatus" class="badge bg-off">OFF</span>
+        </div>
+        <div class="stat-item" style="width:100%;">
+            <span class="val" id="invVA">0VA</span><span class="lab">Consumo AC</span>
+        </div>
+    </section>
+
+    <section class="card" style="grid-column: 1 / -1; border-left:none;">
+        <div class="log-header">
+            <span class="card-title" style="margin:0">Terminal Datos MQTT</span>
+            <button id="btnLog" class="btn-stop" onclick="toggleLog()">PARAR LOG</button>
+        </div>
+        <div id="logContainer">Conectando...</div>
     </section>
 </div>
 
 <script>
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-    let pSolar = 0, pInv = 0, pOrion = 0;
+    let pSolar = 0, pInv = 0, pOrion = 0, logActive = true;
 
     const cellList = document.getElementById('cellList');
     for(let i=1; i<=4; i++) {
         cellList.innerHTML += `
             <div class="cell-row">
-                <div class="cell-label">C${i}</div>
+                <div style="font-size:0.6rem; width:20px">C${i}</div>
                 <div class="cell-bar-bg"><div id="bar${i}" class="cell-bar-fill"></div></div>
                 <div id="vCell${i}" class="cell-val">-.---V</div>
             </div>`;
+    }
+
+    function toggleLog() {
+        logActive = !logActive;
+        document.getElementById('btnLog').innerText = logActive ? "PARAR LOG" : "ACTIVAR LOG";
+        document.getElementById('btnLog').style.background = logActive ? "var(--danger)" : "var(--battery)";
     }
 
     client.on('connect', () => { 
@@ -167,47 +185,54 @@
         const val = parseFloat(msg.toString());
         const sensor = topic.split('/').pop();
 
-        const log = document.getElementById('logContainer');
-        log.innerHTML = `<div>[${new Date().toLocaleTimeString()}] <b>${sensor}</b>: ${val}</div>` + log.innerHTML;
-        if(log.children.length > 8) log.lastChild.remove();
+        if(logActive) {
+            const log = document.getElementById('logContainer');
+            log.innerHTML = `<div>[${new Date().toLocaleTimeString()}] <b>${sensor}</b>: ${val}</div>` + log.innerHTML;
+            if(log.children.length > 8) log.lastChild.remove();
+        }
 
-        if(sensor === 'porcentaje_bateria') {
-            document.getElementById('socValue').innerText = Math.round(val) + '%';
-            document.getElementById('socMini').innerText = Math.round(val) + '%';
-            document.getElementById('bmsSoc').innerText = Math.round(val) + '%';
-        }
-        if(sensor === 'voltaje_bateria') {
-            document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
-            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
-        }
-        if(sensor === 'corriente_bateria' || sensor === 'bms_corriente') {
-            document.getElementById('iBat').innerText = val.toFixed(1) + 'A';
-            document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
-        }
-        if(sensor === 'potencia_solar') {
-            document.getElementById('solW').innerText = Math.round(val) + 'W';
-            pSolar = val;
-        }
-        if(sensor === 'potencia_salida_phoenix') {
-            document.getElementById('invVA').innerText = Math.round(val) + 'VA';
-            pInv = val;
-            document.getElementById('invStatus').innerText = val > 15 ? "ON" : "OFF";
-            document.getElementById('invStatus').className = val > 15 ? "badge bg-on" : "badge bg-off";
-        }
-        if(sensor === 'voltaje_salida_orion') {
-            document.getElementById('oriOut').innerText = val.toFixed(2) + 'V';
+        // --- MAPEO COMPLETO ---
+        if(sensor === 'porcentaje_bateria') { document.getElementById('socValue').innerText = Math.round(val)+'%'; document.getElementById('socMini').innerText = Math.round(val)+'%'; document.getElementById('bmsSoc').innerText = Math.round(val)+'%'; }
+        if(sensor === 'voltaje_bateria') document.getElementById('vBat').innerText = val.toFixed(2)+'V';
+        if(sensor === 'corriente_bateria') document.getElementById('iBat').innerText = val.toFixed(1)+'A';
+        
+        // BMS
+        if(sensor === 'bms_voltaje_total') document.getElementById('bmsV').innerText = val.toFixed(2)+'V';
+        if(sensor === 'bms_corriente') document.getElementById('bmsI').innerText = val.toFixed(1)+'A';
+        if(sensor === 'temperatura_bms') document.getElementById('bmsT').innerText = val.toFixed(1)+'°C';
+
+        // Solar
+        if(sensor === 'potencia_solar') { document.getElementById('solW').innerText = Math.round(val)+'W'; pSolar = val; }
+        if(sensor === 'voltaje_solar') document.getElementById('solV').innerText = val.toFixed(1)+'V';
+        if(sensor === 'rendimiento_hoy') document.getElementById('solY').innerText = val.toFixed(2)+'kWh';
+
+        // Orion
+        if(sensor === 'voltaje_entrada_orion') document.getElementById('oriIn').innerText = val.toFixed(2)+'V';
+        if(sensor === 'voltaje_salida_orion') { 
+            document.getElementById('oriOut').innerText = val.toFixed(2)+'V'; 
             pOrion = (val > 13.0) ? 300 : 0;
-        }
-        if(sensor === 'temperatura_bms') {
-            document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
+            document.getElementById('oriState').innerText = val > 13.2 ? "CARGANDO" : "STANDBY";
         }
 
+        // Phoenix
+        if(sensor === 'potencia_salida_phoenix') {
+            document.getElementById('invVA').innerText = Math.round(val)+'VA';
+            pInv = val;
+            document.getElementById('invStatus').innerText = val > 10 ? "ON" : "OFF";
+            document.getElementById('invStatus').className = val > 10 ? "badge bg-on" : "badge bg-off";
+        }
+
+        // Battery Sense
+        if(sensor === 'voltaje_sense') document.getElementById('vSense').innerText = val.toFixed(2)+'V';
+        if(sensor === 'temperatura_sense') document.getElementById('tSense').innerText = val.toFixed(1)+'°C';
+
+        // Celdas
         if(sensor.includes('cell_voltage_')) {
             const n = sensor.split('_').pop();
-            if(n >= 1 && n <= 4) {
-                document.getElementById(`vCell${n}`).innerText = val.toFixed(3) + 'V';
+            if(n>=1 && n<=4) {
+                document.getElementById(`vCell${n}`).innerText = val.toFixed(3)+'V';
                 const pct = ((val - 2.8) / (3.65 - 2.8)) * 100;
-                document.getElementById(`bar${n}`).style.width = Math.min(Math.max(pct, 0), 100) + '%';
+                document.getElementById(`bar${n}`).style.width = Math.min(Math.max(pct,0),100)+'%';
             }
         }
     });
@@ -222,25 +247,15 @@
         ctx.clearRect(0, 0, w, h);
         const time = Date.now() * 0.002;
         const pts = { 
-            sol: {x: w*0.15+35, y: h*0.1+35}, 
-            ori: {x: w*0.15+35, y: h*0.9-35}, 
-            bat: {x: w*0.5, y: h*0.5}, 
-            inv: {x: w*0.85-35, y: h*0.1+35}
+            sol: {x: w*0.15+35, y: h*0.1+35}, ori: {x: w*0.15+35, y: h*0.9-35}, 
+            bat: {x: w*0.5, y: h*0.5}, inv: {x: w*0.85-35, y: h*0.1+35}
         };
-
         function draw(f, t, act, col) {
             if(!act || act < 5) return;
-            ctx.beginPath();
-            ctx.setLineDash([12, 18]);
-            ctx.lineDashOffset = -time * 45;
-            ctx.strokeStyle = col;
-            ctx.lineWidth = 6;
-            ctx.lineCap = "round";
-            ctx.moveTo(f.x, f.y);
-            ctx.lineTo(t.x, t.y);
-            ctx.stroke();
+            ctx.beginPath(); ctx.setLineDash([12, 18]); ctx.lineDashOffset = -time * 45;
+            ctx.strokeStyle = col; ctx.lineWidth = 6; ctx.lineCap = "round";
+            ctx.moveTo(f.x, f.y); ctx.lineTo(t.x, t.y); ctx.stroke();
         }
-
         draw(pts.sol, pts.bat, pSolar, '#d69e2e');
         draw(pts.ori, pts.bat, pOrion, '#3182ce');
         draw(pts.bat, pts.inv, pInv, '#e53e3e');
