@@ -38,7 +38,6 @@
 
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 900; color: white; text-transform: uppercase; }
         .bg-on { background: var(--battery); }
-        .bg-off { background: var(--danger); }
         .bg-wait { background: #d69e2e; }
 
         .flow-section { grid-column: 1 / -1; height: 320px; position: relative; overflow: hidden; background: var(--card); border-left: none !important; }
@@ -52,6 +51,7 @@
         .n-solar { top: 10%; left: 15%; border-color: var(--solar); } 
         .n-orion { bottom: 10%; left: 15%; border-color: var(--accent); }
         .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: var(--battery); width: 90px; height: 90px; font-size: 0.8rem; }
+        .n-inverter { top: 10%; right: 15%; border-color: var(--accent); } 
         .n-loads { bottom: 10%; right: 15%; border-color: var(--danger); }
 
         .soc-big { font-size: 3.5rem; font-weight: 900; text-align: center; margin: 5px 0; color: var(--battery); letter-spacing: -2px; }
@@ -75,7 +75,7 @@
 
 <div class="dashboard">
     <header>
-        <h1 style="font-size: 1.1rem;">MONITORIZACION AUTOCARAVANA <span style="color:var(--accent)">-SISTEMA VICTRON + BMS-</span></h1>
+        <h1 style="font-size: 1.1rem;">MONITORIZACIÓN AUTOCARAVANA <span style="color:var(--accent)">-SISTEMA VICTRON + BMS-</span></h1>
         <button onclick="toggleTheme()" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </header>
 
@@ -91,11 +91,12 @@
         <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>Solar</span></div>
         <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion</span></div>
         <div class="node n-battery"><i class="fas fa-car-battery" style="color:var(--battery)"></i><span id="socMini">--%</span></div>
+        <div class="node n-inverter"><i class="fas fa-plug" style="color:var(--accent)"></i><span>Inversor</span></div>
         <div class="node n-loads"><i class="fas fa-bolt" style="color:var(--danger)"></i><span>Cargas</span></div>
     </section>
 
     <section id="shuntCard" class="card c-battery">
-        <div class="card-title"><i class="fas fa-car-battery"></i> SMART SHUNT</div>
+        <div class="card-title"><i class="fas fa-car-battery"></i> SMART SHUNT (Victron)</div>
         <div id="socValue" class="soc-big">--%</div>
         <div class="stats-grid-4">
             <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión</span></div>
@@ -109,15 +110,23 @@
             <div class="stat-item"><span class="val" id="bmsSoc">--%</span><span class="lab">SOC</span></div>
             <div class="stat-item"><span class="val" id="bmsV">--V</span><span class="lab">Tensión</span></div>
             <div class="stat-item"><span class="val" id="bmsI">--A</span><span class="lab">Corriente</span></div>
-            <div class="stat-item"><span class="val" id="bmsT">--°C</span><span class="lab">Temp. BMS</span></div>
+            <div class="stat-item"><span class="val" id="bmsT">--°C</span><span class="lab">Temperatura</span></div>
         </div>
         <div class="cell-container" id="cellList"></div>
+    </section>
+
+    <section class="card" style="border-left-color: var(--accent);">
+        <div class="card-title"><i class="fas fa-plug"></i> INVERSOR PHOENIX</div>
+        <div class="stat-item" style="width: 100%;">
+            <span class="val" id="invVA">-- VA</span>
+            <span class="lab">Consumo AC</span>
+        </div>
     </section>
 
     <section class="card" style="border-left-color: var(--danger);">
         <div class="card-title"><i class="fas fa-thermometer-half"></i> SMART BATTERY SENSE</div>
         <div class="stats-grid-4">
-            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Tensión SBS</span></div>
+            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Tensión BTS</span></div>
             <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temp. Celda</span></div>
         </div>
     </section>
@@ -125,7 +134,7 @@
     <section class="card" style="border-left-color: var(--accent);">
         <div class="card-title"><i class="fas fa-truck-moving"></i> ORION DC-DC</div>
         <div class="stats-grid-4">
-            <div class="stat-item" style="grid-column: 1 / -1;"><span class="val" id="oriOut">--V</span><span class="lab">Tensión de Carga</span></div>
+            <div class="stat-item" style="grid-column: 1 / -1;"><span class="val" id="oriOut">--V</span><span class="lab">Salida Carga</span></div>
         </div>
     </section>
 
@@ -141,30 +150,24 @@
             <span><i class="fas fa-terminal"></i> TERMINAL DE DATOS</span>
             <button id="pauseBtn" onclick="togglePause()" style="background:var(--accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:0.65rem; font-weight:900;">DETENER LOG</button>
         </div>
-        <div id="logContainer">Iniciando recepción de datos...</div>
+        <div id="logContainer">Esperando datos MQTT...</div>
     </section>
 
-    <footer>MONITORIZACION AUTOCARAVANA -SISTEMA VICTRON + BMS- <br> COPYLEFT 🄯 UZTURRE 2026</footer>
+    <footer>MONITORIZACIÓN AUTOCARAVANA -SISTEMA VICTRON + BMS- <br> 🄯 COPYLEFT UZTURRE 2026</footer>
 </div>
 
 <script>
     const TOPIC_PREFIX = "siena395_monitor_mikel_2026/sensor/";
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-    let pSolar = 0, iBat = 0, isPaused = false;
+    let pSolar = 0, pInv = 0, iBat = 0, isPaused = false;
 
-    // Inyectar celdas BMS
+    // Crear celdas
     const cellList = document.getElementById('cellList');
     for(let i=1; i<=4; i++) {
-        cellList.innerHTML += `
-            <div class="cell-row">
-                <div class="cell-label" style="font-size:0.65rem; font-weight:800; width:40px;">C${i}</div>
-                <div class="cell-bar-bg"><div id="bar${i}" class="cell-bar-fill"></div></div>
-                <div id="vCell${i}" class="cell-val">-.---V</div>
-            </div>`;
+        cellList.innerHTML += `<div class="cell-row"><div class="cell-label" style="font-size:0.65rem; font-weight:800; width:40px;">C${i}</div><div class="cell-bar-bg"><div id="bar${i}" class="cell-bar-fill"></div></div><div id="vCell${i}" class="cell-val">-.---V</div></div>`;
     }
 
     function toggleTheme() { document.body.classList.toggle('dark-mode'); }
-    
     function togglePause() {
         isPaused = !isPaused;
         const btn = document.getElementById('pauseBtn');
@@ -180,24 +183,23 @@
 
     client.on('message', (topic, msg) => {
         const rawSensor = topic.replace(TOPIC_PREFIX, "");
-        // Limpiamos el nombre: quitamos /state y __dash_
         const sensor = rawSensor.replace("/state", "").replace("__dash_", "");
         const val = parseFloat(msg.toString());
 
         if (!isPaused) {
             const log = document.getElementById('logContainer');
             log.innerHTML = `<div>[${new Date().toLocaleTimeString()}] <b>${sensor}</b>: ${msg.toString()}</div>` + log.innerHTML;
-            if (log.children.length > 10) log.lastChild.remove();
+            if (log.children.length > 8) log.lastChild.remove();
         }
 
-        // --- SHUNT & SOC (Alarma 20%) ---
+        // --- SHUNT & SOC ---
         if(sensor.includes("soc") || sensor.includes("porcentaje_bateria")) {
             const s = Math.round(val);
             document.getElementById('socValue').innerText = s + '%';
             document.getElementById('socMini').innerText = s + '%';
             document.getElementById('bmsSoc').innerText = s + '%';
-            const card = document.getElementById('shuntCard');
-            if(s <= 20) card.classList.add('alarm-low'); else card.classList.remove('alarm-low');
+            if(s <= 20) document.getElementById('shuntCard').classList.add('alarm-low');
+            else document.getElementById('shuntCard').classList.remove('alarm-low');
         }
 
         if(sensor === "voltaje_bateria") {
@@ -212,7 +214,7 @@
             iBat = val;
         }
 
-        // --- BMS CELDA & TEMP ---
+        // --- BMS CELDA & TEMP/CORRIENTE ---
         if(sensor.includes("cell") && sensor.includes("voltage")) {
             const n = sensor.match(/\d+/);
             if(n) {
@@ -224,21 +226,21 @@
         if(sensor.includes("corriente") && sensor.includes("bms")) document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
         if(sensor.includes("temperatura") && sensor.includes("bms")) document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
 
-        // --- SMART BATTERY SENSE (SBS) ---
-        // Buscamos palabras clave si el nombre no es exacto
-        if(sensor.includes("voltaje_bts") || (sensor.includes("voltage") && sensor.includes("sense"))) {
-            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
+        // --- INVERSOR PHOENIX ---
+        if(sensor.includes("potencia_salida_phoenix")) {
+            document.getElementById('invVA').innerText = Math.round(val) + ' VA';
+            pInv = val;
         }
-        if(sensor.includes("temperatura_bts") || (sensor.includes("temperature") && sensor.includes("sense"))) {
-            document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
-        }
+
+        // --- BATTERY SENSE ---
+        if(sensor.includes("voltaje_bts") || (sensor.includes("voltage") && sensor.includes("sense"))) document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
+        if(sensor.includes("temperatura_bts") || (sensor.includes("temperature") && sensor.includes("sense"))) document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
 
         // --- ORION & SOLAR ---
         if(sensor.includes("voltaje_salida_orion")) document.getElementById('oriOut').innerText = val.toFixed(2) + 'V';
         if(sensor.includes("potencia_solar")) { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
     });
 
-    // Animación de flujo
     const canvas = document.getElementById('flowCanvas');
     const ctx = canvas.getContext('2d');
     let w, h;
@@ -254,6 +256,7 @@
             sol: {x: w*0.15+35, y: h*0.1+35}, 
             ori: {x: w*0.15+35, y: h*0.9-35}, 
             bat: {x: w*0.5, y: h*0.5}, 
+            inv: {x: w*0.85-35, y: h*0.1+35},
             loa: {x: w*0.85-35, y: h*0.9-35} 
         };
 
@@ -267,8 +270,9 @@
             ctx.stroke(); ctx.globalAlpha = 1;
         }
 
-        draw(pts.sol, pts.bat, pSolar > 5, 'var(--solar)');
-        draw(pts.bat, pts.loa, iBat < -0.3, 'var(--danger)'); // Flujo a cargas si hay consumo
+        draw(pts.sol, pts.bat, pSolar > 10, 'var(--solar)');
+        draw(pts.bat, pts.inv, pInv > 10, 'var(--accent)');
+        draw(pts.bat, pts.loa, iBat < -0.4, 'var(--danger)');
         
         requestAnimationFrame(animate);
     }
