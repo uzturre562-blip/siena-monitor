@@ -18,7 +18,7 @@ Este repositorio contiene el código del Dashboard/Interfaz web para la monitori
 - **Diseño Ultra:** Interfaz optimizada para móviles y tablets con modo oscuro.
 
 ## 📡 Arquitectura de Datos (MQTT)
-- **Broker:** `wss://broker.emqx.io:8084/mqtt`
+- **Broker:** `ZZZ.ZZZZ` puede ser broker público o privado. 
   
 ## 🤝 Agradecimientos y Origen del Proyecto
 Este ecosistema de monitorización no habría sido posible sin la base técnica proporcionada por:
