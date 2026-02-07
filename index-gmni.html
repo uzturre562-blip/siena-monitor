@@ -13,8 +13,8 @@
         :root {
             /* Colores base - Tono gris azulado suave */
             --bg-primary: #f5f7fa;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #edf2f7;
+            --bg-secondary: rgba(255, 255, 255, 0.85); /* Más transparente */
+            --bg-tertiary: rgba(237, 242, 247, 0.7); /* Más suave */
             
             /* Colores de texto */
             --text-primary: #2d3748;
@@ -40,7 +40,7 @@
             
             /* Elementos UI */
             --border: #cbd5e0;
-            --border-light: #e2e8f0;
+            --border-light: rgba(226, 232, 240, 0.6); /* Más transparente */
             --shadow-sm: 0 2px 4px rgba(45, 55, 72, 0.05);
             --shadow: 0 4px 12px rgba(45, 55, 72, 0.08);
             --shadow-md: 0 8px 24px rgba(45, 55, 72, 0.1);
@@ -53,17 +53,17 @@
             --radius-xl: 24px;
             
             /* Efectos de vidrio */
-            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.75); /* Más transparente */
             --glass-border: rgba(255, 255, 255, 0.3);
             --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
         }
 
-        /* ========== TEMA OSCURO (MEJOR CONTRASTE) ========== */
+        /* ========== TEMA OSCURO (CON BARRAS DE TENSIÓN VISIBLES) ========== */
         .dark-mode {
             /* Colores base - Gris oscuro con azulado */
             --bg-primary: #1a202c;
-            --bg-secondary: #2d3748;
-            --bg-tertiary: #4a5568;
+            --bg-secondary: rgba(45, 55, 72, 0.9);
+            --bg-tertiary: rgba(74, 85, 104, 0.7);
             
             /* Colores de texto - Mejor contraste */
             --text-primary: #f7fafc;
@@ -89,14 +89,14 @@
             
             /* Elementos UI oscuros */
             --border: #4a5568;
-            --border-light: #718096;
+            --border-light: rgba(113, 128, 150, 0.6);
             --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
             --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.4);
             
             /* Efectos de vidrio oscuros */
-            --glass-bg: rgba(45, 55, 72, 0.9);
+            --glass-bg: rgba(45, 55, 72, 0.85);
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
@@ -310,10 +310,11 @@
             font-weight: 500;
         }
 
-        /* ========== DIAGRAMA DE FLUJO ========== */
+        /* ========== DIAGRAMA DE FLUJO - TARJETA MÁS GRANDE ========== */
         .flow-card {
             grid-column: 1 / -1;
-            height: 320px;
+            min-height: 380px; /* Más alta */
+            height: auto;
             padding: 0;
             background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
             border-radius: var(--radius-xl);
@@ -335,27 +336,33 @@
                 radial-gradient(circle at 80% 80%, rgba(56, 161, 105, 0.08) 0%, transparent 50%);
         }
 
+        /* TÍTULO DEL FLUJO - REDUCIDO Y RESPONSIVE */
         .flow-title {
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 1rem;
+            font-size: 1.1rem; /* Tamaño reducido */
             font-weight: 700;
             color: var(--accent-primary);
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
-            padding: 10px 28px;
+            padding: 10px 24px; /* Padding reducido */
             border-radius: 30px;
             border: 1px solid var(--glass-border);
             z-index: 10;
             white-space: nowrap;
             box-shadow: var(--shadow-sm);
+            text-align: center;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #flowCanvas {
             width: 100%;
             height: 100%;
+            min-height: 320px; /* Altura mínima */
             display: block;
         }
 
@@ -567,7 +574,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* ========== BMS COMPLETO ========== */
+        /* ========== BMS COMPLETO - CON BARRAS VISIBLES ========== */
         .bms-card::before {
             background: var(--bms);
         }
@@ -598,7 +605,7 @@
             color: var(--bms);
         }
 
-        /* Celdas BMS - MEJOR VISIBILIDAD EN MODO OSCURO */
+        /* Celdas BMS - VISIBLES EN MODO OSCURO */
         .cell-container {
             margin-top: 25px;
             padding-top: 25px;
@@ -658,35 +665,82 @@
         }
 
         .cell-bar {
-            height: 8px;
-            background: var(--border);
-            border-radius: 4px;
+            height: 10px; /* Un poco más alta */
+            background: rgba(0, 0, 0, 0.1); /* Fondo más visible */
+            border-radius: 5px;
             overflow: hidden;
             position: relative;
         }
 
+        /* ========== BARRAS DE TENSIÓN VISIBLES EN AMBOS MODOS ========== */
         .cell-fill {
             height: 100%;
-            border-radius: 4px;
+            border-radius: 5px;
             width: 0%;
             transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-            /* Fondo visible en ambos modos */
+            /* Gradiente vibrante para mejor visibilidad */
             background: linear-gradient(90deg, 
-                var(--battery) 0%, 
-                var(--battery-light) 50%, 
-                var(--battery) 100%
+                #38a169 0%, 
+                #68d391 50%, 
+                #38a169 100%
             );
-            box-shadow: 0 0 8px rgba(56, 161, 105, 0.3);
+            box-shadow: 
+                0 0 8px rgba(56, 161, 105, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        /* Mejor contraste para barras en modo oscuro */
+        /* Barras visibles en modo oscuro */
+        .dark-mode .cell-bar {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
         .dark-mode .cell-fill {
             background: linear-gradient(90deg, 
-                var(--battery) 0%, 
-                var(--battery-light) 70%, 
-                var(--battery) 100%
+                #68d391 0%, 
+                #9ae6b4 50%, 
+                #68d391 100%
             );
-            box-shadow: 0 0 12px rgba(104, 211, 145, 0.4);
+            box-shadow: 
+                0 0 12px rgba(104, 211, 145, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Color de advertencia para bajo voltaje */
+        .cell-fill.low {
+            background: linear-gradient(90deg, 
+                #e53e3e 0%, 
+                #fc8181 50%, 
+                #e53e3e 100%
+            );
+            box-shadow: 0 0 8px rgba(229, 62, 62, 0.6);
+        }
+
+        .dark-mode .cell-fill.low {
+            background: linear-gradient(90deg, 
+                #fc8181 0%, 
+                #fed7d7 50%, 
+                #fc8181 100%
+            );
+            box-shadow: 0 0 12px rgba(252, 129, 129, 0.7);
+        }
+
+        /* Color de advertencia para alto voltaje */
+        .cell-fill.high {
+            background: linear-gradient(90deg, 
+                #d69e2e 0%, 
+                #f6e05e 50%, 
+                #d69e2e 100%
+            );
+            box-shadow: 0 0 8px rgba(214, 158, 46, 0.6);
+        }
+
+        .dark-mode .cell-fill.high {
+            background: linear-gradient(90deg, 
+                #f6ad55 0%, 
+                #fbd38d 50%, 
+                #f6ad55 100%
+            );
+            box-shadow: 0 0 12px rgba(246, 173, 85, 0.7);
         }
 
         /* ========== BATTERY SENSE ========== */
@@ -932,7 +986,7 @@
         .card:nth-child(8) { animation-delay: 0.8s; }
         .card:nth-child(9) { animation-delay: 0.9s; }
 
-        /* ========== RESPONSIVE ========== */
+        /* ========== RESPONSIVE - MEJORADO ========== */
         @media (max-width: 1200px) {
             .dashboard {
                 grid-template-columns: repeat(2, 1fr);
@@ -957,18 +1011,36 @@
                 justify-content: center;
             }
             
+            /* TARJETA DE FLUJO RESPONSIVE */
             .flow-card {
-                height: 280px;
+                min-height: 320px;
+            }
+            
+            .flow-title {
+                font-size: 0.95rem; /* Más pequeño en móvil */
+                padding: 8px 20px;
+                max-width: 85%;
+                white-space: normal; /* Permite múltiples líneas si es necesario */
+                line-height: 1.3;
             }
             
             .flow-node {
-                width: 80px;
-                height: 80px;
+                width: 70px;
+                height: 70px;
             }
             
             .node-battery {
-                width: 100px;
-                height: 100px;
+                width: 90px;
+                height: 90px;
+            }
+            
+            .flow-node i {
+                font-size: 1.6rem;
+                margin-bottom: 8px;
+            }
+            
+            .flow-node span {
+                font-size: 0.75rem;
             }
             
             .cell-grid {
@@ -1002,21 +1074,26 @@
             }
             
             .flow-card {
-                height: 250px;
+                min-height: 280px;
             }
             
             .flow-node {
-                width: 70px;
-                height: 70px;
+                width: 60px;
+                height: 60px;
             }
             
             .node-battery {
-                width: 90px;
-                height: 90px;
+                width: 80px;
+                height: 80px;
             }
             
             .flow-node i {
-                font-size: 1.6rem;
+                font-size: 1.4rem;
+                margin-bottom: 6px;
+            }
+            
+            .flow-node span {
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -1055,9 +1132,9 @@
         <div class="last-update" id="lastUpdate">--:--:--</div>
     </section>
 
-    <!-- DIAGRAMA DE FLUJO -->
+    <!-- DIAGRAMA DE FLUJO - TARJETA MÁS GRANDE -->
     <section class="card flow-card">
-        <div class="flow-title">DIAGRAMA DE FLUJO DE ENERGÍA EN TIEMPO REAL</div>
+        <div class="flow-title">DIAGRAMA DE FLUJO DE ENERGÍA</div>
         <canvas id="flowCanvas"></canvas>
         <div class="flow-node node-solar">
             <i class="fas fa-sun"></i>
@@ -1467,12 +1544,8 @@
         for(let i = 1; i <= 4; i++) {
             const bar = document.getElementById(`bar${i}`);
             if (bar) {
-                bar.style.background = isDark ? 
-                    'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 70%, var(--battery) 100%)' :
-                    'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 50%, var(--battery) 100%)';
-                bar.style.boxShadow = isDark ? 
-                    '0 0 12px rgba(104, 211, 145, 0.4)' : 
-                    '0 0 8px rgba(56, 161, 105, 0.3)';
+                // Los colores se actualizan en updateCellVoltage
+                bar.style.display = 'block';
             }
         }
     }
@@ -1643,26 +1716,20 @@
         const fill = document.getElementById(`bar${cellNum}`);
         fill.style.width = Math.min(Math.max(percentage, 0), 100) + '%';
         
-        // Color según voltaje - VISIBLE EN AMBOS MODOS
+        // Asegurar visibilidad en ambos modos
         const isDark = document.body.classList.contains('dark-mode');
+        
         if (value < 3.0) {
-            fill.style.background = 'linear-gradient(90deg, var(--danger) 0%, var(--danger-light) 100%)';
-            fill.style.boxShadow = isDark ? 
-                '0 0 12px rgba(252, 129, 129, 0.4)' : 
-                '0 0 8px rgba(229, 62, 62, 0.3)';
+            fill.className = 'cell-fill low';
         } else if (value > 3.45) {
-            fill.style.background = 'linear-gradient(90deg, var(--solar) 0%, var(--solar-light) 100%)';
-            fill.style.boxShadow = isDark ? 
-                '0 0 12px rgba(246, 173, 85, 0.4)' : 
-                '0 0 8px rgba(214, 158, 46, 0.3)';
+            fill.className = 'cell-fill high';
         } else {
-            fill.style.background = isDark ? 
-                'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 70%, var(--battery) 100%)' :
-                'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 50%, var(--battery) 100%)';
-            fill.style.boxShadow = isDark ? 
-                '0 0 12px rgba(104, 211, 145, 0.4)' : 
-                '0 0 8px rgba(56, 161, 105, 0.3)';
+            fill.className = 'cell-fill';
+            // Los colores CSS se aplican automáticamente
         }
+        
+        // Mostrar siempre la barra
+        fill.style.opacity = '1';
     }
 
     function updateSolar(value) {
