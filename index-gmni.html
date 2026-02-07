@@ -192,17 +192,21 @@
             if (log.children.length > 8) log.lastChild.remove();
         }
 
-        // --- SMART SHUNT ---
-        if(sensor === "soc_shunt") {
+        // --- SHUNT & SOC (USANDO LOS NOMBRES DEL YAML ORIGINAL) ---
+        if(sensor === "porcentaje_bateria") {
             const s = Math.round(val);
             document.getElementById('socValue').innerText = s + '%';
             document.getElementById('socMini').innerText = s + '%';
+            document.getElementById('bmsSoc').innerText = s + '%';
             if(s <= 20) document.getElementById('shuntCard').classList.add('alarm-low');
             else document.getElementById('shuntCard').classList.remove('alarm-low');
         }
 
         if(sensor === "voltaje_bateria") {
             document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
+            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
+            // También actualizar Battery Sense si no llega otro voltaje específico
+            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         }
 
         if(sensor === "corriente_bateria") {
@@ -212,30 +216,24 @@
             iBat = val;
         }
 
-        // --- BMS ULTIMATRON ---
-        if(sensor === "bms_soc") {
-            document.getElementById('bmsSoc').innerText = Math.round(val) + '%';
-        }
-
-        if(sensor === "bms_voltaje_total") {
-            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
-        }
-
+        // --- BMS CORRIENTE & TEMPERATURA ---
         if(sensor === "bms_corriente") {
             document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
         }
 
-        if(sensor === "bms_temperatura") {
-            document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
-        }
+        // Para temperatura, necesitas añadirla en el YAML
+        // if(sensor === "bms_temperatura") {
+        //     document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
+        // }
 
         // --- CELDAS INDIVIDUALES ---
-        if(sensor.includes("cell") && sensor.includes("voltage")) {
-            const n = sensor.match(/\d+/);
-            if(n) {
-                document.getElementById(`vCell${n[0]}`).innerText = val.toFixed(3) + 'V';
+        if(sensor.includes("cell_voltage_")) {
+            const match = sensor.match(/cell_voltage_(\d+)/);
+            if(match && match[1]) {
+                const cellNum = match[1];
+                document.getElementById(`vCell${cellNum}`).innerText = val.toFixed(3) + 'V';
                 const pct = ((val - 2.8) / (3.6 - 2.8)) * 100;
-                document.getElementById(`bar${n[0]}`).style.width = Math.min(Math.max(pct, 0), 100) + '%';
+                document.getElementById(`bar${cellNum}`).style.width = Math.min(Math.max(pct, 0), 100) + '%';
             }
         }
 
@@ -246,22 +244,28 @@
         }
 
         // --- SMART BATTERY SENSE ---
-        if(sensor === "voltaje_bts") {
+        // Estos temas pueden variar, dependen de tu YAML
+        if(sensor.includes("voltaje") && sensor.includes("bts")) {
             document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
         }
-
-        if(sensor === "temperatura_bts") {
+        
+        if(sensor.includes("temperatura") && sensor.includes("bts")) {
             document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
         }
 
         // --- ORION & SOLAR ---
-        if(sensor === "voltaje_salida_orion") {
+        if(sensor.includes("voltaje_salida_orion")) {
             document.getElementById('oriOut').innerText = val.toFixed(2) + 'V';
         }
 
         if(sensor === "potencia_solar") { 
             document.getElementById('solW').innerText = Math.round(val) + 'W'; 
             pSolar = val; 
+        }
+        
+        // --- TEMPERATURA BMS (SI EXISTE) ---
+        if(sensor.includes("temperatura") && !sensor.includes("bts")) {
+            document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
         }
     });
 
