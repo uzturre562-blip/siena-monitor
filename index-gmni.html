@@ -9,12 +9,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
-        /* ========== TEMA CLARO (PREDETERMINADO) ========== */
+        /* ========== TEMA CLARO (MEJORADO - NO TAN BLANCO) ========== */
         :root {
-            /* Colores base - Tono azul grisáceo profesional */
-            --bg-primary: #f0f4f8;
+            /* Colores base - Tono gris azulado suave */
+            --bg-primary: #f5f7fa;
             --bg-secondary: #ffffff;
-            --bg-tertiary: #e8edf3;
+            --bg-tertiary: #edf2f7;
             
             /* Colores de texto */
             --text-primary: #2d3748;
@@ -41,10 +41,10 @@
             /* Elementos UI */
             --border: #cbd5e0;
             --border-light: #e2e8f0;
-            --shadow-sm: 0 1px 3px rgba(50, 50, 93, 0.05);
-            --shadow: 0 4px 6px rgba(50, 50, 93, 0.08);
-            --shadow-md: 0 10px 20px rgba(50, 50, 93, 0.1);
-            --shadow-lg: 0 15px 35px rgba(50, 50, 93, 0.12);
+            --shadow-sm: 0 2px 4px rgba(45, 55, 72, 0.05);
+            --shadow: 0 4px 12px rgba(45, 55, 72, 0.08);
+            --shadow-md: 0 8px 24px rgba(45, 55, 72, 0.1);
+            --shadow-lg: 0 12px 36px rgba(45, 55, 72, 0.12);
             
             /* Bordes */
             --radius-sm: 10px;
@@ -53,19 +53,19 @@
             --radius-xl: 24px;
             
             /* Efectos de vidrio */
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.3);
             --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
         }
 
-        /* ========== TEMA OSCURO (NO DEMASIADO OSCURO) ========== */
+        /* ========== TEMA OSCURO (MEJOR CONTRASTE) ========== */
         .dark-mode {
-            /* Colores base - Gris azulado oscuro suave */
+            /* Colores base - Gris oscuro con azulado */
             --bg-primary: #1a202c;
             --bg-secondary: #2d3748;
             --bg-tertiary: #4a5568;
             
-            /* Colores de texto - Contraste suave */
+            /* Colores de texto - Mejor contraste */
             --text-primary: #f7fafc;
             --text-secondary: #e2e8f0;
             --text-tertiary: #cbd5e0;
@@ -75,7 +75,7 @@
             --accent-secondary: #90cdf4;
             --accent-gradient: linear-gradient(135deg, #63b3ed 0%, #90cdf4 100%);
             
-            /* Colores de dispositivos - Tonos más suaves */
+            /* Colores de dispositivos - Más vibrantes */
             --solar: #f6ad55;
             --solar-light: #fbd38d;
             --battery: #68d391;
@@ -90,14 +90,14 @@
             /* Elementos UI oscuros */
             --border: #4a5568;
             --border-light: #718096;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
-            --shadow-md: 0 10px 20px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.35);
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+            --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.4);
             
             /* Efectos de vidrio oscuros */
-            --glass-bg: rgba(45, 55, 72, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(45, 55, 72, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.15);
             --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
@@ -474,7 +474,6 @@
             left: 0;
             width: 5px;
             height: 100%;
-            background: var(--accent-primary);
         }
 
         .card:hover {
@@ -599,7 +598,7 @@
             color: var(--bms);
         }
 
-        /* Celdas BMS */
+        /* Celdas BMS - MEJOR VISIBILIDAD EN MODO OSCURO */
         .cell-container {
             margin-top: 25px;
             padding-top: 25px;
@@ -663,14 +662,31 @@
             background: var(--border);
             border-radius: 4px;
             overflow: hidden;
+            position: relative;
         }
 
         .cell-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 100%);
             border-radius: 4px;
             width: 0%;
             transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            /* Fondo visible en ambos modos */
+            background: linear-gradient(90deg, 
+                var(--battery) 0%, 
+                var(--battery-light) 50%, 
+                var(--battery) 100%
+            );
+            box-shadow: 0 0 8px rgba(56, 161, 105, 0.3);
+        }
+
+        /* Mejor contraste para barras en modo oscuro */
+        .dark-mode .cell-fill {
+            background: linear-gradient(90deg, 
+                var(--battery) 0%, 
+                var(--battery-light) 70%, 
+                var(--battery) 100%
+            );
+            box-shadow: 0 0 12px rgba(104, 211, 145, 0.4);
         }
 
         /* ========== BATTERY SENSE ========== */
@@ -764,6 +780,10 @@
             grid-column: 1 / -1;
             height: 280px;
             padding: 24px;
+        }
+
+        .chart-card::before {
+            background: linear-gradient(135deg, var(--battery) 0%, var(--bms) 100%);
         }
 
         #histChart {
@@ -1229,7 +1249,7 @@
     <footer class="dashboard-footer">
         MONITORIZACIÓN AUTOCARAVANA [SISTEMA VICTRON + BMS ULTIMATRON]
         <div class="copyleft">
-            <i class="fas fa-copyright fa-rotate-180"></i> COPLEFT UZTURRE 2026 - Proyecto de código abierto
+            <i class="fas fa-copyright fa-rotate-180"></i> COPYLEFT UZTURRE 2026 - Proyecto de código abierto
         </div>
     </footer>
 </div>
@@ -1249,6 +1269,7 @@
     let pSolar = 0;
     let pInv = 0;
     let iBat = 0;
+    let oriOut = 0; // Nueva variable para Orion
     let isPaused = false;
     let mqttClient = null;
     let socChart = null;
@@ -1260,7 +1281,7 @@
     // INICIALIZACIÓN
     // =============================================
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('🚀 Inicializando dashboard PRO premium...');
+        console.log('🚀 Inicializando dashboard PRO premium v2...');
         
         initializeCells();
         initializeChart();
@@ -1268,7 +1289,7 @@
         connectMQTT();
         initializeFlowAnimation();
         
-        addLog('Sistema PRO premium inicializado', 'success');
+        addLog('Sistema PRO premium v2 inicializado', 'success');
         
         // Actualizar hora cada segundo
         setInterval(() => {
@@ -1410,6 +1431,7 @@
         document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
         localStorage.setItem('siena395_theme', 'dark');
         updateChartColors();
+        updateCellBarsVisibility();
         addLog('Modo oscuro activado', 'info');
     }
 
@@ -1418,6 +1440,7 @@
         document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
         localStorage.setItem('siena395_theme', 'light');
         updateChartColors();
+        updateCellBarsVisibility();
         addLog('Modo claro activado', 'info');
     }
 
@@ -1436,6 +1459,22 @@
         socChart.options.plugins.tooltip.titleColor = isDark ? '#f7fafc' : '#2d3748';
         socChart.options.plugins.tooltip.bodyColor = isDark ? '#f7fafc' : '#2d3748';
         socChart.update();
+    }
+
+    function updateCellBarsVisibility() {
+        // Asegurar que las barras sean visibles en ambos modos
+        const isDark = document.body.classList.contains('dark-mode');
+        for(let i = 1; i <= 4; i++) {
+            const bar = document.getElementById(`bar${i}`);
+            if (bar) {
+                bar.style.background = isDark ? 
+                    'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 70%, var(--battery) 100%)' :
+                    'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 50%, var(--battery) 100%)';
+                bar.style.boxShadow = isDark ? 
+                    '0 0 12px rgba(104, 211, 145, 0.4)' : 
+                    '0 0 8px rgba(56, 161, 105, 0.3)';
+            }
+        }
     }
 
     // =============================================
@@ -1532,6 +1571,7 @@
                 
             case sensor === 'voltaje_salida_orion':
                 document.getElementById('oriOut').textContent = value.toFixed(2) + 'V';
+                oriOut = value; // Guardar para el diagrama de flujo
                 break;
                 
             case sensor === 'voltaje_bts':
@@ -1603,13 +1643,25 @@
         const fill = document.getElementById(`bar${cellNum}`);
         fill.style.width = Math.min(Math.max(percentage, 0), 100) + '%';
         
-        // Color según voltaje
+        // Color según voltaje - VISIBLE EN AMBOS MODOS
+        const isDark = document.body.classList.contains('dark-mode');
         if (value < 3.0) {
             fill.style.background = 'linear-gradient(90deg, var(--danger) 0%, var(--danger-light) 100%)';
+            fill.style.boxShadow = isDark ? 
+                '0 0 12px rgba(252, 129, 129, 0.4)' : 
+                '0 0 8px rgba(229, 62, 62, 0.3)';
         } else if (value > 3.45) {
             fill.style.background = 'linear-gradient(90deg, var(--solar) 0%, var(--solar-light) 100%)';
+            fill.style.boxShadow = isDark ? 
+                '0 0 12px rgba(246, 173, 85, 0.4)' : 
+                '0 0 8px rgba(214, 158, 46, 0.3)';
         } else {
-            fill.style.background = 'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 100%)';
+            fill.style.background = isDark ? 
+                'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 70%, var(--battery) 100%)' :
+                'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 50%, var(--battery) 100%)';
+            fill.style.boxShadow = isDark ? 
+                '0 0 12px rgba(104, 211, 145, 0.4)' : 
+                '0 0 8px rgba(56, 161, 105, 0.3)';
         }
     }
 
@@ -1645,7 +1697,7 @@
     }
 
     // =============================================
-    // 6. ANIMACIÓN DEL FLUJO
+    // 6. ANIMACIÓN DEL FLUJO (CON LÍNEA ORION-BATERÍA)
     // =============================================
     function initializeFlowAnimation() {
         const canvas = document.getElementById('flowCanvas');
@@ -1676,6 +1728,7 @@
             ctx.setLineDash([5, 3]);
             ctx.globalAlpha = 0.3;
             
+            // Todas las conexiones posibles
             ctx.beginPath();
             ctx.moveTo(nodes.solar.x, nodes.solar.y);
             ctx.lineTo(nodes.battery.x, nodes.battery.y);
@@ -1691,6 +1744,12 @@
             ctx.lineTo(nodes.loads.x, nodes.loads.y);
             ctx.stroke();
             
+            // NUEVA: Línea Orion → Batería
+            ctx.beginPath();
+            ctx.moveTo(nodes.orion.x, nodes.orion.y);
+            ctx.lineTo(nodes.battery.x, nodes.battery.y);
+            ctx.stroke();
+            
             ctx.globalAlpha = 1;
             ctx.setLineDash([]);
             
@@ -1703,19 +1762,25 @@
                 ctx.moveTo(from.x, from.y);
                 ctx.lineTo(to.x, to.y);
                 ctx.strokeStyle = color;
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 4 + (intensity * 2); // Grosor según intensidad
                 ctx.lineCap = 'round';
                 ctx.shadowColor = color;
-                ctx.shadowBlur = 15;
-                ctx.globalAlpha = intensity;
+                ctx.shadowBlur = 15 + (intensity * 10);
+                ctx.globalAlpha = 0.7 + (intensity * 0.3);
                 
                 // Efecto de partículas en movimiento
-                const dashLength = 20;
-                const dashGap = 15;
-                const offset = -time * 40;
+                const dashLength = 15 + (intensity * 10);
+                const dashGap = 10;
+                const offset = -time * (30 + (intensity * 20));
                 
                 ctx.setLineDash([dashLength, dashGap]);
                 ctx.lineDashOffset = offset;
+                ctx.stroke();
+                
+                // Efecto de brillo interior
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.setLineDash([]);
                 ctx.stroke();
                 
                 ctx.restore();
@@ -1725,6 +1790,9 @@
             drawEnergyFlow(nodes.solar, nodes.battery, pSolar > 5, 'var(--solar)', Math.min(pSolar / 100, 1));
             drawEnergyFlow(nodes.battery, nodes.inverter, pInv > 10, 'var(--accent-primary)', Math.min(pInv / 500, 1));
             drawEnergyFlow(nodes.battery, nodes.loads, iBat < -0.5, 'var(--danger)', Math.min(Math.abs(iBat) / 30, 1));
+            
+            // NUEVA: Flujo Orion → Batería (si hay voltaje de salida)
+            drawEnergyFlow(nodes.orion, nodes.battery, oriOut > 13.0, 'var(--orion)', Math.min((oriOut - 12) / 2, 1));
             
             flowAnimation = requestAnimationFrame(animate);
         }
