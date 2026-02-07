@@ -192,19 +192,17 @@
             if (log.children.length > 8) log.lastChild.remove();
         }
 
-        // --- SHUNT & SOC ---
-        if(sensor.includes("soc") || sensor.includes("porcentaje_bateria")) {
+        // --- SMART SHUNT ---
+        if(sensor === "soc_shunt") {
             const s = Math.round(val);
             document.getElementById('socValue').innerText = s + '%';
             document.getElementById('socMini').innerText = s + '%';
-            document.getElementById('bmsSoc').innerText = s + '%';
             if(s <= 20) document.getElementById('shuntCard').classList.add('alarm-low');
             else document.getElementById('shuntCard').classList.remove('alarm-low');
         }
 
         if(sensor === "voltaje_bateria") {
             document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
-            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
         }
 
         if(sensor === "corriente_bateria") {
@@ -214,7 +212,24 @@
             iBat = val;
         }
 
-        // --- BMS CELDA & TEMP/CORRIENTE ---
+        // --- BMS ULTIMATRON ---
+        if(sensor === "bms_soc") {
+            document.getElementById('bmsSoc').innerText = Math.round(val) + '%';
+        }
+
+        if(sensor === "bms_voltaje_total") {
+            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
+        }
+
+        if(sensor === "bms_corriente") {
+            document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
+        }
+
+        if(sensor === "bms_temperatura") {
+            document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
+        }
+
+        // --- CELDAS INDIVIDUALES ---
         if(sensor.includes("cell") && sensor.includes("voltage")) {
             const n = sensor.match(/\d+/);
             if(n) {
@@ -223,8 +238,6 @@
                 document.getElementById(`bar${n[0]}`).style.width = Math.min(Math.max(pct, 0), 100) + '%';
             }
         }
-        if(sensor.includes("corriente") && sensor.includes("bms")) document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
-        if(sensor.includes("temperatura") && sensor.includes("bms")) document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
 
         // --- INVERSOR PHOENIX ---
         if(sensor.includes("potencia_salida_phoenix")) {
@@ -232,13 +245,24 @@
             pInv = val;
         }
 
-        // --- BATTERY SENSE ---
-        if(sensor.includes("voltaje_bts") || (sensor.includes("voltage") && sensor.includes("sense"))) document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
-        if(sensor.includes("temperatura_bts") || (sensor.includes("temperature") && sensor.includes("sense"))) document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
+        // --- SMART BATTERY SENSE ---
+        if(sensor === "voltaje_bts") {
+            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
+        }
+
+        if(sensor === "temperatura_bts") {
+            document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
+        }
 
         // --- ORION & SOLAR ---
-        if(sensor.includes("voltaje_salida_orion")) document.getElementById('oriOut').innerText = val.toFixed(2) + 'V';
-        if(sensor.includes("potencia_solar")) { document.getElementById('solW').innerText = Math.round(val) + 'W'; pSolar = val; }
+        if(sensor === "voltaje_salida_orion") {
+            document.getElementById('oriOut').innerText = val.toFixed(2) + 'V';
+        }
+
+        if(sensor === "potencia_solar") { 
+            document.getElementById('solW').innerText = Math.round(val) + 'W'; 
+            pSolar = val; 
+        }
     });
 
     const canvas = document.getElementById('flowCanvas');
