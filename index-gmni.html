@@ -3,308 +3,1831 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MONITORIZACION AUTOCARAVANA -SISTEMA VICTRON + BMS-</title>
+    <title>MONITORIZACIÓN AUTOCARAVANA - SISTEMA VICTRON + BMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
+        /* ========== TEMA CLARO (PREDETERMINADO) ========== */
         :root {
-            --bg: #a0aec0; --card: #cbd5e0; --text: #1a202c; --accent: #3182ce;
-            --solar: #d69e2e; --battery: #38a169; --danger: #e53e3e; --border: #718096; 
-            --radius: 18px; --flow-line: #1a202c; --stat-bg: rgba(255,255,255,0.5);
-        }
-        .dark-mode { 
-            --bg: #1a202c; --card: #2d3748; --text: #f7fafc; --border: #4a5568; 
-            --flow-line: #edf2f7; --stat-bg: rgba(255,255,255,0.2);
+            /* Colores base - Tono azul grisáceo profesional */
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e8edf3;
+            
+            /* Colores de texto */
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --text-tertiary: #718096;
+            
+            /* Colores de acento - Azul profesional */
+            --accent-primary: #3182ce;
+            --accent-secondary: #4299e1;
+            --accent-gradient: linear-gradient(135deg, #3182ce 0%, #4299e1 100%);
+            
+            /* Colores de dispositivos */
+            --solar: #d69e2e;
+            --solar-light: #f6e05e;
+            --battery: #38a169;
+            --battery-light: #68d391;
+            --danger: #e53e3e;
+            --danger-light: #fc8181;
+            --sense: #805ad5;
+            --sense-light: #b794f4;
+            --bms: #6b46c1;
+            --orion: #3182ce;
+            
+            /* Elementos UI */
+            --border: #cbd5e0;
+            --border-light: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(50, 50, 93, 0.05);
+            --shadow: 0 4px 6px rgba(50, 50, 93, 0.08);
+            --shadow-md: 0 10px 20px rgba(50, 50, 93, 0.1);
+            --shadow-lg: 0 15px 35px rgba(50, 50, 93, 0.12);
+            
+            /* Bordes */
+            --radius-sm: 10px;
+            --radius: 16px;
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+            
+            /* Efectos de vidrio */
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background 0.3s; }
-        body { background-color: var(--bg); color: var(--text); padding: 15px; display: flex; justify-content: center; }
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; max-width: 1200px; width: 100%; }
+        /* ========== TEMA OSCURO (NO DEMASIADO OSCURO) ========== */
+        .dark-mode {
+            /* Colores base - Gris azulado oscuro suave */
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --bg-tertiary: #4a5568;
+            
+            /* Colores de texto - Contraste suave */
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-tertiary: #cbd5e0;
+            
+            /* Colores de acento - Azul brillante */
+            --accent-primary: #63b3ed;
+            --accent-secondary: #90cdf4;
+            --accent-gradient: linear-gradient(135deg, #63b3ed 0%, #90cdf4 100%);
+            
+            /* Colores de dispositivos - Tonos más suaves */
+            --solar: #f6ad55;
+            --solar-light: #fbd38d;
+            --battery: #68d391;
+            --battery-light: #9ae6b4;
+            --danger: #fc8181;
+            --danger-light: #fed7d7;
+            --sense: #b794f4;
+            --sense-light: #d6bcfa;
+            --bms: #9f7aea;
+            --orion: #63b3ed;
+            
+            /* Elementos UI oscuros */
+            --border: #4a5568;
+            --border-light: #718096;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
+            --shadow-md: 0 10px 20px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.35);
+            
+            /* Efectos de vidrio oscuros */
+            --glass-bg: rgba(45, 55, 72, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
 
-        header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 5px; }
+        /* ========== RESET Y BASE ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.4s ease;
+            overflow-x: hidden;
+        }
+
+        /* ========== LAYOUT PRINCIPAL ========== */
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+        }
+
+        /* ========== HEADER PREMIUM ========== */
+        .dashboard-header {
+            grid-column: 1 / -1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--glass-shadow);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            border-left: 5px solid var(--accent-primary);
+        }
+
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-gradient);
+        }
+
+        .title-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .title-container h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .title-container .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle-badge {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        /* ========== BOTONES DE CONTROL ========== */
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            border: none;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.3rem;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--accent-gradient);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .control-btn:hover::before {
+            opacity: 0.1;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .control-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .control-btn i {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ========== ESTADO MQTT ========== */
+        .mqtt-card {
+            grid-column: 1 / -1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--accent-primary);
+        }
+
+        .mqtt-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mqtt-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--danger);
+            position: relative;
+            box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+        }
+
+        .mqtt-indicator.connected {
+            background: var(--battery);
+            box-shadow: 0 0 0 4px rgba(56, 161, 105, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0.4); }
+            70% { box-shadow: 0 0 0 12px rgba(56, 161, 105, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0); }
+        }
+
+        .mqtt-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .mqtt-topic {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .last-update {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ========== DIAGRAMA DE FLUJO ========== */
+        .flow-card {
+            grid-column: 1 / -1;
+            height: 320px;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .flow-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(49, 130, 206, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(56, 161, 105, 0.08) 0%, transparent 50%);
+        }
+
+        .flow-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            padding: 10px 28px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            z-index: 10;
+            white-space: nowrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+        #flowCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ========== NODOS DEL DIAGRAMA ========== */
+        .flow-node {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border-radius: 22px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 3px solid;
+            z-index: 10;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .flow-node::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .flow-node:hover::before {
+            opacity: 1;
+        }
+
+        .flow-node:hover {
+            transform: scale(1.08) translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .flow-node i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .flow-node span {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Posiciones de nodos */
+        .node-solar { 
+            top: 15%; 
+            left: 15%; 
+            border-color: var(--solar);
+            color: var(--solar);
+        }
         
-        .card { 
-            background: var(--card); border-radius: var(--radius); padding: 18px; 
-            border: 1px solid var(--border); border-left: 6px solid var(--accent);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
+        .node-orion { 
+            bottom: 15%; 
+            left: 15%; 
+            border-color: var(--orion);
+            color: var(--orion);
         }
-        .card.c-battery { border-left-color: var(--battery); }
-        .card.c-bms { border-left-color: #805ad5; } 
-
-        .alarm-low { border: 2px solid var(--danger) !important; border-left: 8px solid var(--danger) !important; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-        .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 900; color: white; text-transform: uppercase; }
-        .bg-on { background: var(--battery); }
-        .bg-wait { background: #d69e2e; }
-
-        .flow-section { grid-column: 1 / -1; height: 320px; position: relative; overflow: hidden; background: var(--card); border-left: none !important; }
-        #flowCanvas { width: 100%; height: 100%; }
-
-        .node { 
-            position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 0.6rem; font-weight: 800; text-align: center; width: 70px; height: 70px; 
-            z-index: 2; border-radius: 50%; background: var(--card); border: 2px solid var(--border);
+        
+        .node-battery { 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            width: 110px; 
+            height: 110px;
+            border-color: var(--battery);
+            color: var(--battery);
         }
-        .n-solar { top: 10%; left: 15%; border-color: var(--solar); } 
-        .n-orion { bottom: 10%; left: 15%; border-color: var(--accent); }
-        .n-battery { top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: var(--battery); width: 90px; height: 90px; font-size: 0.8rem; }
-        .n-inverter { top: 10%; right: 15%; border-color: var(--accent); } 
-        .n-loads { bottom: 10%; right: 15%; border-color: var(--danger); }
+        
+        .node-inverter { 
+            top: 15%; 
+            right: 15%; 
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        
+        .node-loads { 
+            bottom: 15%; 
+            right: 15%; 
+            border-color: var(--danger);
+            color: var(--danger);
+        }
 
-        .soc-big { font-size: 3.5rem; font-weight: 900; text-align: center; margin: 5px 0; color: var(--battery); letter-spacing: -2px; }
-        .stats-grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-item { background: var(--stat-bg); padding: 10px; border-radius: 12px; text-align: center; border: 1px solid rgba(0,0,0,0.1); }
-        .val { display: block; font-size: 1.1rem; font-weight: 900; }
-        .lab { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
-        .card-title { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        /* ========== TARJETAS DE EQUIPOS ========== */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
 
-        .cell-container { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
-        .cell-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-        .cell-bar-bg { flex-grow: 1; height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; }
-        .cell-bar-fill { height: 100%; width: 0%; background: var(--battery); transition: 0.5s; }
-        .cell-val { font-size: 0.7rem; font-weight: 900; width: 55px; text-align: right; }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--accent-primary);
+        }
 
-        #logContainer { background: #1a202c; color: #48bb78; font-family: 'Courier New', monospace; font-size: 0.65rem; height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-        footer { grid-column: 1 / -1; text-align: center; font-size: 0.75rem; opacity: 0.7; padding: 20px 0; font-weight: 600; line-height: 1.5; }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-primary);
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .card-title i {
+            font-size: 1.2rem;
+            width: 28px;
+            text-align: center;
+        }
+
+        /* ========== SMART SHUNT ========== */
+        .shunt-card::before {
+            background: var(--battery);
+        }
+
+        .soc-display {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .soc-value {
+            font-size: 4.5rem;
+            font-weight: 800;
+            color: var(--battery);
+            line-height: 1;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(56, 161, 105, 0.3);
+        }
+
+        .soc-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .shunt-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .shunt-stat {
+            background: var(--bg-tertiary);
+            padding: 18px;
+            border-radius: var(--radius);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-light);
+        }
+
+        .shunt-stat:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ========== BMS COMPLETO ========== */
+        .bms-card::before {
+            background: var(--bms);
+        }
+
+        .bms-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .bms-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .bms-stat {
+            background: var(--bg-tertiary);
+            padding: 18px;
+            border-radius: var(--radius);
+            text-align: center;
+            border: 1px solid var(--border-light);
+        }
+
+        .bms-stat .stat-value {
+            color: var(--bms);
+        }
+
+        /* Celdas BMS */
+        .cell-container {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+        }
+
+        .cell-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cell-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .cell-item {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .cell-item:hover {
+            border-color: var(--bms);
+            transform: translateY(-2px);
+        }
+
+        .cell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .cell-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .cell-voltage {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--bms);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .cell-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .cell-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 100%);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ========== BATTERY SENSE ========== */
+        .sense-card::before {
+            background: var(--sense);
+        }
+
+        .sense-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .sense-stat .stat-value {
+            color: var(--sense);
+        }
+
+        /* ========== SMARTSOLAR ========== */
+        .solar-card::before {
+            background: var(--solar);
+        }
+
+        .solar-power {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .solar-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--solar);
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(214, 158, 46, 0.3);
+        }
+
+        /* ========== ORION ========== */
+        .orion-card::before {
+            background: var(--orion);
+        }
+
+        .orion-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .orion-stat .stat-value {
+            color: var(--orion);
+        }
+
+        /* ========== PHOENIX INVERTER ========== */
+        .inverter-card::before {
+            background: var(--accent-primary);
+        }
+
+        .inverter-power {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .inverter-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            line-height: 1;
+        }
+
+        .inverter-status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 12px;
+        }
+
+        .status-on {
+            background: linear-gradient(135deg, var(--battery) 0%, var(--battery-light) 100%);
+            color: white;
+        }
+
+        .status-off {
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-light) 100%);
+            color: white;
+        }
+
+        /* ========== GRÁFICO HISTÓRICO ========== */
+        .chart-card {
+            grid-column: 1 / -1;
+            height: 280px;
+            padding: 24px;
+        }
+
+        #histChart {
+            width: 100% !important;
+            height: 200px !important;
+        }
+
+        /* ========== LOGS DEL SISTEMA ========== */
+        .log-card {
+            grid-column: 1 / -1;
+        }
+
+        .log-card::before {
+            background: var(--sense);
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .log-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .log-btn {
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-btn.primary {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .log-btn.danger {
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-light) 100%);
+            color: white;
+        }
+
+        .log-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .log-container {
+            height: 180px;
+            overflow-y: auto;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            padding: 20px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            border: 1px solid var(--border);
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-right: 15px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ========== FOOTER ========== */
+        .dashboard-footer {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 30px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .copyleft {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* ========== ANIMACIONES ========== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        .card:nth-child(5) { animation-delay: 0.5s; }
+        .card:nth-child(6) { animation-delay: 0.6s; }
+        .card:nth-child(7) { animation-delay: 0.7s; }
+        .card:nth-child(8) { animation-delay: 0.8s; }
+        .card:nth-child(9) { animation-delay: 0.9s; }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+                padding: 20px;
+            }
+            
+            .header-controls {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .flow-card {
+                height: 280px;
+            }
+            
+            .flow-node {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .node-battery {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .cell-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .bms-stats,
+            .shunt-stats,
+            .sense-stats,
+            .orion-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .soc-value {
+                font-size: 3.5rem;
+            }
+            
+            .solar-value,
+            .inverter-value {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .flow-card {
+                height: 250px;
+            }
+            
+            .flow-node {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .node-battery {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .flow-node i {
+                font-size: 1.6rem;
+            }
+        }
     </style>
 </head>
 <body class="dark-mode">
 
 <div class="dashboard">
-    <header>
-        <h1 style="font-size: 1.1rem;">MONITORIZACIÓN AUTOCARAVANA <span style="color:var(--accent)">-SISTEMA VICTRON + BMS-</span></h1>
-        <button onclick="toggleTheme()" style="background:none; border:none; color:inherit; font-size: 1.3rem; cursor:pointer;"><i class="fas fa-adjust"></i></button>
+    <!-- HEADER -->
+    <header class="dashboard-header">
+        <div class="title-container">
+            <h1>MONITORIZACIÓN AUTOCARAVANA</h1>
+            <div class="subtitle">
+                <i class="fas fa-bolt"></i> Sistema Victron + BMS Ultimatron
+                <span class="subtitle-badge">PRO v2.0</span>
+            </div>
+        </div>
+        <div class="header-controls">
+            <button class="control-btn" id="themeToggle" title="Cambiar tema claro/oscuro">
+                <i class="fas fa-adjust"></i>
+            </button>
+            <button class="control-btn" onclick="window.open('index-gmni.html', '_blank')" title="Versión básica">
+                <i class="fas fa-exchange-alt"></i>
+            </button>
+        </div>
     </header>
 
-    <section class="card" style="grid-column: 1 / -1; padding: 10px 18px; border-left-color: var(--border);">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="card-title" style="margin:0;"><i class="fas fa-network-wired"></i> ESTADO BROKER</div>
-            <span id="mqttStatus" class="badge bg-wait">CONECTANDO...</span>
+    <!-- ESTADO MQTT -->
+    <section class="card mqtt-card">
+        <div class="mqtt-status">
+            <div class="mqtt-indicator" id="mqttIndicator"></div>
+            <div class="mqtt-info">
+                <h3 id="mqttStatusText">CONECTANDO AL BROKER MQTT...</h3>
+                <div class="mqtt-topic">siena395_monitor_mikel_2026/sensor/#</div>
+            </div>
         </div>
+        <div class="last-update" id="lastUpdate">--:--:--</div>
     </section>
 
-    <section class="card flow-section">
+    <!-- DIAGRAMA DE FLUJO -->
+    <section class="card flow-card">
+        <div class="flow-title">DIAGRAMA DE FLUJO DE ENERGÍA EN TIEMPO REAL</div>
         <canvas id="flowCanvas"></canvas>
-        <div class="node n-solar"><i class="fas fa-sun" style="color:var(--solar)"></i><span>Solar</span></div>
-        <div class="node n-orion"><i class="fas fa-truck-moving" style="color:var(--accent)"></i><span>Orion</span></div>
-        <div class="node n-battery"><i class="fas fa-car-battery" style="color:var(--battery)"></i><span id="socMini">--%</span></div>
-        <div class="node n-inverter"><i class="fas fa-plug" style="color:var(--accent)"></i><span>Inversor</span></div>
-        <div class="node n-loads"><i class="fas fa-bolt" style="color:var(--danger)"></i><span>Cargas</span></div>
-    </section>
-
-    <section id="shuntCard" class="card c-battery">
-        <div class="card-title"><i class="fas fa-car-battery"></i> SMART SHUNT (Victron)</div>
-        <div id="socValue" class="soc-big">--%</div>
-        <div class="stats-grid-4">
-            <div class="stat-item"><span class="val" id="vBat">--V</span><span class="lab">Tensión</span></div>
-            <div class="stat-item"><span class="val" id="iBat">--A</span><span class="lab">Corriente</span></div>
+        <div class="flow-node node-solar">
+            <i class="fas fa-sun"></i>
+            <span>Solar</span>
+        </div>
+        <div class="flow-node node-orion">
+            <i class="fas fa-truck-moving"></i>
+            <span>Orion</span>
+        </div>
+        <div class="flow-node node-battery">
+            <i class="fas fa-car-battery"></i>
+            <span id="socMini">--%</span>
+        </div>
+        <div class="flow-node node-inverter">
+            <i class="fas fa-plug"></i>
+            <span>Phoenix</span>
+        </div>
+        <div class="flow-node node-loads">
+            <i class="fas fa-lightbulb"></i>
+            <span>Cargas</span>
         </div>
     </section>
 
-    <section class="card c-bms">
-        <div class="card-title"><i class="fas fa-shield-alt"></i> BMS ULTIMATRON 100AH</div>
-        <div class="stats-grid-4">
-            <div class="stat-item"><span class="val" id="bmsSoc">--%</span><span class="lab">SOC</span></div>
-            <div class="stat-item"><span class="val" id="bmsV">--V</span><span class="lab">Tensión</span></div>
-            <div class="stat-item"><span class="val" id="bmsI">--A</span><span class="lab">Corriente</span></div>
-            <div class="stat-item"><span class="val" id="bmsT">--°C</span><span class="lab">Temperatura</span></div>
+    <!-- SMART SHUNT 300A -->
+    <section class="card shunt-card">
+        <div class="card-title">
+            <i class="fas fa-car-battery"></i> VICTRON SMART SHUNT 300A
         </div>
-        <div class="cell-container" id="cellList"></div>
-    </section>
-
-    <section class="card" style="border-left-color: var(--accent);">
-        <div class="card-title"><i class="fas fa-plug"></i> INVERSOR PHOENIX</div>
-        <div class="stat-item" style="width: 100%;">
-            <span class="val" id="invVA">-- VA</span>
-            <span class="lab">Consumo AC</span>
+        <div class="soc-display">
+            <div id="socValue" class="soc-value">--%</div>
+            <div class="soc-label">Estado de Carga (SOC)</div>
         </div>
-    </section>
-
-    <section class="card" style="border-left-color: var(--danger);">
-        <div class="card-title"><i class="fas fa-thermometer-half"></i> SMART BATTERY SENSE</div>
-        <div class="stats-grid-4">
-            <div class="stat-item"><span class="val" id="btsV">--V</span><span class="lab">Tensión BTS</span></div>
-            <div class="stat-item"><span class="val" id="btsT">--°C</span><span class="lab">Temp. Celda</span></div>
+        <div class="shunt-stats">
+            <div class="shunt-stat">
+                <span id="vBat" class="stat-value">--V</span>
+                <span class="stat-label">Tensión Batería</span>
+            </div>
+            <div class="shunt-stat">
+                <span id="iBat" class="stat-value">--A</span>
+                <span class="stat-label">Corriente</span>
+            </div>
         </div>
     </section>
 
-    <section class="card" style="border-left-color: var(--accent);">
-        <div class="card-title"><i class="fas fa-truck-moving"></i> ORION DC-DC</div>
-        <div class="stats-grid-4">
-            <div class="stat-item" style="grid-column: 1 / -1;"><span class="val" id="oriOut">--V</span><span class="lab">Salida Carga</span></div>
+    <!-- BMS ULTIMATRON 100Ah -->
+    <section class="card bms-card">
+        <div class="bms-header">
+            <div class="card-title">
+                <i class="fas fa-microchip"></i> BMS ULTIMATRON 100Ah
+            </div>
+            <div class="last-update" style="font-size: 0.8rem;">4 celdas LiFePO4</div>
+        </div>
+        <div class="bms-stats">
+            <div class="bms-stat">
+                <span id="bmsSoc" class="stat-value">--%</span>
+                <span class="stat-label">SOC BMS</span>
+            </div>
+            <div class="bms-stat">
+                <span id="bmsV" class="stat-value">--V</span>
+                <span class="stat-label">Tensión Total</span>
+            </div>
+            <div class="bms-stat">
+                <span id="bmsI" class="stat-value">--A</span>
+                <span class="stat-label">Corriente</span>
+            </div>
+            <div class="bms-stat">
+                <span id="bmsT" class="stat-value">--°C</span>
+                <span class="stat-label">Temperatura</span>
+            </div>
+        </div>
+        <div class="cell-container">
+            <div class="cell-title">
+                <i class="fas fa-layer-group"></i> Voltaje de Celdas Individuales
+            </div>
+            <div class="cell-grid" id="cellGrid">
+                <!-- Generado dinámicamente -->
+            </div>
         </div>
     </section>
 
-    <section class="card" style="border-left-color: var(--solar);">
-        <div class="card-title"><i class="fas fa-sun"></i> SMARTSOLAR MPPT</div>
-        <div class="stats-grid-4">
-            <div class="stat-item" style="grid-column: 1 / -1;"><span class="val" id="solW">--W</span><span class="lab">Potencia Solar</span></div>
+    <!-- BATTERY SENSE -->
+    <section class="card sense-card">
+        <div class="card-title">
+            <i class="fas fa-thermometer-half"></i> VICTRON BATTERY SENSE
+        </div>
+        <div class="sense-stats">
+            <div class="sense-stat">
+                <span id="btsV" class="stat-value">--V</span>
+                <span class="stat-label">Tensión Batería</span>
+            </div>
+            <div class="sense-stat">
+                <span id="btsT" class="stat-value">--°C</span>
+                <span class="stat-label">Temperatura Celda</span>
+            </div>
         </div>
     </section>
 
-    <section class="card" style="grid-column: 1 / -1; border-left-color: var(--text);">
-        <div class="card-title" style="justify-content: space-between;">
-            <span><i class="fas fa-terminal"></i> TERMINAL DE DATOS</span>
-            <button id="pauseBtn" onclick="togglePause()" style="background:var(--accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:0.65rem; font-weight:900;">DETENER LOG</button>
+    <!-- SMARTSOLAR MPPT 75/15 -->
+    <section class="card solar-card">
+        <div class="card-title">
+            <i class="fas fa-sun"></i> VICTRON SMARTSOLAR 75/15
         </div>
-        <div id="logContainer">Esperando datos MQTT...</div>
+        <div class="solar-power">
+            <div id="solW" class="solar-value">--W</div>
+            <div class="soc-label">Potencia Solar Actual</div>
+        </div>
+        <div class="shunt-stats">
+            <div class="shunt-stat">
+                <span id="solV" class="stat-value">--V</span>
+                <span class="stat-label">Paneles</span>
+            </div>
+            <div class="shunt-stat">
+                <span id="solVbat" class="stat-value">--V</span>
+                <span class="stat-label">V. Batería</span>
+            </div>
+        </div>
     </section>
 
-    <footer>MONITORIZACIÓN AUTOCARAVANA -SISTEMA VICTRON + BMS- <br> 🄯 COPYLEFT UZTURRE 2026</footer>
+    <!-- ORION DC-DC 30A -->
+    <section class="card orion-card">
+        <div class="card-title">
+            <i class="fas fa-shuttle-van"></i> VICTRON ORION DC-DC 30A
+        </div>
+        <div class="orion-stats">
+            <div class="orion-stat">
+                <span id="oriIn" class="stat-value">--V</span>
+                <span class="stat-label">Entrada Vehículo</span>
+            </div>
+            <div class="orion-stat">
+                <span id="oriOut" class="stat-value">--V</span>
+                <span class="stat-label">Salida Batería</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- PHOENIX INVERTER 2000VA -->
+    <section class="card inverter-card">
+        <div class="card-title">
+            <i class="fas fa-bolt"></i> VICTRON PHOENIX 2000VA
+        </div>
+        <div class="inverter-power">
+            <div id="invVA" class="inverter-value">--VA</div>
+            <div id="invStatus" class="inverter-status status-off">APAGADO</div>
+        </div>
+        <div class="shunt-stats">
+            <div class="shunt-stat">
+                <span id="invV" class="stat-value">--V</span>
+                <span class="stat-label">Tensión Entrada</span>
+            </div>
+            <div class="shunt-stat">
+                <span id="invF" class="stat-value">--Hz</span>
+                <span class="stat-label">Frecuencia</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- GRÁFICO HISTÓRICO SOC -->
+    <section class="card chart-card">
+        <div class="card-title">
+            <i class="fas fa-chart-line"></i> HISTÓRICO ESTADO DE CARGA (SOC)
+        </div>
+        <canvas id="histChart"></canvas>
+    </section>
+
+    <!-- LOGS DEL SISTEMA -->
+    <section class="card log-card">
+        <div class="log-header">
+            <div class="card-title" style="margin-bottom: 0;">
+                <i class="fas fa-terminal"></i> LOG DEL SISTEMA EN TIEMPO REAL
+            </div>
+            <div class="log-controls">
+                <button id="pauseBtn" class="log-btn primary">
+                    <i class="fas fa-pause"></i> PAUSAR
+                </button>
+                <button onclick="clearLogs()" class="log-btn danger">
+                    <i class="fas fa-trash"></i> LIMPIAR
+                </button>
+            </div>
+        </div>
+        <div class="log-container" id="logContainer">
+            <div class="log-entry">
+                <span class="log-time">--:--:--</span>
+                <span>Sistema inicializado. Esperando datos MQTT...</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="dashboard-footer">
+        MONITORIZACIÓN AUTOCARAVANA [SISTEMA VICTRON + BMS ULTIMATRON]
+        <div class="copyleft">
+            <i class="fas fa-copyright fa-rotate-180"></i> COPLEFT UZTURRE 2026 - Proyecto de código abierto
+        </div>
+    </footer>
 </div>
 
 <script>
-    const TOPIC_PREFIX = "siena395_monitor_mikel_2026/sensor/";
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-    let pSolar = 0, pInv = 0, iBat = 0, isPaused = false;
+    // =============================================
+    // CONFIGURACIÓN
+    // =============================================
+    const CONFIG = {
+        MQTT_BROKER: 'wss://broker.hivemq.com:8884/mqtt',
+        TOPIC_PREFIX: 'siena395_monitor_mikel_2026',
+        CHART_POINTS: 60,
+        LOG_LIMIT: 12,
+        UPDATE_INTERVAL: 1000
+    };
 
-    // Crear celdas
-    const cellList = document.getElementById('cellList');
-    for(let i=1; i<=4; i++) {
-        cellList.innerHTML += `<div class="cell-row"><div class="cell-label" style="font-size:0.65rem; font-weight:800; width:40px;">C${i}</div><div class="cell-bar-bg"><div id="bar${i}" class="cell-bar-fill"></div></div><div id="vCell${i}" class="cell-val">-.---V</div></div>`;
-    }
+    let pSolar = 0;
+    let pInv = 0;
+    let iBat = 0;
+    let isPaused = false;
+    let mqttClient = null;
+    let socChart = null;
+    let flowAnimation = null;
+    let logEntries = [];
+    let socHistory = [];
 
-    function toggleTheme() { document.body.classList.toggle('dark-mode'); }
-    function togglePause() {
-        isPaused = !isPaused;
-        const btn = document.getElementById('pauseBtn');
-        btn.innerText = isPaused ? "REANUDAR LOG" : "DETENER LOG";
-        btn.style.background = isPaused ? "var(--danger)" : "var(--accent)";
-    }
-
-    client.on('connect', () => { 
-        document.getElementById('mqttStatus').innerText = "CONECTADO";
-        document.getElementById('mqttStatus').className = "badge bg-on";
-        client.subscribe(TOPIC_PREFIX + "#"); 
+    // =============================================
+    // INICIALIZACIÓN
+    // =============================================
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('🚀 Inicializando dashboard PRO premium...');
+        
+        initializeCells();
+        initializeChart();
+        initializeTheme();
+        connectMQTT();
+        initializeFlowAnimation();
+        
+        addLog('Sistema PRO premium inicializado', 'success');
+        
+        // Actualizar hora cada segundo
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 
+                `Última actualización: ${now.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit' 
+                })}`;
+        }, 1000);
     });
 
-    client.on('message', (topic, msg) => {
-        const rawSensor = topic.replace(TOPIC_PREFIX, "");
-        const sensor = rawSensor.replace("/state", "").replace("__dash_", "");
-        const val = parseFloat(msg.toString());
-
-        if (!isPaused) {
-            const log = document.getElementById('logContainer');
-            log.innerHTML = `<div>[${new Date().toLocaleTimeString()}] <b>${sensor}</b>: ${msg.toString()}</div>` + log.innerHTML;
-            if (log.children.length > 8) log.lastChild.remove();
-        }
-
-        // --- SHUNT & SOC (USANDO LOS NOMBRES DEL YAML ORIGINAL) ---
-        if(sensor === "porcentaje_bateria") {
-            const s = Math.round(val);
-            document.getElementById('socValue').innerText = s + '%';
-            document.getElementById('socMini').innerText = s + '%';
-            document.getElementById('bmsSoc').innerText = s + '%';
-            if(s <= 20) document.getElementById('shuntCard').classList.add('alarm-low');
-            else document.getElementById('shuntCard').classList.remove('alarm-low');
-        }
-
-        if(sensor === "voltaje_bateria") {
-            document.getElementById('vBat').innerText = val.toFixed(2) + 'V';
-            document.getElementById('bmsV').innerText = val.toFixed(2) + 'V';
-            // También actualizar Battery Sense si no llega otro voltaje específico
-            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
-        }
-
-        if(sensor === "corriente_bateria") {
-            const el = document.getElementById('iBat');
-            el.innerText = val.toFixed(1) + 'A';
-            el.style.color = val < 0 ? "var(--danger)" : "var(--battery)";
-            iBat = val;
-        }
-
-        // --- BMS CORRIENTE & TEMPERATURA ---
-        if(sensor === "bms_corriente") {
-            document.getElementById('bmsI').innerText = val.toFixed(1) + 'A';
-        }
-
-        // Para temperatura, necesitas añadirla en el YAML
-        // if(sensor === "bms_temperatura") {
-        //     document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
-        // }
-
-        // --- CELDAS INDIVIDUALES ---
-        if(sensor.includes("cell_voltage_")) {
-            const match = sensor.match(/cell_voltage_(\d+)/);
-            if(match && match[1]) {
-                const cellNum = match[1];
-                document.getElementById(`vCell${cellNum}`).innerText = val.toFixed(3) + 'V';
-                const pct = ((val - 2.8) / (3.6 - 2.8)) * 100;
-                document.getElementById(`bar${cellNum}`).style.width = Math.min(Math.max(pct, 0), 100) + '%';
-            }
-        }
-
-        // --- INVERSOR PHOENIX ---
-        if(sensor.includes("potencia_salida_phoenix")) {
-            document.getElementById('invVA').innerText = Math.round(val) + ' VA';
-            pInv = val;
-        }
-
-        // --- SMART BATTERY SENSE ---
-        // Estos temas pueden variar, dependen de tu YAML
-        if(sensor.includes("voltaje") && sensor.includes("bts")) {
-            document.getElementById('btsV').innerText = val.toFixed(2) + 'V';
-        }
+    // =============================================
+    // 1. INICIALIZAR CELDAS BMS
+    // =============================================
+    function initializeCells() {
+        const cellGrid = document.getElementById('cellGrid');
+        cellGrid.innerHTML = '';
         
-        if(sensor.includes("temperatura") && sensor.includes("bts")) {
-            document.getElementById('btsT').innerText = val.toFixed(1) + '°C';
+        for(let i = 1; i <= 4; i++) {
+            const cellHTML = `
+                <div class="cell-item" id="cell${i}">
+                    <div class="cell-header">
+                        <span class="cell-name">CELDA ${i}</span>
+                        <span class="cell-voltage" id="vCell${i}">-.---V</span>
+                    </div>
+                    <div class="cell-bar">
+                        <div class="cell-fill" id="bar${i}"></div>
+                    </div>
+                </div>
+            `;
+            cellGrid.innerHTML += cellHTML;
         }
+    }
 
-        // --- ORION & SOLAR ---
-        if(sensor.includes("voltaje_salida_orion")) {
-            document.getElementById('oriOut').innerText = val.toFixed(2) + 'V';
-        }
-
-        if(sensor === "potencia_solar") { 
-            document.getElementById('solW').innerText = Math.round(val) + 'W'; 
-            pSolar = val; 
-        }
-        
-        // --- TEMPERATURA BMS (SI EXISTE) ---
-        if(sensor.includes("temperatura") && !sensor.includes("bts")) {
-            document.getElementById('bmsT').innerText = val.toFixed(1) + '°C';
-        }
-    });
-
-    const canvas = document.getElementById('flowCanvas');
-    const ctx = canvas.getContext('2d');
-    let w, h;
-    function resize() { w = canvas.width = canvas.offsetWidth; h = canvas.height = canvas.offsetHeight; }
-    
-    function animate() {
-        ctx.clearRect(0, 0, w, h);
-        const time = Date.now() * 0.002;
+    // =============================================
+    // 2. INICIALIZAR GRÁFICO
+    // =============================================
+    function initializeChart() {
+        const ctx = document.getElementById('histChart').getContext('2d');
         const isDark = document.body.classList.contains('dark-mode');
-        const colorBase = isDark ? '#ffffff' : '#1a202c';
         
-        const pts = { 
-            sol: {x: w*0.15+35, y: h*0.1+35}, 
-            ori: {x: w*0.15+35, y: h*0.9-35}, 
-            bat: {x: w*0.5, y: h*0.5}, 
-            inv: {x: w*0.85-35, y: h*0.1+35},
-            loa: {x: w*0.85-35, y: h*0.9-35} 
-        };
-
-        function draw(f, t, active, col) {
-            ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(t.x, t.y);
-            ctx.strokeStyle = active ? col : colorBase;
-            ctx.globalAlpha = active ? 1 : 0.15;
-            ctx.lineWidth = 2.5;
-            ctx.setLineDash(active ? [8, 12] : [2, 6]);
-            ctx.lineDashOffset = -time * 25;
-            ctx.stroke(); ctx.globalAlpha = 1;
-        }
-
-        draw(pts.sol, pts.bat, pSolar > 10, 'var(--solar)');
-        draw(pts.bat, pts.inv, pInv > 10, 'var(--accent)');
-        draw(pts.bat, pts.loa, iBat < -0.4, 'var(--danger)');
-        
-        requestAnimationFrame(animate);
+        socChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'SOC %',
+                    data: [],
+                    borderColor: isDark ? '#68d391' : '#38a169',
+                    backgroundColor: isDark ? 
+                        'rgba(104, 211, 145, 0.15)' : 
+                        'rgba(56, 161, 105, 0.15)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: isDark ? '#68d391' : '#38a169',
+                    pointBorderColor: isDark ? '#1a202c' : '#ffffff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: isDark ? 'rgba(45, 55, 72, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                        titleColor: isDark ? '#f7fafc' : '#2d3748',
+                        bodyColor: isDark ? '#f7fafc' : '#2d3748',
+                        borderColor: isDark ? '#68d391' : '#38a169',
+                        borderWidth: 1,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        grid: {
+                            color: isDark ? 'rgba(203, 213, 224, 0.1)' : 'rgba(203, 213, 224, 0.2)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: isDark ? '#cbd5e0' : '#4a5568',
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            },
+                            callback: (value) => `${value}%`
+                        }
+                    },
+                    x: {
+                        display: false,
+                        grid: { display: false }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
     }
-    window.addEventListener('resize', resize); resize(); animate();
+
+    // =============================================
+    // 3. SISTEMA DE TEMA
+    // =============================================
+    function initializeTheme() {
+        const savedTheme = localStorage.getItem('siena395_theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'light' || (!savedTheme && !systemDark)) {
+            enableLightMode();
+        } else {
+            enableDarkMode();
+        }
+        
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('siena395_theme')) {
+                e.matches ? enableDarkMode() : enableLightMode();
+            }
+        });
+    }
+
+    function toggleTheme() {
+        document.body.classList.contains('dark-mode') ? enableLightMode() : enableDarkMode();
+    }
+
+    function enableDarkMode() {
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+        localStorage.setItem('siena395_theme', 'dark');
+        updateChartColors();
+        addLog('Modo oscuro activado', 'info');
+    }
+
+    function enableLightMode() {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
+        localStorage.setItem('siena395_theme', 'light');
+        updateChartColors();
+        addLog('Modo claro activado', 'info');
+    }
+
+    function updateChartColors() {
+        if (!socChart) return;
+        
+        const isDark = document.body.classList.contains('dark-mode');
+        socChart.data.datasets[0].borderColor = isDark ? '#68d391' : '#38a169';
+        socChart.data.datasets[0].backgroundColor = isDark ? 
+            'rgba(104, 211, 145, 0.15)' : 'rgba(56, 161, 105, 0.15)';
+        socChart.options.scales.y.grid.color = isDark ? 
+            'rgba(203, 213, 224, 0.1)' : 'rgba(203, 213, 224, 0.2)';
+        socChart.options.scales.y.ticks.color = isDark ? '#cbd5e0' : '#4a5568';
+        socChart.options.plugins.tooltip.backgroundColor = isDark ? 
+            'rgba(45, 55, 72, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+        socChart.options.plugins.tooltip.titleColor = isDark ? '#f7fafc' : '#2d3748';
+        socChart.options.plugins.tooltip.bodyColor = isDark ? '#f7fafc' : '#2d3748';
+        socChart.update();
+    }
+
+    // =============================================
+    // 4. CONEXIÓN MQTT
+    // =============================================
+    function connectMQTT() {
+        mqttClient = mqtt.connect(CONFIG.MQTT_BROKER, {
+            clientId: 'siena395_pro_' + Math.random().toString(16).substr(2, 8),
+            clean: true,
+            reconnectPeriod: 3000
+        });
+
+        mqttClient.on('connect', () => {
+            console.log('✅ Conectado a HiveMQ');
+            updateMQTTStatus(true);
+            mqttClient.subscribe(`${CONFIG.TOPIC_PREFIX}/sensor/#`);
+            addLog('Conectado al broker MQTT (HiveMQ)', 'success');
+        });
+
+        mqttClient.on('reconnect', () => {
+            updateMQTTStatus(false);
+            addLog('Reconectando al broker...', 'warning');
+        });
+
+        mqttClient.on('offline', () => {
+            updateMQTTStatus(false);
+            addLog('Desconectado del broker', 'error');
+        });
+
+        mqttClient.on('message', processMQTTMessage);
+    }
+
+    function updateMQTTStatus(connected) {
+        const indicator = document.getElementById('mqttIndicator');
+        const statusText = document.getElementById('mqttStatusText');
+        
+        if (connected) {
+            indicator.className = 'mqtt-indicator connected';
+            statusText.textContent = 'CONECTADO A HIVEMQ';
+            statusText.style.color = 'var(--battery)';
+        } else {
+            indicator.className = 'mqtt-indicator';
+            statusText.textContent = 'DESCONECTADO';
+            statusText.style.color = 'var(--danger)';
+        }
+    }
+
+    // =============================================
+    // 5. PROCESAR DATOS MQTT
+    // =============================================
+    function processMQTTMessage(topic, message) {
+        const value = parseFloat(message.toString());
+        const sensor = topic.split('/')[2];
+        const rawValue = message.toString();
+        
+        if (!isPaused) {
+            addLog(`${sensor}: ${rawValue}`);
+        }
+        
+        switch(true) {
+            case sensor === 'soc_bateria':
+                updateSOC(value);
+                break;
+                
+            case sensor === 'voltaje_bateria':
+                document.getElementById('vBat').textContent = value.toFixed(2) + 'V';
+                document.getElementById('bmsV').textContent = value.toFixed(2) + 'V';
+                break;
+                
+            case sensor === 'corriente_bateria':
+                updateCurrent(value);
+                break;
+                
+            case sensor === 'temperatura_bms':
+                document.getElementById('bmsT').textContent = value.toFixed(1) + '°C';
+                break;
+                
+            case sensor === 'bms_corriente':
+                document.getElementById('bmsI').textContent = value.toFixed(1) + 'A';
+                break;
+                
+            case sensor.includes('cell_voltage_'):
+                const cellNum = parseInt(sensor.split('_')[2]);
+                if (cellNum <= 4) updateCellVoltage(cellNum, value);
+                break;
+                
+            case sensor === 'potencia_solar':
+                updateSolar(value);
+                break;
+                
+            case sensor === 'potencia_salida_phoenix':
+                updateInverter(value);
+                break;
+                
+            case sensor === 'voltaje_salida_orion':
+                document.getElementById('oriOut').textContent = value.toFixed(2) + 'V';
+                break;
+                
+            case sensor === 'voltaje_bts':
+                document.getElementById('btsV').textContent = value.toFixed(2) + 'V';
+                break;
+                
+            case sensor === 'temperatura_bts':
+                document.getElementById('btsT').textContent = value.toFixed(1) + '°C';
+                break;
+        }
+    }
+
+    // =============================================
+    // FUNCIONES DE ACTUALIZACIÓN
+    // =============================================
+    function updateSOC(value) {
+        const soc = Math.round(value);
+        const socText = soc + '%';
+        
+        document.getElementById('socValue').textContent = socText;
+        document.getElementById('socMini').textContent = socText;
+        document.getElementById('bmsSoc').textContent = socText;
+        
+        // Actualizar gráfico
+        if (socChart) {
+            const now = new Date();
+            const timeLabel = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            socChart.data.labels.push(timeLabel);
+            socChart.data.datasets[0].data.push(soc);
+            
+            if (socChart.data.labels.length > CONFIG.CHART_POINTS) {
+                socChart.data.labels.shift();
+                socChart.data.datasets[0].data.shift();
+            }
+            
+            socChart.update('none');
+        }
+        
+        // Alertas visuales
+        const socElement = document.getElementById('socValue');
+        if (soc < 20) {
+            socElement.style.color = 'var(--danger)';
+            socElement.style.animation = 'pulse 1s infinite';
+        } else if (soc < 30) {
+            socElement.style.color = 'var(--solar)';
+            socElement.style.animation = 'none';
+        } else {
+            socElement.style.color = 'var(--battery)';
+            socElement.style.animation = 'none';
+        }
+    }
+
+    function updateCurrent(value) {
+        const current = value.toFixed(1) + 'A';
+        const currentElement = document.getElementById('iBat');
+        
+        currentElement.textContent = current;
+        currentElement.style.color = value < 0 ? 'var(--danger)' : 'var(--battery)';
+        iBat = value;
+    }
+
+    function updateCellVoltage(cellNum, value) {
+        const voltage = value.toFixed(3) + 'V';
+        document.getElementById(`vCell${cellNum}`).textContent = voltage;
+        
+        // Calcular porcentaje (LiFePO4: 2.8V - 3.6V)
+        const percentage = ((value - 2.8) / (3.6 - 2.8)) * 100;
+        const fill = document.getElementById(`bar${cellNum}`);
+        fill.style.width = Math.min(Math.max(percentage, 0), 100) + '%';
+        
+        // Color según voltaje
+        if (value < 3.0) {
+            fill.style.background = 'linear-gradient(90deg, var(--danger) 0%, var(--danger-light) 100%)';
+        } else if (value > 3.45) {
+            fill.style.background = 'linear-gradient(90deg, var(--solar) 0%, var(--solar-light) 100%)';
+        } else {
+            fill.style.background = 'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 100%)';
+        }
+    }
+
+    function updateSolar(value) {
+        const power = Math.round(value) + 'W';
+        document.getElementById('solW').textContent = power;
+        pSolar = value;
+        
+        // Color según potencia
+        const solarElement = document.getElementById('solW');
+        if (value > 50) {
+            solarElement.style.color = 'var(--solar)';
+        } else {
+            solarElement.style.color = 'var(--text-secondary)';
+        }
+    }
+
+    function updateInverter(value) {
+        const power = Math.round(value) + 'VA';
+        document.getElementById('invVA').textContent = power;
+        pInv = value;
+        
+        const status = document.getElementById('invStatus');
+        if (value > 10) {
+            status.className = 'inverter-status status-on';
+            status.textContent = 'ENCENDIDO';
+            document.getElementById('invVA').style.color = 'var(--accent-primary)';
+        } else {
+            status.className = 'inverter-status status-off';
+            status.textContent = 'APAGADO';
+            document.getElementById('invVA').style.color = 'var(--text-secondary)';
+        }
+    }
+
+    // =============================================
+    // 6. ANIMACIÓN DEL FLUJO
+    // =============================================
+    function initializeFlowAnimation() {
+        const canvas = document.getElementById('flowCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resize() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const time = Date.now() * 0.001;
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            const nodes = {
+                solar: { x: w * 0.15 + 45, y: h * 0.15 + 45 },
+                orion: { x: w * 0.15 + 45, y: h * 0.85 - 45 },
+                battery: { x: w * 0.5, y: h * 0.5 },
+                inverter: { x: w * 0.85 - 45, y: h * 0.15 + 45 },
+                loads: { x: w * 0.85 - 45, y: h * 0.85 - 45 }
+            };
+            
+            // Dibujar líneas de conexión base
+            ctx.strokeStyle = 'var(--border)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 3]);
+            ctx.globalAlpha = 0.3;
+            
+            ctx.beginPath();
+            ctx.moveTo(nodes.solar.x, nodes.solar.y);
+            ctx.lineTo(nodes.battery.x, nodes.battery.y);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(nodes.battery.x, nodes.battery.y);
+            ctx.lineTo(nodes.inverter.x, nodes.inverter.y);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(nodes.battery.x, nodes.battery.y);
+            ctx.lineTo(nodes.loads.x, nodes.loads.y);
+            ctx.stroke();
+            
+            ctx.globalAlpha = 1;
+            ctx.setLineDash([]);
+            
+            // Dibujar flujos de energía activos
+            function drawEnergyFlow(from, to, active, color, intensity = 1) {
+                if (!active) return;
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 15;
+                ctx.globalAlpha = intensity;
+                
+                // Efecto de partículas en movimiento
+                const dashLength = 20;
+                const dashGap = 15;
+                const offset = -time * 40;
+                
+                ctx.setLineDash([dashLength, dashGap]);
+                ctx.lineDashOffset = offset;
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            // Flujos según datos reales
+            drawEnergyFlow(nodes.solar, nodes.battery, pSolar > 5, 'var(--solar)', Math.min(pSolar / 100, 1));
+            drawEnergyFlow(nodes.battery, nodes.inverter, pInv > 10, 'var(--accent-primary)', Math.min(pInv / 500, 1));
+            drawEnergyFlow(nodes.battery, nodes.loads, iBat < -0.5, 'var(--danger)', Math.min(Math.abs(iBat) / 30, 1));
+            
+            flowAnimation = requestAnimationFrame(animate);
+        }
+        
+        resize();
+        animate();
+        
+        window.addEventListener('resize', () => {
+            if (flowAnimation) cancelAnimationFrame(flowAnimation);
+            resize();
+            animate();
+        });
+    }
+
+    // =============================================
+    // 7. SISTEMA DE LOGS
+    // =============================================
+    function addLog(message, type = 'info') {
+        if (isPaused) return;
+        
+        const now = new Date();
+        const time = now.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        });
+        
+        const entry = {
+            time,
+            message,
+            type
+        };
+        
+        logEntries.unshift(entry);
+        if (logEntries.length > CONFIG.LOG_LIMIT) {
+            logEntries.pop();
+        }
+        
+        updateLogDisplay();
+    }
+
+    function updateLogDisplay() {
+        const container = document.getElementById('logContainer');
+        container.innerHTML = '';
+        
+        logEntries.forEach(entry => {
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            let icon = 'fa-info-circle';
+            if (entry.type === 'success') icon = 'fa-check-circle';
+            if (entry.type === 'warning') icon = 'fa-exclamation-triangle';
+            if (entry.type === 'error') icon = 'fa-times-circle';
+            
+            logEntry.innerHTML = `
+                <span class="log-time">${entry.time}</span>
+                <i class="fas ${icon}" style="margin-right: 8px; color: var(--${entry.type === 'success' ? 'battery' : entry.type === 'warning' ? 'solar' : 'danger'})"></i>
+                <span>${entry.message}</span>
+            `;
+            container.appendChild(logEntry);
+        });
+        
+        container.scrollTop = 0;
+    }
+
+    function clearLogs() {
+        logEntries = [];
+        updateLogDisplay();
+        addLog('Logs limpiados', 'info');
+    }
+
+    // Configurar botón de pausa
+    document.getElementById('pauseBtn').addEventListener('click', function() {
+        isPaused = !isPaused;
+        const icon = this.querySelector('i');
+        const text = this.querySelector('span') || document.createElement('span');
+        
+        if (isPaused) {
+            icon.className = 'fas fa-play';
+            text.textContent = ' REANUDAR';
+            this.appendChild(text);
+            addLog('Logs pausados', 'warning');
+        } else {
+            icon.className = 'fas fa-pause';
+            text.textContent = ' PAUSAR';
+            this.appendChild(text);
+            addLog('Logs reanudados', 'success');
+        }
+    });
+
+    // =============================================
+    // MANEJO DE ERRORES
+    // =============================================
+    window.addEventListener('error', (error) => {
+        console.error('Error:', error);
+        addLog(`Error: ${error.message}`, 'error');
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (mqttClient) mqttClient.end();
+        if (flowAnimation) cancelAnimationFrame(flowAnimation);
+    });
+
 </script>
 </body>
 </html>
