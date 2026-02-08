@@ -3,67 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MONITORIZACIÓN AUTOCARAVANA - [SISTEMA VICTRON + BMS]</title>
+    <title>MONITORIZACIÓN AUTOCARAVANA - SISTEMA VICTRON + BMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
-        /* ========== TEMA CLARO (MEJORADO - NO TAN BLANCO) ========== */
+        /* ========== TEMA CLARO MEJORADO (BEIGE/CREMA SUAVE) ========== */
         :root {
-            /* Colores base - Tono gris azulado suave */
-            --bg-primary: #f5f7fa;
-            --bg-secondary: rgba(255, 255, 255, 0.85); /* Más transparente */
-            --bg-tertiary: rgba(237, 242, 247, 0.7); /* Más suave */
+            /* Colores base - Tono beige/crema cálido, NO blanco puro */
+            --bg-primary: #f8f5f0;           /* Beige muy claro cálido */
+            --bg-secondary: #fefcf8;         /* Crema casi blanco pero cálido */
+            --bg-tertiary: #f2eee6;          /* Beige grisáceo suave */
             
-            /* Colores de texto */
-            --text-primary: #2d3748;
-            --text-secondary: #4a5568;
-            --text-tertiary: #718096;
+            /* Colores de texto - Contrastan bien con fondo beige */
+            --text-primary: #3a342e;         /* Marrón oscuro suave */
+            --text-secondary: #6b6258;       /* Marrón medio */
+            --text-tertiary: #8a8074;        /* Marrón claro */
             
-            /* Colores de acento - Azul profesional */
-            --accent-primary: #3182ce;
-            --accent-secondary: #4299e1;
-            --accent-gradient: linear-gradient(135deg, #3182ce 0%, #4299e1 100%);
+            /* Colores de acento - Azul que combina con beige */
+            --accent-primary: #4a7b9d;       /* Azul pizarra suave */
+            --accent-secondary: #6b9bb8;     /* Azul cielo */
+            --accent-gradient: linear-gradient(135deg, #4a7b9d 0%, #6b9bb8 100%);
             
-            /* Colores de dispositivos */
-            --solar: #d69e2e;
-            --solar-light: #f6e05e;
-            --battery: #38a169;
-            --battery-light: #68d391;
-            --danger: #e53e3e;
-            --danger-light: #fc8181;
-            --sense: #805ad5;
-            --sense-light: #b794f4;
-            --bms: #6b46c1;
-            --orion: #3182ce;
+            /* Colores de dispositivos - Tonos más suaves que combinen */
+            --solar: #d4a657;                /* Oro suave */
+            --solar-light: #e8c988;
+            --battery: #5a8c5a;              /* Verde oliva */
+            --battery-light: #7ba87b;
+            --danger: #c45c5c;               /* Rojo terracota */
+            --danger-light: #d88a8a;
+            --sense: #8a7bb8;                /* Lavanda */
+            --sense-light: #a99dcf;
+            --bms: #7a6ba8;                  /* Púrpura suave */
+            --orion: #4a7b9d;                /* Mismo azul que acento */
             
-            /* Elementos UI */
-            --border: #cbd5e0;
-            --border-light: rgba(226, 232, 240, 0.6); /* Más transparente */
-            --shadow-sm: 0 2px 4px rgba(45, 55, 72, 0.05);
-            --shadow: 0 4px 12px rgba(45, 55, 72, 0.08);
-            --shadow-md: 0 8px 24px rgba(45, 55, 72, 0.1);
-            --shadow-lg: 0 12px 36px rgba(45, 55, 72, 0.12);
+            /* Elementos UI - Bordes suaves */
+            --border: #d6ccc2;               /* Beige grisáceo */
+            --border-light: #e8e2d9;         /* Beige muy claro */
+            --shadow-sm: 0 2px 6px rgba(58, 52, 46, 0.05);
+            --shadow: 0 4px 12px rgba(58, 52, 46, 0.08);
+            --shadow-md: 0 8px 24px rgba(58, 52, 46, 0.1);
+            --shadow-lg: 0 12px 36px rgba(58, 52, 46, 0.12);
             
-            /* Bordes */
+            /* Bordes redondeados */
             --radius-sm: 10px;
             --radius: 16px;
             --radius-lg: 20px;
             --radius-xl: 24px;
             
-            /* Efectos de vidrio */
-            --glass-bg: rgba(255, 255, 255, 0.75); /* Más transparente */
-            --glass-border: rgba(255, 255, 255, 0.3);
-            --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
+            /* Efectos de vidrio - Suaves */
+            --glass-bg: rgba(255, 252, 248, 0.92);  /* Crema translúcido */
+            --glass-border: rgba(214, 204, 194, 0.4);
+            --glass-shadow: 0 8px 32px rgba(58, 52, 46, 0.06);
         }
 
-        /* ========== TEMA OSCURO (CON BARRAS DE TENSIÓN VISIBLES) ========== */
+        /* ========== TEMA OSCURO (PROFESIONAL) ========== */
         .dark-mode {
             /* Colores base - Gris oscuro con azulado */
             --bg-primary: #1a202c;
-            --bg-secondary: rgba(45, 55, 72, 0.9);
-            --bg-tertiary: rgba(74, 85, 104, 0.7);
+            --bg-secondary: #2d3748;
+            --bg-tertiary: #4a5568;
             
             /* Colores de texto - Mejor contraste */
             --text-primary: #f7fafc;
@@ -89,14 +89,14 @@
             
             /* Elementos UI oscuros */
             --border: #4a5568;
-            --border-light: rgba(113, 128, 150, 0.6);
+            --border-light: #718096;
             --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
             --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.4);
             
             /* Efectos de vidrio oscuros */
-            --glass-bg: rgba(45, 55, 72, 0.85);
+            --glass-bg: rgba(45, 55, 72, 0.92);
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
@@ -119,6 +119,14 @@
             min-height: 100vh;
             transition: all 0.4s ease;
             overflow-x: hidden;
+        }
+
+        /* Fondo con textura sutil en modo claro */
+        body:not(.dark-mode) {
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(234, 228, 218, 0.3) 0%, transparent 55%),
+                radial-gradient(circle at 85% 30%, rgba(242, 238, 230, 0.4) 0%, transparent 55%);
+            background-attachment: fixed;
         }
 
         /* ========== LAYOUT PRINCIPAL ========== */
@@ -272,19 +280,19 @@
             border-radius: 50%;
             background: var(--danger);
             position: relative;
-            box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+            box-shadow: 0 0 0 0 rgba(196, 92, 92, 0.7);
         }
 
         .mqtt-indicator.connected {
             background: var(--battery);
-            box-shadow: 0 0 0 4px rgba(56, 161, 105, 0.3);
+            box-shadow: 0 0 0 4px rgba(90, 140, 90, 0.3);
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0.4); }
-            70% { box-shadow: 0 0 0 12px rgba(56, 161, 105, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(56, 161, 105, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(90, 140, 90, 0.4); }
+            70% { box-shadow: 0 0 0 12px rgba(90, 140, 90, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(90, 140, 90, 0); }
         }
 
         .mqtt-info h3 {
@@ -310,11 +318,10 @@
             font-weight: 500;
         }
 
-        /* ========== DIAGRAMA DE FLUJO - TARJETA MÁS GRANDE ========== */
+        /* ========== DIAGRAMA DE FLUJO ========== */
         .flow-card {
             grid-column: 1 / -1;
-            min-height: 380px; /* Más alta */
-            height: auto;
+            height: 320px;
             padding: 0;
             background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
             border-radius: var(--radius-xl);
@@ -332,37 +339,31 @@
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 20%, rgba(49, 130, 206, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(56, 161, 105, 0.08) 0%, transparent 50%);
+                radial-gradient(circle at 20% 20%, rgba(74, 123, 157, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(90, 140, 90, 0.08) 0%, transparent 50%);
         }
 
-        /* TÍTULO DEL FLUJO - REDUCIDO Y RESPONSIVE */
         .flow-title {
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 1.1rem; /* Tamaño reducido */
+            font-size: 1rem;
             font-weight: 700;
             color: var(--accent-primary);
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
-            padding: 10px 24px; /* Padding reducido */
+            padding: 10px 28px;
             border-radius: 30px;
             border: 1px solid var(--glass-border);
             z-index: 10;
             white-space: nowrap;
             box-shadow: var(--shadow-sm);
-            text-align: center;
-            max-width: 90%;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         #flowCanvas {
             width: 100%;
             height: 100%;
-            min-height: 320px; /* Altura mínima */
             display: block;
         }
 
@@ -525,7 +526,7 @@
             color: var(--battery);
             line-height: 1;
             margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(56, 161, 105, 0.3);
+            text-shadow: 0 2px 10px rgba(90, 140, 90, 0.3);
         }
 
         .soc-label {
@@ -574,7 +575,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* ========== BMS COMPLETO - CON BARRAS VISIBLES ========== */
+        /* ========== BMS COMPLETO ========== */
         .bms-card::before {
             background: var(--bms);
         }
@@ -605,7 +606,7 @@
             color: var(--bms);
         }
 
-        /* Celdas BMS - VISIBLES EN MODO OSCURO */
+        /* Celdas BMS */
         .cell-container {
             margin-top: 25px;
             padding-top: 25px;
@@ -665,82 +666,24 @@
         }
 
         .cell-bar {
-            height: 10px; /* Un poco más alta */
-            background: rgba(0, 0, 0, 0.1); /* Fondo más visible */
-            border-radius: 5px;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
             overflow: hidden;
             position: relative;
         }
 
-        /* ========== BARRAS DE TENSIÓN VISIBLES EN AMBOS MODOS ========== */
         .cell-fill {
             height: 100%;
-            border-radius: 5px;
+            border-radius: 4px;
             width: 0%;
             transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-            /* Gradiente vibrante para mejor visibilidad */
             background: linear-gradient(90deg, 
-                #38a169 0%, 
-                #68d391 50%, 
-                #38a169 100%
+                var(--battery) 0%, 
+                var(--battery-light) 50%, 
+                var(--battery) 100%
             );
-            box-shadow: 
-                0 0 8px rgba(56, 161, 105, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-
-        /* Barras visibles en modo oscuro */
-        .dark-mode .cell-bar {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .dark-mode .cell-fill {
-            background: linear-gradient(90deg, 
-                #68d391 0%, 
-                #9ae6b4 50%, 
-                #68d391 100%
-            );
-            box-shadow: 
-                0 0 12px rgba(104, 211, 145, 0.7),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-
-        /* Color de advertencia para bajo voltaje */
-        .cell-fill.low {
-            background: linear-gradient(90deg, 
-                #e53e3e 0%, 
-                #fc8181 50%, 
-                #e53e3e 100%
-            );
-            box-shadow: 0 0 8px rgba(229, 62, 62, 0.6);
-        }
-
-        .dark-mode .cell-fill.low {
-            background: linear-gradient(90deg, 
-                #fc8181 0%, 
-                #fed7d7 50%, 
-                #fc8181 100%
-            );
-            box-shadow: 0 0 12px rgba(252, 129, 129, 0.7);
-        }
-
-        /* Color de advertencia para alto voltaje */
-        .cell-fill.high {
-            background: linear-gradient(90deg, 
-                #d69e2e 0%, 
-                #f6e05e 50%, 
-                #d69e2e 100%
-            );
-            box-shadow: 0 0 8px rgba(214, 158, 46, 0.6);
-        }
-
-        .dark-mode .cell-fill.high {
-            background: linear-gradient(90deg, 
-                #f6ad55 0%, 
-                #fbd38d 50%, 
-                #f6ad55 100%
-            );
-            box-shadow: 0 0 12px rgba(246, 173, 85, 0.7);
+            box-shadow: 0 0 8px rgba(90, 140, 90, 0.3);
         }
 
         /* ========== BATTERY SENSE ========== */
@@ -773,7 +716,7 @@
             font-weight: 800;
             color: var(--solar);
             line-height: 1;
-            text-shadow: 0 2px 10px rgba(214, 158, 46, 0.3);
+            text-shadow: 0 2px 10px rgba(212, 166, 87, 0.3);
         }
 
         /* ========== ORION ========== */
@@ -986,7 +929,7 @@
         .card:nth-child(8) { animation-delay: 0.8s; }
         .card:nth-child(9) { animation-delay: 0.9s; }
 
-        /* ========== RESPONSIVE - MEJORADO ========== */
+        /* ========== RESPONSIVE ========== */
         @media (max-width: 1200px) {
             .dashboard {
                 grid-template-columns: repeat(2, 1fr);
@@ -1011,36 +954,18 @@
                 justify-content: center;
             }
             
-            /* TARJETA DE FLUJO RESPONSIVE */
             .flow-card {
-                min-height: 320px;
-            }
-            
-            .flow-title {
-                font-size: 0.95rem; /* Más pequeño en móvil */
-                padding: 8px 20px;
-                max-width: 85%;
-                white-space: normal; /* Permite múltiples líneas si es necesario */
-                line-height: 1.3;
+                height: 280px;
             }
             
             .flow-node {
-                width: 70px;
-                height: 70px;
+                width: 80px;
+                height: 80px;
             }
             
             .node-battery {
-                width: 90px;
-                height: 90px;
-            }
-            
-            .flow-node i {
-                font-size: 1.6rem;
-                margin-bottom: 8px;
-            }
-            
-            .flow-node span {
-                font-size: 0.75rem;
+                width: 100px;
+                height: 100px;
             }
             
             .cell-grid {
@@ -1074,26 +999,21 @@
             }
             
             .flow-card {
-                min-height: 280px;
+                height: 250px;
             }
             
             .flow-node {
-                width: 60px;
-                height: 60px;
+                width: 70px;
+                height: 70px;
             }
             
             .node-battery {
-                width: 80px;
-                height: 80px;
+                width: 90px;
+                height: 90px;
             }
             
             .flow-node i {
-                font-size: 1.4rem;
-                margin-bottom: 6px;
-            }
-            
-            .flow-node span {
-                font-size: 0.7rem;
+                font-size: 1.6rem;
             }
         }
     </style>
@@ -1106,8 +1026,8 @@
         <div class="title-container">
             <h1>MONITORIZACIÓN AUTOCARAVANA</h1>
             <div class="subtitle">
-                <i class="fas fa-bolt"></i> [Sistema Victron + BMS Ultimatron]
-                <span class="subtitle-badge">PRO v2.0.0</span>
+                <i class="fas fa-bolt"></i> Sistema Victron + BMS Ultimatron
+                <span class="subtitle-badge">PRO v2.0</span>
             </div>
         </div>
         <div class="header-controls">
@@ -1132,9 +1052,9 @@
         <div class="last-update" id="lastUpdate">--:--:--</div>
     </section>
 
-    <!-- DIAGRAMA DE FLUJO - TARJETA MÁS GRANDE -->
+    <!-- DIAGRAMA DE FLUJO -->
     <section class="card flow-card">
-        <div class="flow-title">FLUJO DE ENERGÍA</div>
+        <div class="flow-title">DIAGRAMA DE FLUJO DE ENERGÍA EN TIEMPO REAL</div>
         <canvas id="flowCanvas"></canvas>
         <div class="flow-node node-solar">
             <i class="fas fa-sun"></i>
@@ -1273,7 +1193,7 @@
     <!-- PHOENIX INVERTER 2000VA -->
     <section class="card inverter-card">
         <div class="card-title">
-            <i class="fas fa-bolt"></i> VICTRON PHOENIX 2000VA-12V
+            <i class="fas fa-bolt"></i> VICTRON PHOENIX 2000VA
         </div>
         <div class="inverter-power">
             <div id="invVA" class="inverter-value">--VA</div>
@@ -1346,7 +1266,7 @@
     let pSolar = 0;
     let pInv = 0;
     let iBat = 0;
-    let oriOut = 0; // Nueva variable para Orion
+    let oriOut = 0;
     let isPaused = false;
     let mqttClient = null;
     let socChart = null;
@@ -1417,17 +1337,17 @@
                 datasets: [{
                     label: 'SOC %',
                     data: [],
-                    borderColor: isDark ? '#68d391' : '#38a169',
+                    borderColor: isDark ? '#68d391' : '#5a8c5a',
                     backgroundColor: isDark ? 
                         'rgba(104, 211, 145, 0.15)' : 
-                        'rgba(56, 161, 105, 0.15)',
+                        'rgba(90, 140, 90, 0.15)',
                     borderWidth: 3,
                     tension: 0.4,
                     fill: true,
                     pointRadius: 0,
                     pointHoverRadius: 8,
-                    pointBackgroundColor: isDark ? '#68d391' : '#38a169',
-                    pointBorderColor: isDark ? '#1a202c' : '#ffffff',
+                    pointBackgroundColor: isDark ? '#68d391' : '#5a8c5a',
+                    pointBorderColor: isDark ? '#1a202c' : '#fefcf8',
                     pointBorderWidth: 2
                 }]
             },
@@ -1439,10 +1359,10 @@
                     tooltip: {
                         mode: 'index',
                         intersect: false,
-                        backgroundColor: isDark ? 'rgba(45, 55, 72, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                        titleColor: isDark ? '#f7fafc' : '#2d3748',
-                        bodyColor: isDark ? '#f7fafc' : '#2d3748',
-                        borderColor: isDark ? '#68d391' : '#38a169',
+                        backgroundColor: isDark ? 'rgba(45, 55, 72, 0.95)' : 'rgba(254, 252, 248, 0.95)',
+                        titleColor: isDark ? '#f7fafc' : '#3a342e',
+                        bodyColor: isDark ? '#f7fafc' : '#3a342e',
+                        borderColor: isDark ? '#68d391' : '#5a8c5a',
                         borderWidth: 1,
                         cornerRadius: 8
                     }
@@ -1452,11 +1372,11 @@
                         min: 0,
                         max: 100,
                         grid: {
-                            color: isDark ? 'rgba(203, 213, 224, 0.1)' : 'rgba(203, 213, 224, 0.2)',
+                            color: isDark ? 'rgba(203, 213, 224, 0.1)' : 'rgba(107, 98, 88, 0.1)',
                             drawBorder: false
                         },
                         ticks: {
-                            color: isDark ? '#cbd5e0' : '#4a5568',
+                            color: isDark ? '#cbd5e0' : '#6b6258',
                             font: {
                                 size: 12,
                                 weight: '600'
@@ -1508,7 +1428,6 @@
         document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
         localStorage.setItem('siena395_theme', 'dark');
         updateChartColors();
-        updateCellBarsVisibility();
         addLog('Modo oscuro activado', 'info');
     }
 
@@ -1517,7 +1436,6 @@
         document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
         localStorage.setItem('siena395_theme', 'light');
         updateChartColors();
-        updateCellBarsVisibility();
         addLog('Modo claro activado', 'info');
     }
 
@@ -1525,29 +1443,17 @@
         if (!socChart) return;
         
         const isDark = document.body.classList.contains('dark-mode');
-        socChart.data.datasets[0].borderColor = isDark ? '#68d391' : '#38a169';
+        socChart.data.datasets[0].borderColor = isDark ? '#68d391' : '#5a8c5a';
         socChart.data.datasets[0].backgroundColor = isDark ? 
-            'rgba(104, 211, 145, 0.15)' : 'rgba(56, 161, 105, 0.15)';
+            'rgba(104, 211, 145, 0.15)' : 'rgba(90, 140, 90, 0.15)';
         socChart.options.scales.y.grid.color = isDark ? 
-            'rgba(203, 213, 224, 0.1)' : 'rgba(203, 213, 224, 0.2)';
-        socChart.options.scales.y.ticks.color = isDark ? '#cbd5e0' : '#4a5568';
+            'rgba(203, 213, 224, 0.1)' : 'rgba(107, 98, 88, 0.1)';
+        socChart.options.scales.y.ticks.color = isDark ? '#cbd5e0' : '#6b6258';
         socChart.options.plugins.tooltip.backgroundColor = isDark ? 
-            'rgba(45, 55, 72, 0.95)' : 'rgba(255, 255, 255, 0.95)';
-        socChart.options.plugins.tooltip.titleColor = isDark ? '#f7fafc' : '#2d3748';
-        socChart.options.plugins.tooltip.bodyColor = isDark ? '#f7fafc' : '#2d3748';
+            'rgba(45, 55, 72, 0.95)' : 'rgba(254, 252, 248, 0.95)';
+        socChart.options.plugins.tooltip.titleColor = isDark ? '#f7fafc' : '#3a342e';
+        socChart.options.plugins.tooltip.bodyColor = isDark ? '#f7fafc' : '#3a342e';
         socChart.update();
-    }
-
-    function updateCellBarsVisibility() {
-        // Asegurar que las barras sean visibles en ambos modos
-        const isDark = document.body.classList.contains('dark-mode');
-        for(let i = 1; i <= 4; i++) {
-            const bar = document.getElementById(`bar${i}`);
-            if (bar) {
-                // Los colores se actualizan en updateCellVoltage
-                bar.style.display = 'block';
-            }
-        }
     }
 
     // =============================================
@@ -1555,15 +1461,16 @@
     // =============================================
     function connectMQTT() {
         mqttClient = mqtt.connect(CONFIG.MQTT_BROKER, {
-            clientId: 'siena395_pro_' + Math.random().toString(16).substr(2, 8),
+            clientId: 'siena395_dashboard_' + Math.random().toString(16).substr(2, 8),
             clean: true,
             reconnectPeriod: 3000
         });
 
         mqttClient.on('connect', () => {
-            console.log('✅ Conectado a HiveMQ');
+            console.log('✅ Dashboard conectado a HiveMQ');
             updateMQTTStatus(true);
             mqttClient.subscribe(`${CONFIG.TOPIC_PREFIX}/sensor/#`);
+            mqttClient.subscribe(`${CONFIG.TOPIC_PREFIX}/alert/#`);
             addLog('Conectado al broker MQTT (HiveMQ)', 'success');
         });
 
@@ -1613,8 +1520,8 @@
                 break;
                 
             case sensor === 'voltaje_bateria':
-                document.getElementById('vBat').textContent = value.toFixed(2) + 'V';
-                document.getElementById('bmsV').textContent = value.toFixed(2) + 'V';
+                updateValue('vBat', value, 'V', 2);
+                updateValue('bmsV', value, 'V', 2);
                 break;
                 
             case sensor === 'corriente_bateria':
@@ -1622,11 +1529,11 @@
                 break;
                 
             case sensor === 'temperatura_bms':
-                document.getElementById('bmsT').textContent = value.toFixed(1) + '°C';
+                updateValue('bmsT', value, '°C', 1);
                 break;
                 
             case sensor === 'bms_corriente':
-                document.getElementById('bmsI').textContent = value.toFixed(1) + 'A';
+                updateValue('bmsI', value, 'A', 1);
                 break;
                 
             case sensor.includes('cell_voltage_'):
@@ -1643,17 +1550,24 @@
                 break;
                 
             case sensor === 'voltaje_salida_orion':
-                document.getElementById('oriOut').textContent = value.toFixed(2) + 'V';
-                oriOut = value; // Guardar para el diagrama de flujo
+                updateValue('oriOut', value, 'V', 2);
+                oriOut = value;
                 break;
                 
             case sensor === 'voltaje_bts':
-                document.getElementById('btsV').textContent = value.toFixed(2) + 'V';
+                updateValue('btsV', value, 'V', 2);
                 break;
                 
             case sensor === 'temperatura_bts':
-                document.getElementById('btsT').textContent = value.toFixed(1) + '°C';
+                updateValue('btsT', value, '°C', 1);
                 break;
+        }
+    }
+
+    function updateValue(elementId, value, unit, decimals) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = value.toFixed(decimals) + unit;
         }
     }
 
@@ -1716,20 +1630,14 @@
         const fill = document.getElementById(`bar${cellNum}`);
         fill.style.width = Math.min(Math.max(percentage, 0), 100) + '%';
         
-        // Asegurar visibilidad en ambos modos
-        const isDark = document.body.classList.contains('dark-mode');
-        
+        // Color según voltaje
         if (value < 3.0) {
-            fill.className = 'cell-fill low';
+            fill.style.background = 'linear-gradient(90deg, var(--danger) 0%, var(--danger-light) 100%)';
         } else if (value > 3.45) {
-            fill.className = 'cell-fill high';
+            fill.style.background = 'linear-gradient(90deg, var(--solar) 0%, var(--solar-light) 100%)';
         } else {
-            fill.className = 'cell-fill';
-            // Los colores CSS se aplican automáticamente
+            fill.style.background = 'linear-gradient(90deg, var(--battery) 0%, var(--battery-light) 50%, var(--battery) 100%)';
         }
-        
-        // Mostrar siempre la barra
-        fill.style.opacity = '1';
     }
 
     function updateSolar(value) {
@@ -1764,7 +1672,7 @@
     }
 
     // =============================================
-    // 6. ANIMACIÓN DEL FLUJO (CON LÍNEA ORION-BATERÍA)
+    // 6. ANIMACIÓN DEL FLUJO
     // =============================================
     function initializeFlowAnimation() {
         const canvas = document.getElementById('flowCanvas');
@@ -1795,7 +1703,6 @@
             ctx.setLineDash([5, 3]);
             ctx.globalAlpha = 0.3;
             
-            // Todas las conexiones posibles
             ctx.beginPath();
             ctx.moveTo(nodes.solar.x, nodes.solar.y);
             ctx.lineTo(nodes.battery.x, nodes.battery.y);
@@ -1811,7 +1718,6 @@
             ctx.lineTo(nodes.loads.x, nodes.loads.y);
             ctx.stroke();
             
-            // NUEVA: Línea Orion → Batería
             ctx.beginPath();
             ctx.moveTo(nodes.orion.x, nodes.orion.y);
             ctx.lineTo(nodes.battery.x, nodes.battery.y);
@@ -1829,13 +1735,12 @@
                 ctx.moveTo(from.x, from.y);
                 ctx.lineTo(to.x, to.y);
                 ctx.strokeStyle = color;
-                ctx.lineWidth = 4 + (intensity * 2); // Grosor según intensidad
+                ctx.lineWidth = 4 + (intensity * 2);
                 ctx.lineCap = 'round';
                 ctx.shadowColor = color;
                 ctx.shadowBlur = 15 + (intensity * 10);
                 ctx.globalAlpha = 0.7 + (intensity * 0.3);
                 
-                // Efecto de partículas en movimiento
                 const dashLength = 15 + (intensity * 10);
                 const dashGap = 10;
                 const offset = -time * (30 + (intensity * 20));
@@ -1844,7 +1749,6 @@
                 ctx.lineDashOffset = offset;
                 ctx.stroke();
                 
-                // Efecto de brillo interior
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.setLineDash([]);
@@ -1853,12 +1757,9 @@
                 ctx.restore();
             }
             
-            // Flujos según datos reales
             drawEnergyFlow(nodes.solar, nodes.battery, pSolar > 5, 'var(--solar)', Math.min(pSolar / 100, 1));
             drawEnergyFlow(nodes.battery, nodes.inverter, pInv > 10, 'var(--accent-primary)', Math.min(pInv / 500, 1));
             drawEnergyFlow(nodes.battery, nodes.loads, iBat < -0.5, 'var(--danger)', Math.min(Math.abs(iBat) / 30, 1));
-            
-            // NUEVA: Flujo Orion → Batería (si hay voltaje de salida)
             drawEnergyFlow(nodes.orion, nodes.battery, oriOut > 13.0, 'var(--orion)', Math.min((oriOut - 12) / 2, 1));
             
             flowAnimation = requestAnimationFrame(animate);
