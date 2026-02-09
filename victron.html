@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA VICTRON - COMPLETO</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-primary: #f8f5f0;
+            --bg-secondary: #fefcf8;
+            --text-main: #2c2925;
+            --accent-primary: #8b7355;
+            --victron-blue: #1a5c96;
+            --solar-orange: #f39c12;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --card-radius: 24px;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-main); margin: 0; }
+        
+        .nav-master { display: flex; justify-content: center; gap: 8px; padding: 12px; background: var(--bg-secondary); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #e2ddd5; }
+        .nav-btn { background: var(--bg-primary); border: 2px solid #e2ddd5; padding: 8px 10px; border-radius: 12px; font-weight: 700; color: #666; text-decoration: none; font-size: 0.75rem; transition: 0.3s; }
+        .nav-btn.active { background: var(--victron-blue); color: white; border-color: var(--victron-blue); }
+
+        .dashboard { max-width: 800px; margin: 0 auto; padding: 15px; }
+        .card { background: var(--bg-secondary); border-radius: var(--card-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.03); }
+        .card-title { font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--victron-blue); font-size: 1rem; }
+        
+        .grid-victron { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .v-item { background: var(--bg-primary); padding: 12px; border-radius: 18px; text-align: center; border: 1px solid rgba(139, 115, 85, 0.1); }
+        .v-label { font-size: 0.7rem; color: #777; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+        .v-value { font-size: 1.2rem; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-master">
+        <a href="index.html" class="nav-btn">INICIO</a>
+        <a href="victron.html" class="nav-btn active">VICTRON</a>
+        <a href="bateria.html" class="nav-btn">BATERÍA</a>
+        <a href="logs.html" class="nav-btn">LOGS</a>
+    </nav>
+
+    <div class="dashboard">
+        
+        <div class="card">
+            <div class="card-title"><i class="fas fa-battery-three-quarters"></i> 1. SMART SHUNT (BATERÍA)</div>
+            <div style="background: var(--bg-primary); padding: 15px; border-radius: 20px; text-align: center; margin-bottom: 12px; border: 2px solid var(--victron-blue);">
+                <div class="v-label">Carga Actual</div>
+                <div id="shuntSoc" style="font-size: 2.5rem; font-weight: 900; color: var(--victron-blue);">--%</div>
+            </div>
+            <div class="grid-victron">
+                <div class="v-item"><div class="v-label">Voltaje</div><div id="shuntVolt" class="v-value">--.--V</div></div>
+                <div class="v-item"><div class="v-label">Amperios</div><div id="shuntCurr" class="v-value">--.--A</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title" style="color: var(--solar-orange);"><i class="fas fa-sun"></i> 2. MPPT SOLAR</div>
+            <div class="grid-victron">
+                <div class="v-item"><div class="v-label">Cosecha Hoy</div><div id="solYield" class="v-value">--.-kWh</div></div>
+                <div class="v-item"><div class="v-label">Voltaje Paneles</div><div id="solVolt" class="v-value">--.-V</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title" style="color: var(--accent-primary);"><i class="fas fa-truck-moving"></i> 3. ORION (ALTERNADOR)</div>
+            <div class="v-item">
+                <div class="v-label">Voltaje Motor/Entrada</div>
+                <div id="oriVolt" class="v-value">--.--V</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title" style="color: #4a90e2;"><i class="fas fa-bolt"></i> 4. PHOENIX INVERTER (230V)</div>
+            <div class="grid-victron">
+                <div class="v-item"><div class="v-label">Voltaje Salida</div><div class="v-value">230V</div></div>
+                <div class="v-item"><div class="v-label">Estado</div><div class="v-value" style="color: var(--success);">ON</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title" style="color: #27ae60;"><i class="fas fa-thermometer-half"></i> 5. SMART BATTERY SENSE</div>
+            <div class="v-item">
+                <div class="v-label">Temperatura en Bornes</div>
+                <div id="senseTemp" class="v-value">--.-°C</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+        const TOPIC_PREFIX = 'siena395_monitor_mikel_2026';
+        const client = mqtt.connect(BROKER);
+
+        client.on('connect', () => { client.subscribe(`${TOPIC_PREFIX}/sensor/#`); });
+
+        client.on('message', (topic, message) => {
+            const val = message.toString();
+            // Shunt
+            if (topic.includes('bateria_porcentaje__shunt_')) document.getElementById('shuntSoc').innerText = val + '%';
+            if (topic.includes('bateria_voltaje__shunt_')) document.getElementById('shuntVolt').innerText = val + 'V';
+            if (topic.includes('bateria_corriente__shunt_')) document.getElementById('shuntCurr').innerText = val + 'A';
+            // MPPT
+            if (topic.includes('solar_produccion_hoy')) document.getElementById('solYield').innerText = val + 'kWh';
+            if (topic.includes('solar_voltaje_placas')) document.getElementById('solVolt').innerText = val + 'V';
+            // Orion
+            if (topic.includes('voltaje_orion')) document.getElementById('oriVolt').innerText = val + 'V';
+            // Sense
+            if (topic.includes('temperatura_bateria__sense_')) document.getElementById('senseTemp').innerText = val + '°C';
+        });
+    </script>
+</body>
+</html>
