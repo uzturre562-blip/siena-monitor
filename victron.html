@@ -35,6 +35,50 @@
         .v-item { background: var(--bg-primary); padding: 12px; border-radius: 18px; text-align: center; border: 1px solid rgba(139, 115, 85, 0.1); }
         .v-label { font-size: 0.7rem; color: #777; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
         .v-value { font-size: 1.2rem; font-weight: 900; }
+        /* --- VARIABLES MODO OSCURO --- */
+body.dark-mode {
+    --bg-primary: #121417;       /* Fondo muy oscuro */
+    --bg-secondary: #1a1d23;     /* Fondo de tarjetas */
+    --bg-tertiary: #252a33;      /* Contrastes */
+    --text-main: #e0e0e0;        /* Texto claro */
+    --accent-secondary: #4a4a4a; /* Bordes oscuros */
+    border-color: #333;
+}
+
+/* Ajustes específicos para que las tarjetas se vean bien en oscuro */
+body.dark-mode .card, 
+body.dark-mode .nav-master, 
+body.dark-mode .v-item, 
+body.dark-mode .cell-item {
+    background: var(--bg-secondary);
+    border: 1px solid #2d343f;
+    color: var(--text-main);
+}
+
+body.dark-mode .nav-btn {
+    background: #252a33;
+    color: #aaa;
+    border-color: #3d4450;
+}
+
+/* Botón flotante para cambiar el modo */
+.theme-switch {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 2000;
+    border: none;
+}
     </style>
 </head>
 <body>
