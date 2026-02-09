@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA DE BATERÍA - BMS JK</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    
+    <style>
+        /* Copiamos tus variables y estilos base del index-gmni.html */
+        :root {
+            --bg-primary: #f8f5f0;
+            --bg-secondary: #fefcf8;
+            --text-main: #2c2925;
+            --accent-primary: #8b7355;
+            --accent-secondary: #c5b4a0;
+            --victron-blue: #1a5c96;
+            --solar-orange: #f39c12;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --shadow-soft: 0 8px 30px rgba(0,0,0,0.05);
+            --card-radius: 24px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- MENÚ DE NAVEGACIÓN --- */
+        .nav-master {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--accent-secondary);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .nav-btn {
+            background: var(--bg-primary);
+            border: 2px solid var(--accent-secondary);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Reutilizamos las clases de tarjetas de tu index-gmni.html */
+        .dashboard { max-width: 800px; margin: 0 auto; padding: 15px; }
+        .card { 
+            background: var(--bg-secondary); 
+            border-radius: var(--card-radius); 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(139, 115, 85, 0.1);
+        }
+        .card-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        
+        /* Estilos específicos para celdas grandes */
+        .cell-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .cell-item { background: var(--bg-primary); padding: 15px; border-radius: 18px; border: 1px solid var(--accent-secondary); }
+        .cell-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .cell-bar-bg { background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; }
+        .cell-bar-fill { background: var(--success); height: 100%; transition: width 0.5s; }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-master">
+        <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> INICIO</a>
+        <a href="victron.html" class="nav-btn"><i class="fas fa-plug"></i> VICTRON</a>
+        <a href="bateria.html" class="nav-btn active"><i class="fas fa-car-battery"></i> BATERÍA</a>
+        <a href="logs.html" class="nav-btn"><i class="fas fa-terminal"></i> LOGS</a>
+    </nav>
+
+    <div class="dashboard">
+        
+        <div class="card" style="padding: 10px 20px;">
+            <div id="mqtt-status" style="font-weight: 700; color: var(--danger); font-size: 0.9rem;">
+                <i class="fas fa-circle"></i> DESCONECTADO (BROKER)
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title" style="color: var(--accent-primary);">
+                <i class="fas fa-shield-alt"></i> JK BMS - ULTMATRON 100AH
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="text-align: center; background: var(--bg-primary); padding: 15px; border-radius: 20px;">
+                    <div style="font-size: 0.8rem; color: #666;">VOLTAJE TOTAL</div>
+                    <div id="bmsVoltage" style="font-size: 1.5rem; font-weight: 900;">--.--V</div>
+                </div>
+                <div style="text-align: center; background: var(--bg-primary); padding: 15px; border-radius: 20px;">
+                    <div style="font-size: 0.8rem; color: #666;">INTENSIDAD</div>
+                    <div id="bmsCurrent" style="font-size: 1.5rem; font-weight: 900;">--.--A</div>
+                </div>
+            </div>
+
+            <div class="cell-grid">
+                <div class="cell-item">
+                    <div class="cell-info">
+                        <span style="font-weight: 700;">CELDA 1</span>
+                        <span id="vCell1" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                    </div>
+                    <div class="cell-bar-bg"><div id="bCell1" class="cell-bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="cell-item">
+                    <div class="cell-info">
+                        <span style="font-weight: 700;">CELDA 2</span>
+                        <span id="vCell2" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                    </div>
+                    <div class="cell-bar-bg"><div id="bCell2" class="cell-bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="cell-item">
+                    <div class="cell-info">
+                        <span style="font-weight: 700;">CELDA 3</span>
+                        <span id="vCell3" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                    </div>
+                    <div class="cell-bar-bg"><div id="bCell3" class="cell-bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="cell-item">
+                    <div class="cell-info">
+                        <span style="font-weight: 700;">CELDA 4</span>
+                        <span id="vCell4" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                    </div>
+                    <div class="cell-bar-bg"><div id="bCell4" class="cell-bar-fill" style="width: 0%"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i class="fas fa-thermometer-half"></i> TEMPERATURA SENSORES</div>
+            <div style="display: flex; justify-content: space-around;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--solar-orange);"><i class="fas fa-microchip"></i></div>
+                    <div style="font-size: 0.8rem;">BMS</div>
+                    <div id="bmsTemp" style="font-weight: 800;">--°C</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--victron-blue);"><i class="fas fa-broadcast-tower"></i></div>
+                    <div style="font-size: 0.8rem;">SENSE</div>
+                    <div id="senseTemp" style="font-weight: 800;">--°C</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN MQTT (Igual que tu index) ---
+        const BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+        const TOPIC_PREFIX = 'siena395_monitor_mikel_2026';
+        const client = mqtt.connect(BROKER);
+
+        client.on('connect', () => {
+            document.getElementById('mqtt-status').innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
+            document.getElementById('mqtt-status').style.color = 'var(--success)';
+            client.subscribe(`${TOPIC_PREFIX}/sensor/#`);
+        });
+
+        client.on('message', (topic, message) => {
+            const val = message.toString();
+            
+            // Actualizar Voltajes de Celdas
+            if (topic.includes('bms_celda_1')) updateCell('vCell1', 'bCell1', val);
+            if (topic.includes('bms_celda_2')) updateCell('vCell2', 'bCell2', val);
+            if (topic.includes('bms_celda_3')) updateCell('vCell3', 'bCell3', val);
+            if (topic.includes('bms_celda_4')) updateCell('vCell4', 'bCell4', val);
+
+            // Datos BMS
+            if (topic.includes('bms_voltaje_total')) document.getElementById('bmsVoltage').innerText = val + 'V';
+            if (topic.includes('bms_intensidad')) document.getElementById('bmsCurrent').innerText = val + 'A';
+            if (topic.includes('bms_temperatura')) document.getElementById('bmsTemp').innerText = val + '°C';
+            if (topic.includes('temperatura_bateria__sense_')) document.getElementById('senseTemp').innerText = val + '°C';
+        });
+
+        function updateCell(textId, barId, value) {
+            document.getElementById(textId).innerText = parseFloat(value).toFixed(3) + 'V';
+            // Cálculo porcentaje barra (3.0V vacía - 3.5V llena aprox)
+            let pct = ((parseFloat(value) - 3.0) / 0.5) * 100;
+            pct = Math.min(Math.max(pct, 0), 100);
+            document.getElementById(barId).style.width = pct + '%';
+        }
+    </script>
+</body>
+</html>
