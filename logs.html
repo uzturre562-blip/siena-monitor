@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SISTEMA LOGS - CONSOLA</title>
+    <title>Siena 395 - Logs MQTT</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
@@ -18,139 +18,604 @@
             --success: #27ae60;
             --danger: #e74c3c;
             --warning: #f39c12;
+            --info: #3498db;
             --card-radius: 24px;
+            --border-light: #e2ddd5;
         }
 
-        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-main); margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        
-        .nav-master { display: flex; justify-content: center; gap: 10px; padding: 12px; background: var(--bg-secondary); border-bottom: 1px solid #e2ddd5; }
-        .nav-btn { background: var(--bg-primary); border: 2px solid #e2ddd5; padding: 8px 12px; border-radius: 12px; font-weight: 700; color: #666; text-decoration: none; font-size: 0.8rem; }
-        .nav-btn.active { background: #333; color: white; border-color: #333; }
+        /* Modo oscuro */
+        body.dark-mode {
+            --bg-primary: #121417;
+            --bg-secondary: #1a1d23;
+            --text-main: #e0e0e0;
+            --border-light: #2d343f;
+        }
 
-        .log-container { flex: 1; margin: 15px; background: #1e1e1e; border-radius: 20px; padding: 15px; box-shadow: inset 0 4px 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Menú de navegación */
+        .nav-master {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .nav-btn {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-light);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        /* Contenedor principal */
+        .dashboard { 
+            max-width: 1200px; 
+            margin: 15px auto; 
+            padding: 0 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Cabecera con estado MQTT */
+        .header-card {
+            background: var(--bg-secondary);
+            border-radius: var(--card-radius);
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .title-section i {
+            color: var(--accent-primary);
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            background: var(--bg-primary);
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .stats-row span {
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        /* Contenedor de logs */
+        .log-container {
+            background: #1e1e1e;
+            border-radius: var(--card-radius);
+            padding: 20px;
+            border: 2px solid var(--accent-primary);
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 400px;
+            overflow: hidden;
+        }
         
-        #log-console { flex: 1; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.85rem; color: #d4d4d4; line-height: 1.4; padding-right: 10px; }
+        #log-console {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #d4d4d4;
+            line-height: 1.5;
+            padding-right: 10px;
+            scroll-behavior: smooth;
+        }
         
-        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 2px; }
-        .timestamp { color: #888; font-size: 0.75rem; margin-right: 8px; }
-        .topic { color: var(--accent-secondary); font-weight: bold; margin-right: 8px; }
-        .msg-info { color: var(--success); }
+        .log-entry {
+            margin-bottom: 6px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 5px;
+        }
+        
+        .timestamp {
+            color: #888;
+            font-size: 0.75rem;
+            font-family: 'Courier New', monospace;
+            background: #2a2a2a;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .topic {
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-size: 0.8rem;
+            background: #2a2a2a;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        .msg-info { color: var(--info); }
+        .msg-success { color: var(--success); }
         .msg-warn { color: var(--warning); }
+        .msg-error { color: var(--danger); }
+        .msg-value { 
+            color: #d4d4d4;
+            font-weight: 500;
+            word-break: break-all;
+        }
 
-        .controls { display: flex; gap: 10px; margin-top: 10px; }
-        .control-btn { flex: 1; background: #333; color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .control-btn:active { transform: scale(0.98); }
-        /* --- VARIABLES MODO OSCURO --- */
-body.dark-mode {
-    --bg-primary: #121417;       /* Fondo muy oscuro */
-    --bg-secondary: #1a1d23;     /* Fondo de tarjetas */
-    --bg-tertiary: #252a33;      /* Contrastes */
-    --text-main: #e0e0e0;        /* Texto claro */
-    --accent-secondary: #4a4a4a; /* Bordes oscuros */
-    border-color: #333;
-}
+        /* Controles */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
 
-/* Ajustes específicos para que las tarjetas se vean bien en oscuro */
-body.dark-mode .card, 
-body.dark-mode .nav-master, 
-body.dark-mode .v-item, 
-body.dark-mode .cell-item {
-    background: var(--bg-secondary);
-    border: 1px solid #2d343f;
-    color: var(--text-main);
-}
+        .control-btn {
+            flex: 1;
+            min-width: 120px;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
 
-body.dark-mode .nav-btn {
-    background: #252a33;
-    color: #aaa;
-    border-color: #3d4450;
-}
+        .control-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.2);
+        }
 
-/* Botón flotante para cambiar el modo */
-.theme-switch {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--accent-primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 2000;
-    border: none;
-}
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.danger { background: var(--danger); }
+        .control-btn.success { background: var(--success); }
+        .control-btn.warning { background: var(--warning); }
+
+        /* Filtros */
+        .filter-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-light);
+        }
+
+        .filter-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        /* Botón modo oscuro */
+        .theme-switch {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 2000;
+            border: none;
+            font-size: 1.5rem;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Menú de navegación -->
     <nav class="nav-master">
-        <a href="index.html" class="nav-btn">INICIO</a>
-        <a href="victron.html" class="nav-btn">VICTRON</a>
-        <a href="bateria.html" class="nav-btn">BATERÍA</a>
-        <a href="logs.html" class="nav-btn active">LOGS</a>
+        <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> INICIO</a>
+        <a href="victron.html" class="nav-btn"><i class="fas fa-solar-panel"></i> VICTRON</a>
+        <a href="bateria.html" class="nav-btn"><i class="fas fa-car-battery"></i> BATERÍA</a>
+        <a href="logs.html" class="nav-btn active"><i class="fas fa-history"></i> LOGS</a>
     </nav>
 
-    <div class="log-container">
-        <div id="log-console">
-            <div class="log-entry"><span class="timestamp">--:--:--</span> <span class="msg-info">Esperando datos del monitor...</span></div>
-        </div>
+    <div class="dashboard">
         
-        <div class="controls">
-            <button class="control-btn" onclick="clearLogs()"><i class="fas fa-trash"></i> LIMPIAR</button>
-            <button class="control-btn" id="pauseBtn" onclick="togglePause()"><i class="fas fa-pause"></i> PAUSAR</button>
+        <!-- Cabecera con estado MQTT -->
+        <div class="header-card">
+            <div class="title-section">
+                <i class="fas fa-terminal"></i>
+                <span>CONSOLA MQTT - MONITORIZACIÓN EN TIEMPO REAL</span>
+            </div>
+            <div id="mqtt-status" class="badge" style="background: #ffebee; color: #e74c3c;">
+                <i class="fas fa-circle"></i> DESCONECTADO
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filter-section">
+            <div class="filter-title">
+                <i class="fas fa-filter"></i> FILTRAR POR TIPO
+            </div>
+            <div class="filter-buttons" id="filter-buttons">
+                <button class="filter-btn active" data-filter="all">TODOS</button>
+                <button class="filter-btn" data-filter="bms">BMS</button>
+                <button class="filter-btn" data-filter="mppt">MPPT</button>
+                <button class="filter-btn" data-filter="shunt">SHUNT</button>
+                <button class="filter-btn" data-filter="inversor">INVERSOR</button>
+                <button class="filter-btn" data-filter="orion">ORION</button>
+                <button class="filter-btn" data-filter="sense">SENSE</button>
+            </div>
+        </div>
+
+        <!-- Contenedor de logs -->
+        <div class="log-container">
+            <div id="log-console">
+                <div class="log-entry">
+                    <span class="timestamp">[--:--:--]</span>
+                    <span class="topic">SISTEMA</span>
+                    <span class="msg-info">Consola de logs iniciada. Esperando datos MQTT...</span>
+                </div>
+            </div>
+            
+            <!-- Controles -->
+            <div class="controls">
+                <button class="control-btn danger" onclick="clearLogs()">
+                    <i class="fas fa-trash"></i> LIMPIAR
+                </button>
+                <button class="control-btn" id="pauseBtn" onclick="togglePause()">
+                    <i class="fas fa-pause"></i> PAUSAR
+                </button>
+                <button class="control-btn success" onclick="exportLogs()">
+                    <i class="fas fa-download"></i> EXPORTAR
+                </button>
+                <button class="control-btn warning" onclick="scrollToBottom()">
+                    <i class="fas fa-arrow-down"></i> IR AL FINAL
+                </button>
+            </div>
+
+            <!-- Estadísticas -->
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.7rem; color: #888;">
+                <span>📊 <span id="msgCount">0</span> mensajes recibidos</span>
+                <span>🔍 Filtro activo: <span id="activeFilter">TODOS</span></span>
+                <span>⏱️ Último: <span id="lastUpdate">--:--:--</span></span>
+            </div>
         </div>
     </div>
 
-    <script>
-        const BROKER = 'wss://broker.hivemq.com:8884/mqtt';
-        const TOPIC_PREFIX = 'siena395_monitor_mikel_2026';
-        let isPaused = false;
-        const consoleEl = document.getElementById('log-console');
+    <!-- Botón flotante para modo oscuro/claro -->
+    <div class="theme-switch" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </div>
 
+    <script>
+        // --- CONFIGURACIÓN MQTT ---
+        const BROKER = 'wss://broker.emqx.io:8084/mqtt';
+        
+        // Estado
+        let isPaused = false;
+        let messageCount = 0;
+        let currentFilter = 'all';
+        let logHistory = [];
+        const MAX_LOGS = 500; // Límite para no saturar el navegador
+        
+        // Elementos DOM
+        const consoleEl = document.getElementById('log-console');
+        const mqttStatusEl = document.getElementById('mqtt-status');
+        const msgCountEl = document.getElementById('msgCount');
+        const activeFilterEl = document.getElementById('activeFilter');
+        const lastUpdateEl = document.getElementById('lastUpdate');
+
+        // Conectar MQTT
         const client = mqtt.connect(BROKER);
 
         client.on('connect', () => {
-            addEntry('SISTEMA', 'Conectado al Broker HiveMQ', 'msg-info');
-            client.subscribe(`${TOPIC_PREFIX}/#`);
+            console.log('✅ Conectado al broker MQTT');
+            mqttStatusEl.innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
+            mqttStatusEl.style.background = '#e8f5e9';
+            mqttStatusEl.style.color = '#27ae60';
+            
+            // Suscribirse a TODOS los sensores (igual que en los otros HTML)
+            client.subscribe('mi_clave_privada_siena/sensor/#');
+            addEntry('SISTEMA', 'Conectado al broker', 'msg-success');
+            addEntry('SISTEMA', 'Suscrito a: mi_clave_privada_siena/sensor/#', 'msg-info');
+        });
+
+        client.on('error', (err) => {
+            console.error('❌ Error MQTT:', err);
+            mqttStatusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ERROR';
+            mqttStatusEl.style.background = '#ffebee';
+            mqttStatusEl.style.color = '#e74c3c';
+            addEntry('ERROR', 'Fallo en conexión MQTT', 'msg-error');
         });
 
         client.on('message', (topic, message) => {
             if (isPaused) return;
             
-            // Simplificamos el nombre del topic para que no ocupe tanto
-            const shortTopic = topic.replace(TOPIC_PREFIX + '/', '');
-            addEntry(shortTopic, message.toString());
+            const payload = message.toString();
+            const timestamp = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            // Actualizar contadores
+            messageCount++;
+            msgCountEl.innerText = messageCount;
+            lastUpdateEl.innerText = timestamp;
+            
+            // Extraer información del tópico
+            const parts = topic.split('/');
+            if (parts.length >= 4) {
+                const sensorName = parts[2]; // "siena_bms_voltaje", etc.
+                const deviceType = getDeviceType(sensorName);
+                
+                // Crear entrada de log
+                const logEntry = {
+                    timestamp: timestamp,
+                    topic: topic,
+                    sensorName: sensorName,
+                    deviceType: deviceType,
+                    payload: payload,
+                    fullTopic: topic
+                };
+                
+                // Guardar en historial
+                logHistory.push(logEntry);
+                if (logHistory.length > MAX_LOGS) {
+                    logHistory.shift();
+                }
+                
+                // Mostrar si pasa el filtro
+                if (currentFilter === 'all' || currentFilter === deviceType) {
+                    displayLogEntry(logEntry);
+                }
+            } else {
+                // Formato de tópico no esperado
+                addEntry('DESCONOCIDO', `${topic}: ${payload}`, 'msg-warn');
+            }
         });
 
-        function addEntry(topic, msg, className = '') {
-            const now = new Date();
-            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
-                          now.getMinutes().toString().padStart(2, '0') + ':' + 
-                          now.getSeconds().toString().padStart(2, '0');
-            
+        // Determinar tipo de dispositivo por el nombre del sensor
+        function getDeviceType(sensorName) {
+            if (sensorName.includes('bms')) return 'bms';
+            if (sensorName.includes('mppt')) return 'mppt';
+            if (sensorName.includes('shunt')) return 'shunt';
+            if (sensorName.includes('inversor')) return 'inversor';
+            if (sensorName.includes('orion')) return 'orion';
+            if (sensorName.includes('sense')) return 'sense';
+            return 'otros';
+        }
+
+        // Mostrar entrada en la consola
+        function displayLogEntry(entry) {
             const div = document.createElement('div');
             div.className = 'log-entry';
-            div.innerHTML = `<span class="timestamp">[${timeStr}]</span><span class="topic">${topic}:</span><span class="${className}">${msg}</span>`;
+            div.setAttribute('data-device', entry.deviceType);
+            
+            // Determinar clase del mensaje según el valor
+            let msgClass = 'msg-value';
+            if (entry.sensorName.includes('error') || entry.payload.includes('nan')) {
+                msgClass = 'msg-error';
+            } else if (entry.sensorName.includes('temperatura') && parseFloat(entry.payload) > 40) {
+                msgClass = 'msg-warn';
+            } else if (entry.sensorName.includes('soc')) {
+                msgClass = 'msg-success';
+            }
+            
+            div.innerHTML = `
+                <span class="timestamp">[${entry.timestamp}]</span>
+                <span class="topic">${entry.sensorName}:</span>
+                <span class="${msgClass}">${entry.payload}</span>
+            `;
             
             consoleEl.appendChild(div);
             consoleEl.scrollTop = consoleEl.scrollHeight; // Auto-scroll
         }
 
-        function clearLogs() {
-            consoleEl.innerHTML = '<div class="log-entry"><span class="timestamp">--:--:--</span> <span class="msg-info">Consola limpia.</span></div>';
+        // Añadir entrada manual del sistema
+        function addEntry(sensor, msg, className = 'msg-info') {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `
+                <span class="timestamp">[${timeStr}]</span>
+                <span class="topic">${sensor}:</span>
+                <span class="${className}">${msg}</span>
+            `;
+            
+            consoleEl.appendChild(div);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
+        // Limpiar logs
+        function clearLogs() {
+            consoleEl.innerHTML = '';
+            addEntry('SISTEMA', 'Consola limpia', 'msg-info');
+            messageCount = 0;
+            msgCountEl.innerText = messageCount;
+            logHistory = [];
+        }
+
+        // Pausar/Reanudar
         function togglePause() {
             isPaused = !isPaused;
             const btn = document.getElementById('pauseBtn');
             btn.innerHTML = isPaused ? '<i class="fas fa-play"></i> REANUDAR' : '<i class="fas fa-pause"></i> PAUSAR';
             btn.style.background = isPaused ? 'var(--success)' : '#333';
+            
+            if (!isPaused) {
+                addEntry('SISTEMA', 'Reanudado - Mostrando mensajes', 'msg-info');
+            }
         }
+
+        // Exportar logs
+        function exportLogs() {
+            let logText = '';
+            const entries = consoleEl.querySelectorAll('.log-entry');
+            
+            entries.forEach(entry => {
+                logText += entry.innerText + '\n';
+            });
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `siena-logs-${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addEntry('SISTEMA', 'Logs exportados correctamente', 'msg-success');
+        }
+
+        // Scroll al final
+        function scrollToBottom() {
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Filtros
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Actualizar botón activo
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Actualizar filtro
+                currentFilter = this.getAttribute('data-filter');
+                activeFilterEl.innerText = this.innerText;
+                
+                // Limpiar y re-dibujar con el filtro
+                consoleEl.innerHTML = '';
+                
+                // Mostrar historial filtrado
+                logHistory.forEach(entry => {
+                    if (currentFilter === 'all' || currentFilter === entry.deviceType) {
+                        displayLogEntry(entry);
+                    }
+                });
+                
+                addEntry('SISTEMA', `Filtro aplicado: ${this.innerText}`, 'msg-info');
+            });
+        });
+
+        // --- MODO OSCURO / CLARO ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        console.log('📋 Página de Logs Siena 395 iniciada');
+        console.log('📡 Esperando datos de: mi_clave_privada_siena/sensor/#');
     </script>
 </body>
 </html>
