@@ -39,6 +39,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -51,6 +52,7 @@
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-light);
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            flex-shrink: 0;
         }
 
         .nav-btn {
@@ -85,6 +87,8 @@
             flex-direction: column;
             width: 100%;
             box-sizing: border-box;
+            overflow: hidden;
+            min-height: 0;
         }
 
         /* Cabecera con estado MQTT */
@@ -99,6 +103,7 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .title-section {
@@ -125,19 +130,49 @@
             border: 1px solid var(--border-light);
         }
 
-        .stats-row {
-            display: flex;
-            gap: 15px;
-            font-size: 0.8rem;
-            color: #888;
+        /* Filtros */
+        .filter-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-light);
+            flex-shrink: 0;
         }
 
-        .stats-row span {
+        .filter-title {
             font-weight: 700;
+            margin-bottom: 10px;
             color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        /* Contenedor de logs */
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        /* Contenedor de logs - AHORA CON TAMAÑO FIJO */
         .log-container {
             background: #1e1e1e;
             border-radius: var(--card-radius);
@@ -147,7 +182,7 @@
             display: flex;
             flex-direction: column;
             flex: 1;
-            min-height: 400px;
+            min-height: 0;
             overflow: hidden;
         }
         
@@ -160,6 +195,7 @@
             line-height: 1.5;
             padding-right: 10px;
             scroll-behavior: smooth;
+            min-height: 0;
         }
         
         .log-entry {
@@ -200,12 +236,13 @@
             word-break: break-all;
         }
 
-        /* Controles */
+        /* Controles - SIEMPRE VISIBLES */
         .controls {
             display: flex;
             gap: 10px;
             margin-top: 15px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
 
         .control-btn {
@@ -239,45 +276,18 @@
         .control-btn.success { background: var(--success); }
         .control-btn.warning { background: var(--warning); }
 
-        /* Filtros */
-        .filter-section {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-light);
-        }
-
-        .filter-title {
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--accent-primary);
+        /* Estadísticas - SIEMPRE VISIBLES */
+        .stats-footer {
             display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .filter-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .filter-btn {
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.7rem;
+            color: #888;
+            flex-shrink: 0;
             background: var(--bg-primary);
+            padding: 8px 12px;
+            border-radius: 12px;
             border: 1px solid var(--border-light);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .filter-btn.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
         }
 
         /* Botón modo oscuro */
@@ -302,6 +312,13 @@
     </style>
 </head>
 <body>
+    <!--
+        CopyLeft 2026 - UZTURRE
+        Este código es completamente libre.
+        Puedes copiarlo, modificarlo y compartirlo sin pedir permiso.
+        Si te sirve, úsalo; si lo mejoras, compártelo.
+        Esto es CopyLeft: el conocimiento no se posee, se comparte.
+    -->
 
     <!-- Menú de navegación -->
     <nav class="nav-master">
@@ -340,7 +357,7 @@
             </div>
         </div>
 
-        <!-- Contenedor de logs -->
+        <!-- Contenedor de logs - TAMAÑO FIJO -->
         <div class="log-container">
             <div id="log-console">
                 <div class="log-entry">
@@ -350,7 +367,7 @@
                 </div>
             </div>
             
-            <!-- Controles -->
+            <!-- Controles - SIEMPRE VISIBLES -->
             <div class="controls">
                 <button class="control-btn danger" onclick="clearLogs()">
                     <i class="fas fa-trash"></i> LIMPIAR
@@ -366,12 +383,17 @@
                 </button>
             </div>
 
-            <!-- Estadísticas -->
-            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.7rem; color: #888;">
-                <span>📊 <span id="msgCount">0</span> mensajes recibidos</span>
-                <span>🔍 Filtro activo: <span id="activeFilter">TODOS</span></span>
+            <!-- Estadísticas - SIEMPRE VISIBLES -->
+            <div class="stats-footer">
+                <span>📊 <span id="msgCount">0</span> mensajes</span>
+                <span>🔍 Filtro: <span id="activeFilter">TODOS</span></span>
                 <span>⏱️ Último: <span id="lastUpdate">--:--:--</span></span>
             </div>
+        </div>
+
+        <!-- CopyLeft visible -->
+        <div style="text-align: center; font-size: 0.6rem; color: #aaa; margin-top: 8px; padding: 5px; border-top: 1px dashed var(--border-light);">
+            🏴‍☠️ CopyLeft 2026 - UZTURRE · El conocimiento no se posee, se comparte · Código 100% libre
         </div>
     </div>
 
@@ -407,9 +429,9 @@
             mqttStatusEl.style.background = '#e8f5e9';
             mqttStatusEl.style.color = '#27ae60';
             
-            // Suscribirse a TODOS los sensores (igual que en los otros HTML)
+            // Suscribirse a TODOS los sensores
             client.subscribe('mi_clave_privada_siena/sensor/#');
-            addEntry('SISTEMA', 'Conectado al broker', 'msg-success');
+            addEntry('SISTEMA', 'Conectado al broker EMQX', 'msg-success');
             addEntry('SISTEMA', 'Suscrito a: mi_clave_privada_siena/sensor/#', 'msg-info');
         });
 
@@ -435,7 +457,7 @@
             // Extraer información del tópico
             const parts = topic.split('/');
             if (parts.length >= 4) {
-                const sensorName = parts[2]; // "siena_bms_voltaje", etc.
+                const sensorName = parts[2];
                 const deviceType = getDeviceType(sensorName);
                 
                 // Crear entrada de log
@@ -498,7 +520,7 @@
             `;
             
             consoleEl.appendChild(div);
-            consoleEl.scrollTop = consoleEl.scrollHeight; // Auto-scroll
+            consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
         // Añadir entrada manual del sistema
@@ -567,18 +589,14 @@
         // Filtros
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                // Actualizar botón activo
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Actualizar filtro
                 currentFilter = this.getAttribute('data-filter');
                 activeFilterEl.innerText = this.innerText;
                 
-                // Limpiar y re-dibujar con el filtro
                 consoleEl.innerHTML = '';
                 
-                // Mostrar historial filtrado
                 logHistory.forEach(entry => {
                     if (currentFilter === 'all' || currentFilter === entry.deviceType) {
                         displayLogEntry(entry);
@@ -589,7 +607,7 @@
             });
         });
 
-        // --- MODO OSCURO / CLARO ---
+        // Modo oscuro
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = themeToggle.querySelector('i');
         
