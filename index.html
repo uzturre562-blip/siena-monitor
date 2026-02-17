@@ -243,7 +243,7 @@
             </div>
         </header>
 
-        <!-- Tarjeta de Flujo de Energía (ahora completa) -->
+        <!-- Tarjeta de Flujo de Energía -->
         <div class="card">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--accent-primary); font-weight: 700;">
                 <i class="fas fa-bolt"></i> FLUJO DE ENERGÍA (ACTUAL)
@@ -262,13 +262,13 @@
                     <span class="flow-value" id="flowBattery">-- W</span>
                 </div>
                 
-                <!-- Fila: Consumo Red -->
+                <!-- Fila: Consumo Red (si lo tienes) -->
                 <div class="flow-row">
                     <span class="flow-label"><i class="fas fa-city"></i> Consumo red</span>
                     <span class="flow-value value-blue" id="flowGrid">-- W</span>
                 </div>
                 
-                <!-- Fila: Consumo Total (con estilo destacado) -->
+                <!-- Fila: Consumo Total -->
                 <div class="flow-row" style="border-bottom: none; margin-top: 5px;">
                     <span class="flow-label" style="font-weight: 800;"><i class="fas fa-home"></i> Consumo total</span>
                     <span class="flow-value" style="font-size: 1.5rem; color: var(--consumer-red);" id="flowLoad">-- W</span>
@@ -320,9 +320,8 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN MQTT ---
+        // --- CONFIGURACIÓN MQTT (IGUAL QUE EN BATERIA Y VICTRON) ---
         const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-        const TOPIC_ROOT = 'siena395/mikel/2026';
         
         // Estado de conexión
         const mqttStatusEl = document.getElementById('mqtt-status');
@@ -355,19 +354,14 @@
 
         client.on('connect', () => {
             console.log('✅ Conectado al broker MQTT');
-            mqttStatusEl.innerHTML = '<i class="fas fa-circle"></i> ONLINE';
+            mqttStatusEl.innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
             mqttStatusEl.style.background = '#e8f5e9';
             mqttStatusEl.style.color = '#27ae60';
             mqttStatusEl.style.borderColor = '#c8e6c9';
             
-            // Suscribirse a todos los tópicos relevantes
-            client.subscribe(`${TOPIC_ROOT}/victron/#`);
-            client.subscribe(`${TOPIC_ROOT}/soc`);
-            client.subscribe(`${TOPIC_ROOT}/solar/power`);
-            client.subscribe(`${TOPIC_ROOT}/solar/today`);
-            client.subscribe(`${TOPIC_ROOT}/grid/power`);
-            client.subscribe(`${TOPIC_ROOT}/battery/power`);
-            client.subscribe(`${TOPIC_ROOT}/load/power`);
+            // Suscribirse a TODOS los sensores (como en bateria.html y victron.html)
+            client.subscribe('mi_clave_privada_siena/sensor/#');
+            console.log('📡 Suscrito a: mi_clave_privada_siena/sensor/#');
         });
 
         client.on('error', (err) => {
@@ -382,44 +376,71 @@
             const timestamp = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             lastUpdateEl.innerText = timestamp;
             
-            // Actualizar valores según el tópico
-            if (topic.includes('/soc') || topic.includes('battery/soc')) {
-                values.soc = parseFloat(payload) || 0;
-                elements.mainSoc.innerText = values.soc.toFixed(1);
-            }
-            else if (topic.includes('/solar/power') || topic.includes('solar/power')) {
-                values.solarPower = parseFloat(payload) || 0;
-                elements.mainSolar.innerText = values.solarPower.toFixed(0);
-                elements.flowSolar.innerText = values.solarPower.toFixed(0) + ' W';
-            }
-            else if (topic.includes('/solar/today')) {
-                values.solarTodayKWh = parseFloat(payload) || 0;
-                elements.solarToday.innerText = `Hoy: ${values.solarTodayKWh.toFixed(2)} kWh`;
-            }
-            else if (topic.includes('/battery/power')) {
-                values.batteryPower = parseFloat(payload) || 0;
-                const batteryText = values.batteryPower > 0 ? '⚡ Cargando' : (values.batteryPower < 0 ? '🔋 Descargando' : '⏸️ Reposo');
-                elements.flowBattery.innerText = values.batteryPower.toFixed(0) + ' W';
-                elements.batteryPower.innerText = batteryText + ` (${values.batteryPower.toFixed(0)} W)`;
-            }
-            else if (topic.includes('/grid/power')) {
-                values.gridPower = parseFloat(payload) || 0;
-                elements.flowGrid.innerText = values.gridPower.toFixed(0) + ' W';
-            }
-            else if (topic.includes('/load/power')) {
-                values.loadPower = parseFloat(payload) || 0;
-                elements.flowLoad.innerText = values.loadPower.toFixed(0) + ' W';
+            console.log(`📨 ${topic} = ${payload}`);
+            
+            // Extraer el nombre del sensor (parte después de /sensor/)
+            const parts = topic.split('/');
+            if (parts.length >= 4) {
+                const sensorName = parts[2]; // "siena_bms_voltaje", "siena_mppt_potencia_solar", etc.
+                
+                switch(sensorName) {
+                    // SOC - Prioridad al shunt, luego al BMS
+                    case 'siena_shunt_soc':
+                        values.soc = parseFloat(payload);
+                        elements.mainSoc.innerText = values.soc.toFixed(1);
+                        break;
+                    case 'siena_bms_soc':
+                        if (!values.soc) {
+                            values.soc = parseFloat(payload);
+                            elements.mainSoc.innerText = values.soc.toFixed(1);
+                        }
+                        break;
+                    
+                    // Potencia solar
+                    case 'siena_mppt_potencia_solar':
+                        values.solarPower = parseFloat(payload) || 0;
+                        elements.mainSolar.innerText = values.solarPower.toFixed(0);
+                        elements.flowSolar.innerText = values.solarPower.toFixed(0) + ' W';
+                        break;
+                    
+                    // Energía solar hoy
+                    case 'siena_mppt_hoy':
+                        values.solarTodayKWh = parseFloat(payload) || 0;
+                        elements.solarToday.innerText = `Hoy: ${values.solarTodayKWh.toFixed(2)} kWh`;
+                        break;
+                    
+                    // Potencia de batería (carga/descarga)
+                    case 'siena_bms_potencia':
+                        values.batteryPower = parseFloat(payload) || 0;
+                        const batteryText = values.batteryPower > 0 ? '⚡ Cargando' : (values.batteryPower < 0 ? '🔋 Descargando' : '⏸️ Reposo');
+                        elements.flowBattery.innerText = values.batteryPower.toFixed(0) + ' W';
+                        elements.batteryPower.innerText = batteryText + ` (${values.batteryPower.toFixed(0)} W)`;
+                        break;
+                    
+                    // Consumo total (puede venir de varios lados)
+                    case 'siena_inversor_potencia':
+                        if (payload !== 'nan') {
+                            values.loadPower = parseFloat(payload) || 0;
+                            elements.flowLoad.innerText = values.loadPower.toFixed(0) + ' W';
+                        }
+                        break;
+                    
+                    // Orion DC-DC (alternador)
+                    case 'siena_orion_corriente':
+                        // Puedes usar esto para calcular consumo del alternador si lo necesitas
+                        break;
+                }
             }
             
-            // También procesar tópicos específicos de Victron si llegan aquí
-            if (topic.includes('victron/solar')) {
+            // También mantener compatibilidad con tópicos antiguos si es necesario
+            if (topic.includes('bateria_porcentaje')) {
+                values.soc = parseFloat(payload) || 0;
+                elements.mainSoc.innerText = values.soc.toFixed(1);
+            }
+            if (topic.includes('potencia_solar_actual')) {
                 values.solarPower = parseFloat(payload) || 0;
                 elements.mainSolar.innerText = values.solarPower.toFixed(0);
                 elements.flowSolar.innerText = values.solarPower.toFixed(0) + ' W';
-            }
-            if (topic.includes('victron/battery/soc')) {
-                values.soc = parseFloat(payload) || 0;
-                elements.mainSoc.innerText = values.soc.toFixed(1);
             }
         });
 
@@ -449,8 +470,8 @@
             }
         });
 
-        // Añadir tooltips o información adicional
         console.log('🚀 Dashboard Siena 395 iniciado');
+        console.log('📡 Esperando datos de: mi_clave_privada_siena/sensor/#');
     </script>
 </body>
 </html>
