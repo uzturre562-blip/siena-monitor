@@ -509,26 +509,7 @@
             }
         }
 
-        // Datos de demostración si no hay conexión
-        function setDemoData() {
-            if (elements.bmsVoltage.innerText === '--.--') {
-                console.log('📊 Mostrando datos de demostración');
-                elements.bmsVoltage.innerText = '13.2';
-                elements.bmsCurrent.innerText = '2.5';
-                elements.bmsTemp.innerText = '24°C';
-                elements.senseTemp.innerText = '23°C';
-                elements.bmsSoc.innerText = '78%';
-                
-                // Celdas demo
-                const demos = [3.32, 3.31, 3.33, 3.30];
-                demos.forEach((v, i) => updateCell(i+1, v));
-                
-                lastUpdateEl.innerText = new Date().toLocaleTimeString();
-            }
-        }
-        
-        // Si después de 5 segundos no hay datos, mostrar demo
-        setTimeout(setDemoData, 5000);
+
 
         // --- MODO OSCURO / CLARO ---
         const themeToggle = document.getElementById('themeToggle');
