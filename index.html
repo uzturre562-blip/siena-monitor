@@ -423,24 +423,6 @@
             }
         });
 
-        // Función para actualizar valores por defecto (para pruebas sin MQTT)
-        function setDemoData() {
-            if (values.soc === 0) {
-                elements.mainSoc.innerText = '78.5';
-                elements.mainSolar.innerText = '1240';
-                elements.flowSolar.innerText = '1240 W';
-                elements.flowBattery.innerText = '-210 W';
-                elements.flowGrid.innerText = '0 W';
-                elements.flowLoad.innerText = '1030 W';
-                elements.batteryPower.innerText = '🔋 Descargando (210 W)';
-                elements.solarToday.innerText = 'Hoy: 4.32 kWh';
-                lastUpdateEl.innerText = new Date().toLocaleTimeString();
-            }
-        }
-        
-        // Si después de 5 segundos no hay datos, mostrar demo
-        setTimeout(setDemoData, 5000);
-
         // --- MODO OSCURO / CLARO ---
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = themeToggle.querySelector('i');
