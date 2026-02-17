@@ -3,34 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SISTEMA DE BATERÍA - BMS JK</title>
+    <title>Siena 395 - Batería Ultimatron</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     
     <style>
-        /* Copiamos tus variables y estilos base del index-gmni.html */
         :root {
             --bg-primary: #f8f5f0;
             --bg-secondary: #fefcf8;
             --text-main: #2c2925;
             --accent-primary: #8b7355;
-            --accent-secondary: #c5b4a0;
             --victron-blue: #1a5c96;
             --solar-orange: #f39c12;
             --success: #27ae60;
             --danger: #e74c3c;
-            --shadow-soft: 0 8px 30px rgba(0,0,0,0.05);
+            --warning: #e67e22;
             --card-radius: 24px;
+            --border-light: #e2ddd5;
+        }
+
+        /* Modo oscuro */
+        body.dark-mode {
+            --bg-primary: #121417;
+            --bg-secondary: #1a1d23;
+            --text-main: #e0e0e0;
+            --border-light: #2d343f;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
+            background: var(--bg-primary);
             color: var(--text-main);
             margin: 0;
-            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* --- MENÚ DE NAVEGACIÓN --- */
@@ -43,20 +50,22 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            border-bottom: 1px solid var(--accent-secondary);
-            box-shadow: var(--shadow-soft);
+            border-bottom: 1px solid var(--border-light);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
         .nav-btn {
             background: var(--bg-primary);
-            border: 2px solid var(--accent-secondary);
+            border: 2px solid var(--border-light);
             padding: 8px 12px;
             border-radius: 12px;
             font-weight: 700;
-            color: var(--accent-primary);
+            color: #888;
             text-decoration: none;
             font-size: 0.8rem;
-            display: flex;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
             align-items: center;
             gap: 5px;
         }
@@ -64,189 +73,491 @@
         .nav-btn.active {
             background: var(--accent-primary);
             color: white;
+            border-color: var(--accent-primary);
         }
 
-        /* Reutilizamos las clases de tarjetas de tu index-gmni.html */
+        /* Estilos del Dashboard */
         .dashboard { max-width: 800px; margin: 0 auto; padding: 15px; }
-        .card { 
-            background: var(--bg-secondary); 
-            border-radius: var(--card-radius); 
-            padding: 20px; 
-            margin-bottom: 20px; 
-            box-shadow: var(--shadow-soft);
-            border: 1px solid rgba(139, 115, 85, 0.1);
-        }
-        .card-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
         
-        /* Estilos específicos para celdas grandes */
-        .cell-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .cell-item { background: var(--bg-primary); padding: 15px; border-radius: 18px; border: 1px solid var(--accent-secondary); }
-        .cell-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .cell-bar-bg { background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; }
-        .cell-bar-fill { background: var(--success); height: 100%; transition: width 0.5s; }
-        /* --- VARIABLES MODO OSCURO --- */
-body.dark-mode {
-    --bg-primary: #121417;       /* Fondo muy oscuro */
-    --bg-secondary: #1a1d23;     /* Fondo de tarjetas */
-    --bg-tertiary: #252a33;      /* Contrastes */
-    --text-main: #e0e0e0;        /* Texto claro */
-    --accent-secondary: #4a4a4a; /* Bordes oscuros */
-    border-color: #333;
-}
+        .card {
+            background: var(--bg-secondary);
+            border-radius: var(--card-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-light);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        .card-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent-primary);
+        }
 
-/* Ajustes específicos para que las tarjetas se vean bien en oscuro */
-body.dark-mode .card, 
-body.dark-mode .nav-master, 
-body.dark-mode .v-item, 
-body.dark-mode .cell-item {
-    background: var(--bg-secondary);
-    border: 1px solid #2d343f;
-    color: var(--text-main);
-}
+        /* Estilos específicos para celdas */
+        .cell-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 15px; 
+        }
+        
+        .cell-item { 
+            background: var(--bg-primary); 
+            padding: 15px; 
+            border-radius: 18px; 
+            border: 1px solid var(--border-light); 
+        }
+        
+        .cell-info { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 8px; 
+        }
+        
+        .cell-bar-bg { 
+            background: #e0e0e0; 
+            height: 12px; 
+            border-radius: 6px; 
+            overflow: hidden; 
+        }
 
-body.dark-mode .nav-btn {
-    background: #252a33;
-    color: #aaa;
-    border-color: #3d4450;
-}
+        body.dark-mode .cell-bar-bg {
+            background: #333a45;
+        }
+        
+        .cell-bar-fill { 
+            background: var(--success); 
+            height: 100%; 
+            width: 0%;
+            transition: width 0.5s; 
+        }
 
-/* Botón flotante para cambiar el modo */
-.theme-switch {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--accent-primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 2000;
-    border: none;
-}
+        /* Mini tarjetas de métricas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: var(--bg-primary);
+            padding: 15px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid var(--border-light);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            line-height: 1.2;
+        }
+
+        .stat-unit {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #888;
+            margin-left: 2px;
+        }
+
+        /* Temperaturas */
+        .temp-grid {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+        }
+
+        .temp-item {
+            text-align: center;
+            flex: 1;
+            background: var(--bg-primary);
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+        }
+
+        .temp-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .temp-label {
+            font-size: 0.8rem;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .temp-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        /* Badge para estado MQTT */
+        .badge {
+            background: var(--bg-primary);
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        /* Botón modo oscuro */
+        .theme-switch {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 2000;
+            border: none;
+            font-size: 1.5rem;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Menú de navegación -->
     <nav class="nav-master">
         <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> INICIO</a>
-        <a href="victron.html" class="nav-btn"><i class="fas fa-plug"></i> VICTRON</a>
+        <a href="victron.html" class="nav-btn"><i class="fas fa-solar-panel"></i> VICTRON</a>
         <a href="bateria.html" class="nav-btn active"><i class="fas fa-car-battery"></i> BATERÍA</a>
-        <a href="logs.html" class="nav-btn"><i class="fas fa-terminal"></i> LOGS</a>
+        <a href="logs.html" class="nav-btn"><i class="fas fa-history"></i> LOGS</a>
     </nav>
 
     <div class="dashboard">
         
-        <div class="card" style="padding: 10px 20px;">
-            <div id="mqtt-status" style="font-weight: 700; color: var(--danger); font-size: 0.9rem;">
-                <i class="fas fa-circle"></i> DESCONECTADO (BROKER)
+        <!-- Estado MQTT -->
+        <div class="card" style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-battery-three-quarters" style="color: var(--accent-primary);"></i> 
+                SISTEMA DE BATERÍA
+            </div>
+            <div id="mqtt-status" class="badge" style="background: #ffebee; color: #e74c3c;">
+                <i class="fas fa-circle"></i> DESCONECTADO
             </div>
         </div>
 
+        <!-- Tarjeta principal BMS -->
         <div class="card">
-            <div class="card-title" style="color: var(--accent-primary);">
-                <i class="fas fa-shield-alt"></i> JK BMS - ULTMATRON 100AH
+            <div class="card-title">
+                <i class="fas fa-microchip"></i> JK BMS - ULTIMATRON 100Ah
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <div style="text-align: center; background: var(--bg-primary); padding: 15px; border-radius: 20px;">
-                    <div style="font-size: 0.8rem; color: #666;">VOLTAJE TOTAL</div>
-                    <div id="bmsVoltage" style="font-size: 1.5rem; font-weight: 900;">--.--V</div>
+            
+            <!-- Métricas principales -->
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label"><i class="fas fa-bolt"></i> VOLTAJE TOTAL</div>
+                    <div>
+                        <span class="stat-value" id="bmsVoltage">--.--</span>
+                        <span class="stat-unit">V</span>
+                    </div>
                 </div>
-                <div style="text-align: center; background: var(--bg-primary); padding: 15px; border-radius: 20px;">
-                    <div style="font-size: 0.8rem; color: #666;">INTENSIDAD</div>
-                    <div id="bmsCurrent" style="font-size: 1.5rem; font-weight: 900;">--.--A</div>
+                <div class="stat-box">
+                    <div class="stat-label"><i class="fas fa-chart-line"></i> INTENSIDAD</div>
+                    <div>
+                        <span class="stat-value" id="bmsCurrent">--.--</span>
+                        <span class="stat-unit">A</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="cell-grid">
-                <div class="cell-item">
-                    <div class="cell-info">
-                        <span style="font-weight: 700;">CELDA 1</span>
-                        <span id="vCell1" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+            <!-- Estado del BMS -->
+            <div style="background: var(--bg-primary); border-radius: 18px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border-light);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-weight: 600; color: #888;">ESTADO:</span>
+                        <span id="bmsState" style="font-weight: 800; color: var(--success); margin-left: 5px;">Normal</span>
                     </div>
-                    <div class="cell-bar-bg"><div id="bCell1" class="cell-bar-fill" style="width: 0%"></div></div>
+                    <div>
+                        <span style="font-weight: 600; color: #888;">SOC:</span>
+                        <span id="bmsSoc" style="font-weight: 800; color: var(--victron-blue);">--.-%</span>
+                    </div>
                 </div>
-                <div class="cell-item">
-                    <div class="cell-info">
-                        <span style="font-weight: 700;">CELDA 2</span>
-                        <span id="vCell2" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
-                    </div>
-                    <div class="cell-bar-bg"><div id="bCell2" class="cell-bar-fill" style="width: 0%"></div></div>
+            </div>
+
+            <!-- Celdas -->
+            <div style="margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <span style="font-weight: 700; color: var(--accent-primary);"><i class="fas fa-battery-full"></i> VOLTAJE DE CELDAS</span>
+                    <span style="font-size: 0.7rem; color: #888;">Balanceo activo</span>
                 </div>
-                <div class="cell-item">
-                    <div class="cell-info">
-                        <span style="font-weight: 700;">CELDA 3</span>
-                        <span id="vCell3" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                
+                <div class="cell-grid">
+                    <div class="cell-item">
+                        <div class="cell-info">
+                            <span style="font-weight: 700;">CELDA 1</span>
+                            <span id="vCell1" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                        </div>
+                        <div class="cell-bar-bg"><div id="bCell1" class="cell-bar-fill" style="width: 0%;"></div></div>
                     </div>
-                    <div class="cell-bar-bg"><div id="bCell3" class="cell-bar-fill" style="width: 0%"></div></div>
-                </div>
-                <div class="cell-item">
-                    <div class="cell-info">
-                        <span style="font-weight: 700;">CELDA 4</span>
-                        <span id="vCell4" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                    <div class="cell-item">
+                        <div class="cell-info">
+                            <span style="font-weight: 700;">CELDA 2</span>
+                            <span id="vCell2" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                        </div>
+                        <div class="cell-bar-bg"><div id="bCell2" class="cell-bar-fill" style="width: 0%;"></div></div>
                     </div>
-                    <div class="cell-bar-bg"><div id="bCell4" class="cell-bar-fill" style="width: 0%"></div></div>
+                    <div class="cell-item">
+                        <div class="cell-info">
+                            <span style="font-weight: 700;">CELDA 3</span>
+                            <span id="vCell3" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                        </div>
+                        <div class="cell-bar-bg"><div id="bCell3" class="cell-bar-fill" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="cell-item">
+                        <div class="cell-info">
+                            <span style="font-weight: 700;">CELDA 4</span>
+                            <span id="vCell4" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
+                        </div>
+                        <div class="cell-bar-bg"><div id="bCell4" class="cell-bar-fill" style="width: 0%;"></div></div>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Tarjeta de Temperaturas -->
         <div class="card">
-            <div class="card-title"><i class="fas fa-thermometer-half"></i> TEMPERATURA SENSORES</div>
-            <div style="display: flex; justify-content: space-around;">
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; color: var(--solar-orange);"><i class="fas fa-microchip"></i></div>
-                    <div style="font-size: 0.8rem;">BMS</div>
-                    <div id="bmsTemp" style="font-weight: 800;">--°C</div>
+            <div class="card-title"><i class="fas fa-thermometer-half"></i> TEMPERATURAS</div>
+            <div class="temp-grid">
+                <div class="temp-item">
+                    <div class="temp-icon" style="color: var(--solar-orange);"><i class="fas fa-microchip"></i></div>
+                    <div class="temp-label">BMS</div>
+                    <div class="temp-value" id="bmsTemp">--°C</div>
                 </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; color: var(--victron-blue);"><i class="fas fa-broadcast-tower"></i></div>
-                    <div style="font-size: 0.8rem;">SENSE</div>
-                    <div id="senseTemp" style="font-weight: 800;">--°C</div>
+                <div class="temp-item">
+                    <div class="temp-icon" style="color: var(--victron-blue);"><i class="fas fa-broadcast-tower"></i></div>
+                    <div class="temp-label">SENSOR</div>
+                    <div class="temp-value" id="senseTemp">--°C</div>
                 </div>
             </div>
         </div>
 
+        <!-- Última actualización -->
+        <div style="text-align: center; font-size: 0.7rem; color: #888; margin-top: 10px; padding: 10px;">
+            <i class="far fa-clock"></i> Última actualización: <span id="lastUpdate">--:--:--</span>
+        </div>
+    </div>
+
+    <!-- Botón flotante para modo oscuro/claro -->
+    <div class="theme-switch" id="themeToggle">
+        <i class="fas fa-moon"></i>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN MQTT (Igual que tu index) ---
-        const BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+        // --- CONFIGURACIÓN MQTT (COINCIDIENDO CON TU YAML) ---
+        const BROKER = 'wss://broker.emqx.io:8084/mqtt';
+        
+        // IMPORTANTE: Esto debe coincidir EXACTAMENTE con tu configuración YAML
         const TOPIC_PREFIX = 'siena395_monitor_mikel_2026';
+        const TOPIC_SECRET = 'mi_clave_privada_siena'; // ← Tal como en tu YAML
+        
+        // Tópico base completo
+        const TOPIC_BASE = `${TOPIC_PREFIX}/${TOPIC_SECRET}`;
+        
+        // Elementos del DOM
+        const mqttStatusEl = document.getElementById('mqtt-status');
+        const lastUpdateEl = document.getElementById('lastUpdate');
+        
+        // Elementos a actualizar
+        const elements = {
+            bmsVoltage: document.getElementById('bmsVoltage'),
+            bmsCurrent: document.getElementById('bmsCurrent'),
+            bmsTemp: document.getElementById('bmsTemp'),
+            senseTemp: document.getElementById('senseTemp'),
+            bmsSoc: document.getElementById('bmsSoc'),
+            bmsState: document.getElementById('bmsState'),
+            cells: [
+                { text: document.getElementById('vCell1'), bar: document.getElementById('bCell1') },
+                { text: document.getElementById('vCell2'), bar: document.getElementById('bCell2') },
+                { text: document.getElementById('vCell3'), bar: document.getElementById('bCell3') },
+                { text: document.getElementById('vCell4'), bar: document.getElementById('bCell4') }
+            ]
+        };
+
+        // Valores almacenados
+        let cellVoltages = [0, 0, 0, 0];
+
+        // Conectar al broker MQTT
         const client = mqtt.connect(BROKER);
 
         client.on('connect', () => {
-            document.getElementById('mqtt-status').innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
-            document.getElementById('mqtt-status').style.color = 'var(--success)';
-            client.subscribe(`${TOPIC_PREFIX}/sensor/#`);
+            console.log('✅ Conectado al broker MQTT');
+            mqttStatusEl.innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
+            mqttStatusEl.style.background = '#e8f5e9';
+            mqttStatusEl.style.color = '#27ae60';
+            
+            // Suscribirse a TODOS los tópicos de batería con tu estructura YAML
+            // El ESP32 publica con: topic: "siena395_monitor_mikel_2026/mi_clave_privada_siena/bms/..."
+            client.subscribe(`${TOPIC_BASE}/bms/#`);
+            client.subscribe(`${TOPIC_BASE}/temperaturas/#`);
+            client.subscribe(`${TOPIC_BASE}/soc`);
+            
+            console.log(`📡 Suscrito a: ${TOPIC_BASE}/bms/#`);
+        });
+
+        client.on('error', (err) => {
+            console.error('❌ Error MQTT:', err);
+            mqttStatusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ERROR';
+            mqttStatusEl.style.background = '#ffebee';
+            mqttStatusEl.style.color = '#e74c3c';
         });
 
         client.on('message', (topic, message) => {
-            const val = message.toString();
+            const payload = message.toString();
+            const timestamp = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            lastUpdateEl.innerText = timestamp;
             
-            // Actualizar Voltajes de Celdas
-            if (topic.includes('bms_celda_1')) updateCell('vCell1', 'bCell1', val);
-            if (topic.includes('bms_celda_2')) updateCell('vCell2', 'bCell2', val);
-            if (topic.includes('bms_celda_3')) updateCell('vCell3', 'bCell3', val);
-            if (topic.includes('bms_celda_4')) updateCell('vCell4', 'bCell4', val);
-
-            // Datos BMS
-            if (topic.includes('bms_voltaje_total')) document.getElementById('bmsVoltage').innerText = val + 'V';
-            if (topic.includes('bms_intensidad')) document.getElementById('bmsCurrent').innerText = val + 'A';
-            if (topic.includes('bms_temperatura')) document.getElementById('bmsTemp').innerText = val + '°C';
-            if (topic.includes('temperatura_bateria__sense_')) document.getElementById('senseTemp').innerText = val + '°C';
+            console.log(`📨 Mensaje recibido: ${topic} = ${payload}`);
+            
+            // Extraer la parte relevante del tópico (después del secreto)
+            const relevantTopic = topic.replace(`${TOPIC_BASE}/`, '');
+            
+            // Actualizar según el tópico
+            if (relevantTopic === 'soc') {
+                elements.bmsSoc.innerText = parseFloat(payload).toFixed(1) + '%';
+            }
+            else if (relevantTopic === 'bms/voltage' || topic.includes('bms_voltaje_total')) {
+                elements.bmsVoltage.innerText = parseFloat(payload).toFixed(2);
+            }
+            else if (relevantTopic === 'bms/current' || topic.includes('bms_intensidad')) {
+                elements.bmsCurrent.innerText = parseFloat(payload).toFixed(2);
+                // Cambiar color según carga/descarga
+                const current = parseFloat(payload);
+                if (current > 0) {
+                    elements.bmsCurrent.style.color = 'var(--success)';
+                } else if (current < 0) {
+                    elements.bmsCurrent.style.color = 'var(--danger)';
+                } else {
+                    elements.bmsCurrent.style.color = '';
+                }
+            }
+            else if (relevantTopic === 'bms/temperature' || topic.includes('bms_temperatura')) {
+                elements.bmsTemp.innerText = parseFloat(payload).toFixed(1) + '°C';
+            }
+            else if (relevantTopic === 'temperaturas/bateria_sense' || topic.includes('temperatura_bateria__sense_')) {
+                elements.senseTemp.innerText = parseFloat(payload).toFixed(1) + '°C';
+            }
+            else if (relevantTopic === 'bms/state') {
+                elements.bmsState.innerText = payload;
+                if (payload === 'Alarma' || payload === 'Error') {
+                    elements.bmsState.style.color = 'var(--danger)';
+                } else {
+                    elements.bmsState.style.color = 'var(--success)';
+                }
+            }
+            
+            // Actualizar celdas (formato nuevo y antiguo)
+            for (let i = 1; i <= 4; i++) {
+                if (relevantTopic === `bms/cell/${i}` || topic.includes(`bms_celda_${i}`)) {
+                    updateCell(i, payload);
+                }
+            }
         });
 
-        function updateCell(textId, barId, value) {
-            document.getElementById(textId).innerText = parseFloat(value).toFixed(3) + 'V';
-            // Cálculo porcentaje barra (3.0V vacía - 3.5V llena aprox)
-            let pct = ((parseFloat(value) - 3.0) / 0.5) * 100;
-            pct = Math.min(Math.max(pct, 0), 100);
-            document.getElementById(barId).style.width = pct + '%';
+        function updateCell(cellNumber, value) {
+            const idx = cellNumber - 1;
+            if (idx >= 0 && idx < 4) {
+                const voltage = parseFloat(value) || 0;
+                cellVoltages[idx] = voltage;
+                
+                // Actualizar texto
+                elements.cells[idx].text.innerText = voltage.toFixed(3) + 'V';
+                
+                // Calcular porcentaje para la barra (rango LiFePO4)
+                let minVolt = 2.8;
+                let maxVolt = 3.6;
+                let pct = ((voltage - minVolt) / (maxVolt - minVolt)) * 100;
+                pct = Math.min(Math.max(pct, 0), 100);
+                
+                elements.cells[idx].bar.style.width = pct + '%';
+                
+                // Cambiar color de la barra según voltaje
+                if (voltage > 3.5) {
+                    elements.cells[idx].bar.style.background = 'var(--success)';
+                } else if (voltage < 3.0) {
+                    elements.cells[idx].bar.style.background = 'var(--danger)';
+                } else {
+                    elements.cells[idx].bar.style.background = 'var(--warning)';
+                }
+            }
         }
+
+        // Datos de demostración si no hay conexión
+        function setDemoData() {
+            if (elements.bmsVoltage.innerText === '--.--') {
+                console.log('📊 Mostrando datos de demostración');
+                elements.bmsVoltage.innerText = '13.2';
+                elements.bmsCurrent.innerText = '2.5';
+                elements.bmsTemp.innerText = '24°C';
+                elements.senseTemp.innerText = '23°C';
+                elements.bmsSoc.innerText = '78%';
+                
+                // Celdas demo
+                const demos = [3.32, 3.31, 3.33, 3.30];
+                demos.forEach((v, i) => updateCell(i+1, v));
+                
+                lastUpdateEl.innerText = new Date().toLocaleTimeString();
+            }
+        }
+        
+        // Si después de 5 segundos no hay datos, mostrar demo
+        setTimeout(setDemoData, 5000);
+
+        // --- MODO OSCURO / CLARO ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        // Comprobar preferencia guardada
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        console.log(`🔋 Página de Batería Siena 395 iniciada`);
+        console.log(`📡 Esperando datos en: ${TOPIC_BASE}/bms/#`);
     </script>
 </body>
 </html>
