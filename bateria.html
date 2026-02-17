@@ -282,8 +282,8 @@
                         <span id="bmsSoc" style="font-weight: 800; color: var(--victron-blue);">--.-%</span>
                     </div>
                     <div>
-                        <span style="font-weight: 600; color: #888;">CAPACIDAD:</span>
-                        <span id="bmsCapacity" style="font-weight: 800;">--/-- Ah</span>
+                        <span style="font-weight: 600; color: #888;">ESTADO:</span>
+                        <span id="bmsEstado" style="font-weight: 800;">--</span>
                     </div>
                 </div>
             </div>
@@ -352,11 +352,8 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN MQTT (EXACTAMENTE IGUAL QUE EN HOME ASSISTANT) ---
+        // --- CONFIGURACIÓN MQTT ---
         const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-        
-        // IMPORTANTE: Usamos el mismo patrón que en Home Assistant
-        const TOPIC_PATTERN = 'mi_clave_privada_siena/sensor/+/state';
         
         // Elementos del DOM
         const mqttStatusEl = document.getElementById('mqtt-status');
@@ -368,7 +365,7 @@
             bmsTemp1: document.getElementById('bmsTemp1'),
             bmsTemp2: document.getElementById('bmsTemp2'),
             bmsSoc: document.getElementById('bmsSoc'),
-            bmsCapacity: document.getElementById('bmsCapacity'),
+            bmsEstado: document.getElementById('bmsEstado'),
             cells: [
                 { text: document.getElementById('vCell1'), bar: document.getElementById('bCell1') },
                 { text: document.getElementById('vCell2'), bar: document.getElementById('bCell2') },
@@ -385,7 +382,7 @@
             mqttStatusEl.style.background = '#e8f5e9';
             mqttStatusEl.style.color = '#27ae60';
             
-            // Suscribirse a TODOS los sensores (como en Home Assistant)
+            // Suscribirse a TODOS los sensores
             client.subscribe('mi_clave_privada_siena/sensor/#');
             console.log('📡 Suscrito a: mi_clave_privada_siena/sensor/#');
         });
@@ -404,11 +401,11 @@
             
             console.log(`📨 ${topic} = ${payload}`);
             
-            // Extraer el nombre del sensor del tópico
-            // Formato: mi_clave_privada_siena/siena_bms_XXX/state
+            // Extraer el nombre del sensor (parte después de /sensor/)
+            // topic = "mi_clave_privada_siena/sensor/siena_bms_voltaje/state"
             const parts = topic.split('/');
-            if (parts.length >= 3) {
-                const sensorName = parts[1]; // ej: "siena_bms_voltaje"
+            if (parts.length >= 4) {  // Tenemos al menos: [clave, sensor, nombre, state]
+                const sensorName = parts[2]; // "siena_bms_voltaje"
                 
                 // Actualizar según el sensor
                 switch(sensorName) {
@@ -421,22 +418,26 @@
                     case 'siena_bms_soc':
                         elements.bmsSoc.innerText = parseFloat(payload).toFixed(1) + '%';
                         break;
+                    case 'siena_bms_estado':
+                        elements.bmsEstado.innerText = payload;
+                        break;
                     case 'siena_bms_temperatura_1':
                         elements.bmsTemp1.innerText = parseFloat(payload).toFixed(1) + '°C';
                         break;
                     case 'siena_bms_temperatura_2':
                         elements.bmsTemp2.innerText = parseFloat(payload).toFixed(1) + '°C';
                         break;
-                    case 'siena_bms_capacidad_nominal':
-                    case 'siena_bms_capacidad_restante':
-                        // Aquí podrías actualizar la capacidad si quieres
-                        break;
                     case 'siena_bms_celda_1':
+                        updateCell(1, payload);
+                        break;
                     case 'siena_bms_celda_2':
+                        updateCell(2, payload);
+                        break;
                     case 'siena_bms_celda_3':
+                        updateCell(3, payload);
+                        break;
                     case 'siena_bms_celda_4':
-                        const cellNum = parseInt(sensorName.split('_')[3]); // Extrae el número
-                        updateCell(cellNum, payload);
+                        updateCell(4, payload);
                         break;
                 }
             }
@@ -450,18 +451,18 @@
                 // Actualizar texto
                 elements.cells[idx].text.innerText = voltage.toFixed(3) + 'V';
                 
-                // Calcular porcentaje para la barra
-                let minVolt = 2.8;
-                let maxVolt = 3.6;
+                // Calcular porcentaje para la barra (rango LiFePO4: 3.0V - 3.5V)
+                let minVolt = 3.0;
+                let maxVolt = 3.5;
                 let pct = ((voltage - minVolt) / (maxVolt - minVolt)) * 100;
                 pct = Math.min(Math.max(pct, 0), 100);
                 
                 elements.cells[idx].bar.style.width = pct + '%';
                 
                 // Cambiar color según voltaje
-                if (voltage > 3.5) {
+                if (voltage > 3.45) {
                     elements.cells[idx].bar.style.background = 'var(--success)';
-                } else if (voltage < 3.0) {
+                } else if (voltage < 3.1) {
                     elements.cells[idx].bar.style.background = 'var(--danger)';
                 } else {
                     elements.cells[idx].bar.style.background = 'var(--warning)';
