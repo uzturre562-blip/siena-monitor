@@ -3,506 +3,494 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena 395 - Batería Ultimatron</title>
+    <title>SIENA 395 · Batería</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-    
     <style>
         :root {
-            --bg-primary: #f8f5f0;
-            --bg-secondary: #fefcf8;
-            --text-main: #2c2925;
-            --accent-primary: #8b7355;
-            --victron-blue: #1a5c96;
-            --solar-orange: #f39c12;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #e67e22;
-            --card-radius: 24px;
-            --border-light: #e2ddd5;
+            --bg: #0a0c0f;
+            --surface: #111318;
+            --surface2: #181c23;
+            --border: #1e2330;
+            --border-bright: #2a3042;
+            --text: #c8d0e0;
+            --text-dim: #5a6480;
+            --text-bright: #eef2ff;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0,212,170,0.12);
+            --battery: #3b82f6;
+            --ok: #10b981;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --radius: 12px;
+            --mono: 'Space Mono', monospace;
+            --display: 'Barlow Condensed', sans-serif;
         }
 
-        body.dark-mode {
-            --bg-primary: #121417;
-            --bg-secondary: #1a1d23;
-            --text-main: #e0e0e0;
-            --border-light: #2d343f;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-main);
-            margin: 0;
-            transition: background-color 0.3s, color 0.3s;
+            font-family: var(--display);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(ellipse at 80% 0%, rgba(59,130,246,0.05) 0%, transparent 60%);
         }
 
-        .nav-master {
+        nav {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 15px;
-            background: var(--bg-secondary);
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border-light);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            z-index: 100;
         }
 
-        .nav-btn {
-            background: var(--bg-primary);
-            border: 2px solid var(--border-light);
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-weight: 700;
-            color: #888;
-            text-decoration: none;
-            font-size: 0.8rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .nav-logo { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 2px; margin-right: auto; padding-right: 16px; border-right: 1px solid var(--border); }
+        .nav-link { font-family: var(--display); font-weight: 700; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); text-decoration: none; padding: 7px 12px; border-radius: 6px; border: 1px solid transparent; transition: all 0.15s; }
+        .nav-link:hover { color: var(--text); background: var(--surface2); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); border-color: rgba(0,212,170,0.25); }
 
-        .nav-btn.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
+        .page { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
 
-        .dashboard { max-width: 800px; margin: 0 auto; padding: 15px; }
-        
-        .card {
-            background: var(--bg-secondary);
-            border-radius: var(--card-radius);
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-            border: 1px solid var(--border-light);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        
-        .card-title {
-            font-weight: 800;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+        .page-title { font-family: var(--display); font-size: 2.4rem; font-weight: 900; letter-spacing: 2px; color: var(--text-bright); line-height: 1; }
+        .page-subtitle { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); letter-spacing: 2px; margin-top: 4px; }
+
+        .mqtt-pill { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 1px; padding: 6px 12px; border-radius: 20px; background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); display: flex; align-items: center; gap: 6px; }
+        .mqtt-pill.connected { background: rgba(16,185,129,0.1); color: var(--ok); border-color: rgba(16,185,129,0.2); }
+        .mqtt-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+
+        .section-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* SOC GRANDE */
+        .soc-hero {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: var(--accent-primary);
-        }
-
-        .cell-grid { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 15px; 
-        }
-        
-        .cell-item { 
-            background: var(--bg-primary); 
-            padding: 15px; 
-            border-radius: 18px; 
-            border: 1px solid var(--border-light); 
-        }
-        
-        .cell-info { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 8px; 
-        }
-        
-        .cell-bar-bg { 
-            background: #e0e0e0; 
-            height: 12px; 
-            border-radius: 6px; 
-            overflow: hidden; 
-        }
-
-        body.dark-mode .cell-bar-bg {
-            background: #333a45;
-        }
-        
-        .cell-bar-fill { 
-            background: var(--success); 
-            height: 100%; 
-            width: 0%;
-            transition: width 0.5s; 
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 24px;
             margin-bottom: 20px;
         }
 
-        .stat-box {
-            background: var(--bg-primary);
-            padding: 15px;
-            border-radius: 20px;
-            text-align: center;
-            border: 1px solid var(--border-light);
+        .soc-circle {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            flex-shrink: 0;
         }
 
-        .stat-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        .soc-circle svg { transform: rotate(-90deg); }
 
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 900;
-            line-height: 1.2;
-        }
-
-        .stat-unit {
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #888;
-            margin-left: 2px;
-        }
-
-        .temp-grid {
+        .soc-circle-text {
+            position: absolute;
+            inset: 0;
             display: flex;
-            justify-content: space-around;
-            gap: 15px;
-        }
-
-        .temp-item {
-            text-align: center;
-            flex: 1;
-            background: var(--bg-primary);
-            padding: 15px;
-            border-radius: 20px;
-            border: 1px solid var(--border-light);
-        }
-
-        .temp-icon {
-            font-size: 2rem;
-            margin-bottom: 5px;
-        }
-
-        .temp-label {
-            font-size: 0.8rem;
-            color: #888;
-            font-weight: 600;
-        }
-
-        .temp-value {
-            font-size: 1.5rem;
-            font-weight: 800;
-        }
-
-        .badge {
-            background: var(--bg-primary);
-            padding: 8px 15px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid var(--border-light);
-        }
-
-        .theme-switch {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            color: white;
-            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 2000;
-            border: none;
-            font-size: 1.5rem;
         }
+
+        .soc-pct {
+            font-family: var(--display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-bright);
+            line-height: 1;
+        }
+
+        .soc-label {
+            font-family: var(--mono);
+            font-size: 0.5rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        .soc-stats {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .soc-stat {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .soc-stat-label { font-family: var(--mono); font-size: 0.55rem; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; }
+        .soc-stat-value { font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: var(--text-bright); line-height: 1.2; }
+        .soc-stat-unit { font-size: 0.75rem; font-weight: 400; color: var(--text-dim); }
+
+        /* STATUS BMS */
+        .bms-status {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-chip {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        .status-chip.on { background: rgba(16,185,129,0.15); color: var(--ok); border-color: rgba(16,185,129,0.3); }
+        .status-chip.warn { background: rgba(245,158,11,0.15); color: var(--warn); border-color: rgba(245,158,11,0.3); }
+        .status-chip.off { background: rgba(239,68,68,0.1); color: var(--danger); border-color: rgba(239,68,68,0.2); }
+
+        /* CELDAS */
+        .cells-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .cell-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .cell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .cell-name { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); letter-spacing: 2px; }
+        .cell-voltage { font-family: var(--display); font-size: 1.5rem; font-weight: 800; color: var(--text-bright); }
+        .cell-voltage .unit { font-size: 0.8rem; font-weight: 400; color: var(--text-dim); }
+
+        .cell-bar-bg { background: var(--border); height: 6px; border-radius: 3px; overflow: hidden; }
+        .cell-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease, background 0.3s; width: 0%; }
+
+        /* DELTA ALERT */
+        .delta-alert {
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid;
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            display: none;
+        }
+
+        .delta-alert.warn { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--warn); }
+        .delta-alert.danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--danger); }
+
+        /* TEMPS */
+        .temp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+        .temp-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .temp-label { font-family: var(--mono); font-size: 0.55rem; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+        .temp-value { font-family: var(--display); font-size: 1.8rem; font-weight: 800; color: var(--text-bright); }
+        .temp-unit { font-size: 0.9rem; font-weight: 400; color: var(--text-dim); }
+
+        .footer { text-align: center; font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); padding: 20px 0 10px; border-top: 1px solid var(--border); letter-spacing: 1px; margin-top: 8px; }
+        .last-update { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); text-align: center; padding: 10px; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-
-    <nav class="nav-master">
-        <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> INICIO</a>
-        <a href="victron.html" class="nav-btn"><i class="fas fa-solar-panel"></i> VICTRON</a>
-        <a href="bateria.html" class="nav-btn active"><i class="fas fa-car-battery"></i> BATERÍA</a>
-        <a href="logs.html" class="nav-btn"><i class="fas fa-history"></i> LOGS</a>
+    <nav>
+        <span class="nav-logo">SIENA·395</span>
+        <a href="index.html" class="nav-link">INICIO</a>
+        <a href="victron.html" class="nav-link">VICTRON</a>
+        <a href="bateria.html" class="nav-link active">BATERÍA</a>
+        <a href="logs.html" class="nav-link">LOGS</a>
     </nav>
 
-    <div class="dashboard">
-        
-        <div class="card" style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-battery-three-quarters" style="color: var(--accent-primary);"></i> 
-                SISTEMA DE BATERÍA
+    <div class="page">
+        <div class="page-header">
+            <div>
+                <div class="page-title">BATERÍA</div>
+                <div class="page-subtitle">JBD BMS · ULTIMATRON LIFEPO4 100Ah 4S</div>
             </div>
-            <div id="mqtt-status" class="badge" style="background: #ffebee; color: #e74c3c;">
-                <i class="fas fa-circle"></i> DESCONECTADO
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                <i class="fas fa-microchip"></i> JK BMS - ULTIMATRON 100Ah
-            </div>
-            
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label"><i class="fas fa-bolt"></i> VOLTAJE TOTAL</div>
-                    <div>
-                        <span class="stat-value" id="bmsVoltage">--.--</span>
-                        <span class="stat-unit">V</span>
-                    </div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label"><i class="fas fa-chart-line"></i> INTENSIDAD</div>
-                    <div>
-                        <span class="stat-value" id="bmsCurrent">--.--</span>
-                        <span class="stat-unit">A</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="background: var(--bg-primary); border-radius: 18px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border-light);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <span style="font-weight: 600; color: #888;">SOC:</span>
-                        <span id="bmsSoc" style="font-weight: 800; color: var(--victron-blue);">--.-%</span>
-                    </div>
-                    <div>
-                        <span style="font-weight: 600; color: #888;">ESTADO:</span>
-                        <span id="bmsEstado" style="font-weight: 800;">--</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-weight: 700; color: var(--accent-primary);"><i class="fas fa-battery-full"></i> VOLTAJE DE CELDAS</span>
-                </div>
-                
-                <div class="cell-grid">
-                    <div class="cell-item">
-                        <div class="cell-info">
-                            <span style="font-weight: 700;">CELDA 1</span>
-                            <span id="vCell1" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
-                        </div>
-                        <div class="cell-bar-bg"><div id="bCell1" class="cell-bar-fill" style="width: 0%;"></div></div>
-                    </div>
-                    <div class="cell-item">
-                        <div class="cell-info">
-                            <span style="font-weight: 700;">CELDA 2</span>
-                            <span id="vCell2" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
-                        </div>
-                        <div class="cell-bar-bg"><div id="bCell2" class="cell-bar-fill" style="width: 0%;"></div></div>
-                    </div>
-                    <div class="cell-item">
-                        <div class="cell-info">
-                            <span style="font-weight: 700;">CELDA 3</span>
-                            <span id="vCell3" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
-                        </div>
-                        <div class="cell-bar-bg"><div id="bCell3" class="cell-bar-fill" style="width: 0%;"></div></div>
-                    </div>
-                    <div class="cell-item">
-                        <div class="cell-info">
-                            <span style="font-weight: 700;">CELDA 4</span>
-                            <span id="vCell4" style="font-weight: 800; color: var(--accent-primary);">-.---V</span>
-                        </div>
-                        <div class="cell-bar-bg"><div id="bCell4" class="cell-bar-fill" style="width: 0%;"></div></div>
-                    </div>
-                </div>
+            <div class="mqtt-pill" id="mqttStatus">
+                <div class="mqtt-dot"></div>DESCONECTADO
             </div>
         </div>
 
+        <!-- SOC + DATOS PRINCIPALES -->
         <div class="card">
-            <div class="card-title"><i class="fas fa-thermometer-half"></i> TEMPERATURAS</div>
+            <div class="section-label">Estado de carga</div>
+            <div class="soc-hero">
+                <div class="soc-circle">
+                    <svg width="110" height="110" viewBox="0 0 110 110">
+                        <circle cx="55" cy="55" r="46" fill="none" stroke="#1e2330" stroke-width="8"/>
+                        <circle cx="55" cy="55" r="46" fill="none" stroke="#3b82f6" stroke-width="8"
+                            stroke-dasharray="289" stroke-dashoffset="289" id="socCircle"
+                            stroke-linecap="round" style="transition: stroke-dashoffset 0.8s ease, stroke 0.3s;"/>
+                    </svg>
+                    <div class="soc-circle-text">
+                        <div class="soc-pct" id="socPct">--</div>
+                        <div class="soc-label">%SOC</div>
+                    </div>
+                </div>
+                <div class="soc-stats">
+                    <div class="soc-stat">
+                        <div class="soc-stat-label">Voltaje</div>
+                        <div class="soc-stat-value" id="bmsVoltage">--<span class="soc-stat-unit">V</span></div>
+                    </div>
+                    <div class="soc-stat">
+                        <div class="soc-stat-label">Corriente</div>
+                        <div class="soc-stat-value" id="bmsCurrent">--<span class="soc-stat-unit">A</span></div>
+                    </div>
+                    <div class="soc-stat">
+                        <div class="soc-stat-label">Restante</div>
+                        <div class="soc-stat-value" id="bmsRemaining">--<span class="soc-stat-unit">Ah</span></div>
+                    </div>
+                    <div class="soc-stat">
+                        <div class="soc-stat-label">Ciclos</div>
+                        <div class="soc-stat-value" id="bmsCycles">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bms-status">
+                <div class="status-chip" id="chipEstado">ESTADO: --</div>
+                <div class="status-chip" id="chipCargando">CARGANDO: --</div>
+                <div class="status-chip" id="chipDescargando">DESCARGANDO: --</div>
+                <div class="status-chip" id="chipErrores">ERRORES: NINGUNO</div>
+            </div>
+        </div>
+
+        <!-- ALERTA DELTA -->
+        <div class="delta-alert" id="deltaAlert">
+            <span id="deltaAlertText"></span>
+        </div>
+
+        <!-- CELDAS -->
+        <div class="card">
+            <div class="section-label">Tensión de celdas LiFePO4</div>
+            <div class="cells-grid">
+                <div class="cell-item" id="cellWrap1">
+                    <div class="cell-header">
+                        <span class="cell-name">CELDA 01</span>
+                        <span class="cell-voltage" id="vCell1">-.---<span class="unit">V</span></span>
+                    </div>
+                    <div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell1"></div></div>
+                </div>
+                <div class="cell-item" id="cellWrap2">
+                    <div class="cell-header">
+                        <span class="cell-name">CELDA 02</span>
+                        <span class="cell-voltage" id="vCell2">-.---<span class="unit">V</span></span>
+                    </div>
+                    <div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell2"></div></div>
+                </div>
+                <div class="cell-item" id="cellWrap3">
+                    <div class="cell-header">
+                        <span class="cell-name">CELDA 03</span>
+                        <span class="cell-voltage" id="vCell3">-.---<span class="unit">V</span></span>
+                    </div>
+                    <div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell3"></div></div>
+                </div>
+                <div class="cell-item" id="cellWrap4">
+                    <div class="cell-header">
+                        <span class="cell-name">CELDA 04</span>
+                        <span class="cell-voltage" id="vCell4">-.---<span class="unit">V</span></span>
+                    </div>
+                    <div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell4"></div></div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                <div class="soc-stat" style="flex:1; min-width:100px;">
+                    <div class="soc-stat-label">Delta celdas</div>
+                    <div class="soc-stat-value" id="cellDelta">--<span class="soc-stat-unit">mV</span></div>
+                </div>
+                <div class="soc-stat" style="flex:1; min-width:100px;">
+                    <div class="soc-stat-label">Promedio</div>
+                    <div class="soc-stat-value" id="cellAvg">--<span class="soc-stat-unit">V</span></div>
+                </div>
+                <div class="soc-stat" style="flex:1; min-width:100px;">
+                    <div class="soc-stat-label">Mínima</div>
+                    <div class="soc-stat-value" id="cellMin">--<span class="soc-stat-unit">V</span></div>
+                </div>
+                <div class="soc-stat" style="flex:1; min-width:100px;">
+                    <div class="soc-stat-label">Máxima</div>
+                    <div class="soc-stat-value" id="cellMax">--<span class="soc-stat-unit">V</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEMPERATURAS -->
+        <div class="card">
+            <div class="section-label">Temperaturas</div>
             <div class="temp-grid">
                 <div class="temp-item">
-                    <div class="temp-icon" style="color: var(--solar-orange);"><i class="fas fa-microchip"></i></div>
-                    <div class="temp-label">SENSOR 1</div>
-                    <div class="temp-value" id="bmsTemp1">--°C</div>
+                    <div class="temp-label">BMS Sensor 1</div>
+                    <div class="temp-value" id="bmsTemp1">--<span class="temp-unit">°C</span></div>
                 </div>
                 <div class="temp-item">
-                    <div class="temp-icon" style="color: var(--victron-blue);"><i class="fas fa-broadcast-tower"></i></div>
-                    <div class="temp-label">SENSOR 2</div>
-                    <div class="temp-value" id="bmsTemp2">--°C</div>
+                    <div class="temp-label">BMS Sensor 2</div>
+                    <div class="temp-value" id="bmsTemp2">--<span class="temp-unit">°C</span></div>
+                </div>
+                <div class="temp-item">
+                    <div class="temp-label">Ambiente</div>
+                    <div class="temp-value" id="senseTemp">--<span class="temp-unit">°C</span></div>
                 </div>
             </div>
         </div>
 
-                <!-- Última actualización -->
-        <div style="text-align: center; font-size: 0.7rem; color: #888; margin-top: 20px; padding: 10px;">
-            <i class="far fa-clock"></i> Última actualización: <span id="lastUpdate">--:--:--</span>
-        </div>
-
-        <!-- CopyLeft visible -->
-        <div style="text-align: center; font-size: 0.6rem; color: #aaa; margin-top: 5px; padding: 8px; border-top: 1px dashed var(--border-light);">
-            &#169; CopyLeft 2026 - UZTURRE · El conocimiento no se posee, se comparte · Código 100% libre
-        </div>
-    </div>
-
-    <div class="theme-switch" id="themeToggle">
-        <i class="fas fa-moon"></i>
+        <div class="last-update">ÚLTIMA ACTUALIZACIÓN · <span id="lastUpdate">--:--:--</span></div>
+        <div class="footer">© COPYLEFT 2026 · UZTURRE · EL CONOCIMIENTO NO SE POSEE, SE COMPARTE</div>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN MQTT ---
         const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-        
-        // Elementos del DOM
-        const mqttStatusEl = document.getElementById('mqtt-status');
-        const lastUpdateEl = document.getElementById('lastUpdate');
-        
-        const elements = {
-            bmsVoltage: document.getElementById('bmsVoltage'),
-            bmsCurrent: document.getElementById('bmsCurrent'),
-            bmsTemp1: document.getElementById('bmsTemp1'),
-            bmsTemp2: document.getElementById('bmsTemp2'),
-            bmsSoc: document.getElementById('bmsSoc'),
-            bmsEstado: document.getElementById('bmsEstado'),
-            cells: [
-                { text: document.getElementById('vCell1'), bar: document.getElementById('bCell1') },
-                { text: document.getElementById('vCell2'), bar: document.getElementById('bCell2') },
-                { text: document.getElementById('vCell3'), bar: document.getElementById('bCell3') },
-                { text: document.getElementById('vCell4'), bar: document.getElementById('bCell4') }
-            ]
-        };
+        const mqttStatusEl = document.getElementById('mqttStatus');
+        let cellValues = [0,0,0,0];
 
-        const client = mqtt.connect(BROKER);
+        const client = mqtt.connect(BROKER, { clientId: 'siena_bat_' + Math.random().toString(16).substr(2,8) });
 
         client.on('connect', () => {
-            console.log('✅ Conectado al broker MQTT');
-            mqttStatusEl.innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
-            mqttStatusEl.style.background = '#e8f5e9';
-            mqttStatusEl.style.color = '#27ae60';
-            
-            // Suscribirse a TODOS los sensores
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>CONECTADO';
+            mqttStatusEl.className = 'mqtt-pill connected';
             client.subscribe('mi_clave_privada_siena/sensor/#');
-            console.log('📡 Suscrito a: mi_clave_privada_siena/sensor/#');
+            client.subscribe('mi_clave_privada_siena/binary_sensor/#');
         });
 
-        client.on('error', (err) => {
-            console.error('❌ Error MQTT:', err);
-            mqttStatusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ERROR';
-            mqttStatusEl.style.background = '#ffebee';
-            mqttStatusEl.style.color = '#e74c3c';
+        client.on('offline', () => {
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>DESCONECTADO';
+            mqttStatusEl.className = 'mqtt-pill';
         });
 
-        client.on('message', (topic, message) => {
-            const payload = message.toString();
-            const timestamp = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            lastUpdateEl.innerText = timestamp;
-            
-            console.log(`📨 ${topic} = ${payload}`);
-            
-            // Extraer el nombre del sensor (parte después de /sensor/)
-            // topic = "mi_clave_privada_siena/sensor/siena_bms_voltaje/state"
-            const parts = topic.split('/');
-            if (parts.length >= 4) {  // Tenemos al menos: [clave, sensor, nombre, state]
-                const sensorName = parts[2]; // "siena_bms_voltaje"
-                
-                // Actualizar según el sensor
-                switch(sensorName) {
-                    case 'siena_bms_voltaje':
-                        elements.bmsVoltage.innerText = parseFloat(payload).toFixed(2);
-                        break;
-                    case 'siena_bms_corriente':
-                        elements.bmsCurrent.innerText = parseFloat(payload).toFixed(2);
-                        break;
-                    case 'siena_bms_soc':
-                        elements.bmsSoc.innerText = parseFloat(payload).toFixed(1) + '%';
-                        break;
-                    case 'siena_bms_estado':
-                        elements.bmsEstado.innerText = payload;
-                        break;
-                    case 'siena_bms_temperatura_1':
-                        elements.bmsTemp1.innerText = parseFloat(payload).toFixed(1) + '°C';
-                        break;
-                    case 'siena_bms_temperatura_2':
-                        elements.bmsTemp2.innerText = parseFloat(payload).toFixed(1) + '°C';
-                        break;
-                    case 'siena_bms_celda_1':
-                        updateCell(1, payload);
-                        break;
-                    case 'siena_bms_celda_2':
-                        updateCell(2, payload);
-                        break;
-                    case 'siena_bms_celda_3':
-                        updateCell(3, payload);
-                        break;
-                    case 'siena_bms_celda_4':
-                        updateCell(4, payload);
-                        break;
-                }
+        client.on('message', (topic, msg) => {
+            const v = msg.toString();
+            const sensor = topic.split('/')[2];
+            const now = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            document.getElementById('lastUpdate').innerText = now;
+
+            if (v === 'nan') return;
+            const val = parseFloat(v);
+
+            switch(sensor) {
+                case 'siena_bms_soc':
+                    document.getElementById('socPct').innerText = val.toFixed(1);
+                    const circumference = 289;
+                    const offset = circumference - (val / 100) * circumference;
+                    const circle = document.getElementById('socCircle');
+                    circle.style.strokeDashoffset = offset;
+                    circle.style.stroke = val > 50 ? '#10b981' : val > 20 ? '#f59e0b' : '#ef4444';
+                    break;
+                case 'siena_bms_voltaje':
+                    document.getElementById('bmsVoltage').innerHTML = val.toFixed(2) + '<span class="soc-stat-unit">V</span>';
+                    break;
+                case 'siena_bms_corriente':
+                    document.getElementById('bmsCurrent').innerHTML = val.toFixed(2) + '<span class="soc-stat-unit">A</span>';
+                    break;
+                case 'siena_bms_capacidad_restante':
+                    document.getElementById('bmsRemaining').innerHTML = val.toFixed(1) + '<span class="soc-stat-unit">Ah</span>';
+                    break;
+                case 'siena_bms_ciclos':
+                    document.getElementById('bmsCycles').innerText = val.toFixed(0);
+                    break;
+                case 'siena_bms_estado_operacion':
+                    document.getElementById('chipEstado').innerText = 'ESTADO: ' + v;
+                    break;
+                case 'siena_bms_errores':
+                    const chip = document.getElementById('chipErrores');
+                    if(v && v.trim()) { chip.innerText = 'ERROR: ' + v; chip.className = 'status-chip warn'; }
+                    else { chip.innerText = 'ERRORES: NINGUNO'; chip.className = 'status-chip on'; }
+                    break;
+                case 'siena_bms_celda_1': updateCell(0, val); break;
+                case 'siena_bms_celda_2': updateCell(1, val); break;
+                case 'siena_bms_celda_3': updateCell(2, val); break;
+                case 'siena_bms_celda_4': updateCell(3, val); break;
+                case 'siena_bms_celda_min':
+                    document.getElementById('cellMin').innerHTML = val.toFixed(3) + '<span class="soc-stat-unit">V</span>';
+                    break;
+                case 'siena_bms_celda_max':
+                    document.getElementById('cellMax').innerHTML = val.toFixed(3) + '<span class="soc-stat-unit">V</span>';
+                    break;
+                case 'siena_bms_voltaje_promedio_celda':
+                    document.getElementById('cellAvg').innerHTML = val.toFixed(3) + '<span class="soc-stat-unit">V</span>';
+                    break;
+                case 'siena_bms_delta_celdas':
+                    const mv = (val * 1000).toFixed(1);
+                    document.getElementById('cellDelta').innerHTML = mv + '<span class="soc-stat-unit">mV</span>';
+                    updateDeltaAlert(parseFloat(mv));
+                    break;
+                case 'siena_bms_temperatura_1':
+                    document.getElementById('bmsTemp1').innerHTML = val.toFixed(1) + '<span class="temp-unit">°C</span>';
+                    break;
+                case 'siena_bms_temperatura_2':
+                    document.getElementById('bmsTemp2').innerHTML = val.toFixed(1) + '<span class="temp-unit">°C</span>';
+                    break;
+                case 'siena_sense_temperatura':
+                    document.getElementById('senseTemp').innerHTML = val.toFixed(1) + '<span class="temp-unit">°C</span>';
+                    break;
+                case 'siena_bms_cargando':
+                    const cc = document.getElementById('chipCargando');
+                    cc.innerText = 'CARGANDO: ' + v;
+                    cc.className = 'status-chip ' + (v === 'ON' ? 'on' : 'off');
+                    break;
+                case 'siena_bms_descargando':
+                    const cd = document.getElementById('chipDescargando');
+                    cd.innerText = 'DESCARGANDO: ' + v;
+                    cd.className = 'status-chip ' + (v === 'ON' ? 'on' : 'off');
+                    break;
             }
         });
 
-        function updateCell(cellNumber, value) {
-            const idx = cellNumber - 1;
-            if (idx >= 0 && idx < 4) {
-                const voltage = parseFloat(value) || 0;
-                
-                // Actualizar texto
-                elements.cells[idx].text.innerText = voltage.toFixed(3) + 'V';
-                
-                // Calcular porcentaje para la barra (rango LiFePO4: 3.0V - 3.5V)
-                let minVolt = 3.0;
-                let maxVolt = 3.5;
-                let pct = ((voltage - minVolt) / (maxVolt - minVolt)) * 100;
-                pct = Math.min(Math.max(pct, 0), 100);
-                
-                elements.cells[idx].bar.style.width = pct + '%';
-                
-                // Cambiar color según voltaje
-                if (voltage > 3.45) {
-                    elements.cells[idx].bar.style.background = 'var(--success)';
-                } else if (voltage < 3.1) {
-                    elements.cells[idx].bar.style.background = 'var(--danger)';
-                } else {
-                    elements.cells[idx].bar.style.background = 'var(--warning)';
-                }
-            }
+        function updateCell(idx, voltage) {
+            cellValues[idx] = voltage;
+            const el = ['vCell1','vCell2','vCell3','vCell4'][idx];
+            const bar = ['bCell1','bCell2','bCell3','bCell4'][idx];
+            const wrap = ['cellWrap1','cellWrap2','cellWrap3','cellWrap4'][idx];
+
+            document.getElementById(el).innerHTML = voltage.toFixed(3) + '<span class="unit">V</span>';
+
+            // Rango LiFePO4 real: 3.0V - 3.65V
+            const pct = Math.min(Math.max(((voltage - 3.0) / 0.65) * 100, 0), 100);
+            const barEl = document.getElementById(bar);
+            barEl.style.width = pct + '%';
+
+            let color, borderColor;
+            if (voltage >= 3.45) { color = '#10b981'; borderColor = 'rgba(16,185,129,0.3)'; }
+            else if (voltage >= 3.2) { color = '#f59e0b'; borderColor = 'rgba(245,158,11,0.3)'; }
+            else { color = '#ef4444'; borderColor = 'rgba(239,68,68,0.3)'; }
+
+            barEl.style.background = color;
+            document.getElementById(wrap).style.borderColor = borderColor;
         }
 
-        // MODO OSCURO
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = themeToggle.querySelector('i');
-        
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeIcon.classList.remove('fa-moon');
-            themeIcon.classList.add('fa-sun');
-        }
-        
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            
-            if (document.body.classList.contains('dark-mode')) {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-                localStorage.setItem('theme', 'dark');
+        function updateDeltaAlert(mv) {
+            const alert = document.getElementById('deltaAlert');
+            if (mv > 50) {
+                alert.className = 'delta-alert danger';
+                alert.style.display = 'block';
+                alert.innerHTML = '⚠ REVISAR BALANCEO — Delta ' + mv + ' mV (>50mV)';
+            } else if (mv > 30) {
+                alert.className = 'delta-alert warn';
+                alert.style.display = 'block';
+                alert.innerHTML = '△ ATENCIÓN — Delta ' + mv + ' mV (30-50mV), vigilar balanceo';
             } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-                localStorage.setItem('theme', 'light');
+                alert.style.display = 'none';
             }
-        });
-
-        console.log('🔋 Página de Batería Siena 395 iniciada');
-        console.log('📡 Esperando datos de: mi_clave_privada_siena/sensor/#');
+        }
     </script>
 </body>
 </html>
