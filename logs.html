@@ -3,101 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena 395 - Logs MQTT</title>
+    <title>SIENA 395 · Logs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-    
     <style>
         :root {
-            --bg-primary: #f8f5f0;
-            --bg-secondary: #fefcf8;
-            --text-main: #2c2925;
-            --accent-primary: #8b7355;
-            --victron-blue: #1a5c96;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --info: #3498db;
-            --card-radius: 24px;
-            --border-light: #e2ddd5;
+            --bg: #0a0c0f;
+            --surface: #111318;
+            --surface2: #181c23;
+            --border: #1e2330;
+            --text: #c8d0e0;
+            --text-dim: #5a6480;
+            --text-bright: #eef2ff;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0,212,170,0.12);
+            --ok: #10b981;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --radius: 12px;
+            --mono: 'Space Mono', monospace;
+            --display: 'Barlow Condensed', sans-serif;
+
+            /* Colores por dispositivo */
+            --col-bms: #10b981;
+            --col-mppt: #ffb020;
+            --col-shunt: #3b82f6;
+            --col-inversor: #f43f5e;
+            --col-orion: #a855f7;
+            --col-sense: #06b6d4;
+            --col-system: #5a6480;
         }
 
-        /* Modo oscuro */
-        body.dark-mode {
-            --bg-primary: #121417;
-            --bg-secondary: #1a1d23;
-            --text-main: #e0e0e0;
-            --border-light: #2d343f;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-main);
-            margin: 0;
+            font-family: var(--display);
+            background: var(--bg);
+            color: var(--text);
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Menú de navegación */
-        .nav-master {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 15px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-light);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            flex-shrink: 0;
-        }
+        nav { display: flex; align-items: center; gap: 4px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .nav-logo { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 2px; margin-right: auto; padding-right: 16px; border-right: 1px solid var(--border); }
+        .nav-link { font-family: var(--display); font-weight: 700; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); text-decoration: none; padding: 7px 12px; border-radius: 6px; border: 1px solid transparent; transition: all 0.15s; }
+        .nav-link:hover { color: var(--text); background: var(--surface2); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); border-color: rgba(0,212,170,0.25); }
 
-        .nav-btn {
-            background: var(--bg-primary);
-            border: 2px solid var(--border-light);
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-weight: 700;
-            color: #888;
-            text-decoration: none;
-            font-size: 0.8rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .nav-btn.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
-
-        /* Contenedor principal */
-        .dashboard { 
-            max-width: 1200px; 
-            margin: 15px auto; 
-            padding: 0 15px;
+        .layout {
             flex: 1;
             display: flex;
             flex-direction: column;
-            width: 100%;
-            box-sizing: border-box;
             overflow: hidden;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 12px 16px;
+            gap: 10px;
             min-height: 0;
         }
 
-        /* Cabecera con estado MQTT */
-        .header-card {
-            background: var(--bg-secondary);
-            border-radius: var(--card-radius);
-            padding: 15px 20px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-light);
+        /* HEADER BAR */
+        .header-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -106,534 +78,429 @@
             flex-shrink: 0;
         }
 
-        .title-section {
+        .page-title { font-family: var(--display); font-size: 1.8rem; font-weight: 900; letter-spacing: 2px; color: var(--text-bright); line-height: 1; }
+        .page-subtitle { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); letter-spacing: 2px; }
+
+        .mqtt-pill { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 1px; padding: 6px 12px; border-radius: 20px; background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); display: flex; align-items: center; gap: 6px; }
+        .mqtt-pill.connected { background: rgba(16,185,129,0.1); color: var(--ok); border-color: rgba(16,185,129,0.2); }
+        .mqtt-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* FILTROS */
+        .filter-bar {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-        }
-
-        .title-section i {
-            color: var(--accent-primary);
-            font-size: 1.2rem;
-        }
-
-        .badge {
-            background: var(--bg-primary);
-            padding: 8px 15px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid var(--border-light);
-        }
-
-        /* Filtros */
-        .filter-section {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-light);
-            flex-shrink: 0;
-        }
-
-        .filter-title {
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--accent-primary);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .filter-buttons {
-            display: flex;
+            gap: 6px;
             flex-wrap: wrap;
-            gap: 8px;
+            flex-shrink: 0;
         }
 
         .filter-btn {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-light);
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
             padding: 6px 12px;
             border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-dim);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
-        .filter-btn.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
+        .filter-btn:hover { color: var(--text-bright); border-color: var(--border-bright); }
 
-        /* Contenedor de logs - AHORA CON TAMAÑO FIJO */
-        .log-container {
-            background: #1e1e1e;
-            border-radius: var(--card-radius);
-            padding: 20px;
-            border: 2px solid var(--accent-primary);
-            box-shadow: inset 0 4px 20px rgba(0,0,0,0.5);
+        /* Activos por dispositivo — todos con texto blanco visible */
+        .filter-btn.active[data-filter="all"] { background: rgba(0,212,170,0.15); color: #00d4aa; border-color: rgba(0,212,170,0.4); }
+        .filter-btn.active[data-filter="bms"] { background: rgba(16,185,129,0.15); color: #10b981; border-color: rgba(16,185,129,0.4); }
+        .filter-btn.active[data-filter="mppt"] { background: rgba(255,176,32,0.15); color: #ffb020; border-color: rgba(255,176,32,0.4); }
+        .filter-btn.active[data-filter="shunt"] { background: rgba(59,130,246,0.15); color: #3b82f6; border-color: rgba(59,130,246,0.4); }
+        .filter-btn.active[data-filter="inversor"] { background: rgba(244,63,94,0.15); color: #f43f5e; border-color: rgba(244,63,94,0.4); }
+        .filter-btn.active[data-filter="orion"] { background: rgba(168,85,247,0.15); color: #a855f7; border-color: rgba(168,85,247,0.4); }
+        .filter-btn.active[data-filter="sense"] { background: rgba(6,182,212,0.15); color: #06b6d4; border-color: rgba(6,182,212,0.4); }
+
+        /* CONSOLA */
+        .console-wrap {
+            flex: 1;
+            background: #060810;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             display: flex;
             flex-direction: column;
-            flex: 1;
-            min-height: 0;
             overflow: hidden;
+            min-height: 0;
         }
-        
-        #log-console {
+
+        .console-titlebar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        #logConsole {
             flex: 1;
             overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            color: #d4d4d4;
-            line-height: 1.5;
-            padding-right: 10px;
-            scroll-behavior: smooth;
+            padding: 12px 14px;
             min-height: 0;
+            scroll-behavior: smooth;
         }
-        
-        .log-entry {
-            margin-bottom: 6px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 4px;
+
+        #logConsole::-webkit-scrollbar { width: 4px; }
+        #logConsole::-webkit-scrollbar-track { background: transparent; }
+        #logConsole::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .log-line {
             display: flex;
-            flex-wrap: wrap;
             align-items: baseline;
-            gap: 5px;
-        }
-        
-        .timestamp {
-            color: #888;
-            font-size: 0.75rem;
-            font-family: 'Courier New', monospace;
-            background: #2a2a2a;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        
-        .topic {
-            color: var(--accent-primary);
-            font-weight: bold;
-            font-size: 0.8rem;
-            background: #2a2a2a;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-        
-        .msg-info { color: var(--info); }
-        .msg-success { color: var(--success); }
-        .msg-warn { color: var(--warning); }
-        .msg-error { color: var(--danger); }
-        .msg-value { 
-            color: #d4d4d4;
-            font-weight: 500;
-            word-break: break-all;
-        }
-
-        /* Controles - SIEMPRE VISIBLES */
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-            flex-shrink: 0;
-        }
-
-        .control-btn {
-            flex: 1;
-            min-width: 120px;
-            background: #333;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             gap: 8px;
-            transition: all 0.2s;
-            font-size: 0.9rem;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            line-height: 1.5;
         }
 
-        .control-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.2);
-        }
+        .log-ts { color: #3a4055; flex-shrink: 0; }
 
-        .control-btn:active {
-            transform: translateY(0);
-        }
-
-        .control-btn.danger { background: var(--danger); }
-        .control-btn.success { background: var(--success); }
-        .control-btn.warning { background: var(--warning); }
-
-        /* Estadísticas - SIEMPRE VISIBLES */
-        .stats-footer {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 0.7rem;
-            color: #888;
+        .log-tag {
             flex-shrink: 0;
-            background: var(--bg-primary);
-            padding: 8px 12px;
-            border-radius: 12px;
-            border: 1px solid var(--border-light);
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+            padding: 1px 7px;
+            border-radius: 3px;
+            font-weight: 700;
         }
 
-        /* Botón modo oscuro */
-        .theme-switch {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            color: white;
+        /* Tags con fondo y texto siempre legible */
+        .tag-bms { background: rgba(16,185,129,0.2); color: #10b981; }
+        .tag-mppt { background: rgba(255,176,32,0.2); color: #ffb020; }
+        .tag-shunt { background: rgba(59,130,246,0.2); color: #3b82f6; }
+        .tag-inversor { background: rgba(244,63,94,0.2); color: #f43f5e; }
+        .tag-orion { background: rgba(168,85,247,0.2); color: #a855f7; }
+        .tag-sense { background: rgba(6,182,212,0.2); color: #06b6d4; }
+        .tag-system { background: rgba(90,100,128,0.2); color: #8090b0; }
+        .tag-error { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+        .log-sensor { color: #6878a0; flex-shrink: 0; font-size: 0.65rem; }
+        .log-value { color: #c8d0e0; flex: 1; }
+        .log-value.val-ok { color: #10b981; }
+        .log-value.val-warn { color: #f59e0b; }
+        .log-value.val-error { color: #ef4444; }
+
+        /* CONTROLES */
+        .controls-bar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .ctrl-btn {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+            padding: 7px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.15s;
             display: flex;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 2000;
-            border: none;
-            font-size: 1.5rem;
+            gap: 6px;
         }
+
+        .ctrl-btn:hover { color: var(--text-bright); border-color: var(--border-bright); }
+        .ctrl-btn.danger { border-color: rgba(239,68,68,0.3); color: var(--danger); }
+        .ctrl-btn.danger:hover { background: rgba(239,68,68,0.1); }
+        .ctrl-btn.ok { border-color: rgba(16,185,129,0.3); color: var(--ok); }
+        .ctrl-btn.ok:hover { background: rgba(16,185,129,0.1); }
+        .ctrl-btn.paused { border-color: rgba(245,158,11,0.3); color: var(--warn); }
+
+        .stats-row {
+            margin-left: auto;
+            display: flex;
+            gap: 16px;
+        }
+
+        .stat-item {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        .stat-item span { color: var(--text); }
     </style>
 </head>
 <body>
-    <!--
-        CopyLeft 2026 - UZTURRE
-        Este código es completamente libre.
-        Puedes copiarlo, modificarlo y compartirlo sin pedir permiso.
-        Si te sirve, úsalo; si lo mejoras, compártelo.
-        Esto es CopyLeft: el conocimiento no se posee, se comparte.
-    -->
-
-    <!-- Menú de navegación -->
-    <nav class="nav-master">
-        <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> INICIO</a>
-        <a href="victron.html" class="nav-btn"><i class="fas fa-solar-panel"></i> VICTRON</a>
-        <a href="bateria.html" class="nav-btn"><i class="fas fa-car-battery"></i> BATERÍA</a>
-        <a href="logs.html" class="nav-btn active"><i class="fas fa-history"></i> LOGS</a>
+    <nav>
+        <span class="nav-logo">SIENA·395</span>
+        <a href="index.html" class="nav-link">INICIO</a>
+        <a href="victron.html" class="nav-link">VICTRON</a>
+        <a href="bateria.html" class="nav-link">BATERÍA</a>
+        <a href="logs.html" class="nav-link active">LOGS</a>
     </nav>
 
-    <div class="dashboard">
-        
-        <!-- Cabecera con estado MQTT -->
-        <div class="header-card">
-            <div class="title-section">
-                <i class="fas fa-terminal"></i>
-                <span>CONSOLA MQTT - MONITORIZACIÓN EN TIEMPO REAL</span>
+    <div class="layout">
+        <div class="header-bar">
+            <div>
+                <div class="page-title">CONSOLA</div>
+                <div class="page-subtitle">MQTT REAL-TIME · mi_clave_privada_siena/#</div>
             </div>
-            <div id="mqtt-status" class="badge" style="background: #ffebee; color: #e74c3c;">
-                <i class="fas fa-circle"></i> DESCONECTADO
+            <div class="mqtt-pill" id="mqttStatus">
+                <div class="mqtt-dot"></div>DESCONECTADO
             </div>
         </div>
 
-        <!-- Filtros -->
-        <div class="filter-section">
-            <div class="filter-title">
-                <i class="fas fa-filter"></i> FILTRAR POR TIPO
-            </div>
-            <div class="filter-buttons" id="filter-buttons">
-                <button class="filter-btn active" data-filter="all">TODOS</button>
-                <button class="filter-btn" data-filter="bms">BMS</button>
-                <button class="filter-btn" data-filter="mppt">MPPT</button>
-                <button class="filter-btn" data-filter="shunt">SHUNT</button>
-                <button class="filter-btn" data-filter="inversor">INVERSOR</button>
-                <button class="filter-btn" data-filter="orion">ORION</button>
-                <button class="filter-btn" data-filter="sense">SENSE</button>
-            </div>
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-btn active" data-filter="all">TODOS</button>
+            <button class="filter-btn" data-filter="bms">BMS</button>
+            <button class="filter-btn" data-filter="mppt">MPPT</button>
+            <button class="filter-btn" data-filter="shunt">SHUNT</button>
+            <button class="filter-btn" data-filter="inversor">INVERSOR</button>
+            <button class="filter-btn" data-filter="orion">ORION</button>
+            <button class="filter-btn" data-filter="sense">SENSE</button>
         </div>
 
-        <!-- Contenedor de logs - TAMAÑO FIJO -->
-        <div class="log-container">
-            <div id="log-console">
-                <div class="log-entry">
-                    <span class="timestamp">[--:--:--]</span>
-                    <span class="topic">SISTEMA</span>
-                    <span class="msg-info">Consola de logs iniciada. Esperando datos MQTT...</span>
+        <div class="console-wrap">
+            <div class="console-titlebar">
+                <div class="dot" style="background:#ef4444;"></div>
+                <div class="dot" style="background:#f59e0b;"></div>
+                <div class="dot" style="background:#10b981;"></div>
+                <span style="font-family:var(--mono); font-size:0.6rem; color:var(--text-dim); margin-left:8px; letter-spacing:1px;">
+                    SIENA-395-MQTT-CONSOLE
+                </span>
+            </div>
+
+            <div id="logConsole">
+                <div class="log-line">
+                    <span class="log-ts">--:--:--</span>
+                    <span class="log-tag tag-system">SYS</span>
+                    <span class="log-value">Consola iniciada. Conectando al broker MQTT...</span>
                 </div>
             </div>
-            
-            <!-- Controles - SIEMPRE VISIBLES -->
-            <div class="controls">
-                <button class="control-btn danger" onclick="clearLogs()">
+
+            <div class="controls-bar">
+                <button class="ctrl-btn danger" onclick="clearLogs()">
                     <i class="fas fa-trash"></i> LIMPIAR
                 </button>
-                <button class="control-btn" id="pauseBtn" onclick="togglePause()">
+                <button class="ctrl-btn" id="pauseBtn" onclick="togglePause()">
                     <i class="fas fa-pause"></i> PAUSAR
                 </button>
-                <button class="control-btn success" onclick="exportLogs()">
+                <button class="ctrl-btn ok" onclick="exportLogs()">
                     <i class="fas fa-download"></i> EXPORTAR
                 </button>
-                <button class="control-btn warning" onclick="scrollToBottom()">
-                    <i class="fas fa-arrow-down"></i> IR AL FINAL
+                <button class="ctrl-btn" onclick="scrollBottom()">
+                    <i class="fas fa-arrow-down"></i> FIN
                 </button>
-            </div>
 
-            <!-- Estadísticas - SIEMPRE VISIBLES -->
-            <div class="stats-footer">
-                <span>📊 <span id="msgCount">0</span> mensajes</span>
-                <span>🔍 Filtro: <span id="activeFilter">TODOS</span></span>
-                <span>⏱️ Último: <span id="lastUpdate">--:--:--</span></span>
+                <div class="stats-row">
+                    <div class="stat-item">MSG: <span id="msgCount">0</span></div>
+                    <div class="stat-item">FILTRO: <span id="activeFilter">TODOS</span></div>
+                    <div class="stat-item">ÚLT: <span id="lastUpdate">--:--:--</span></div>
+                </div>
             </div>
         </div>
-
-        <!-- CopyLeft visible -->
-        <div style="text-align: center; font-size: 0.6rem; color: #aaa; margin-top: 8px; padding: 5px; border-top: 1px dashed var(--border-light);">
-            &#169; CopyLeft 2026 - UZTURRE · El conocimiento no se posee, se comparte · Código 100% libre
-        </div>
-    </div>
-
-    <!-- Botón flotante para modo oscuro/claro -->
-    <div class="theme-switch" id="themeToggle">
-        <i class="fas fa-moon"></i>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN MQTT ---
         const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-        
-        // Estado
+        const mqttStatusEl = document.getElementById('mqttStatus');
+        const consoleEl = document.getElementById('logConsole');
+
         let isPaused = false;
-        let messageCount = 0;
+        let msgCount = 0;
         let currentFilter = 'all';
         let logHistory = [];
-        const MAX_LOGS = 500; // Límite para no saturar el navegador
-        
-        // Elementos DOM
-        const consoleEl = document.getElementById('log-console');
-        const mqttStatusEl = document.getElementById('mqtt-status');
-        const msgCountEl = document.getElementById('msgCount');
-        const activeFilterEl = document.getElementById('activeFilter');
-        const lastUpdateEl = document.getElementById('lastUpdate');
+        const MAX_LOGS = 500;
 
-        // Conectar MQTT
-        const client = mqtt.connect(BROKER);
+        const client = mqtt.connect(BROKER, { clientId: 'siena_logs_' + Math.random().toString(16).substr(2,8) });
 
         client.on('connect', () => {
-            console.log('✅ Conectado al broker MQTT');
-            mqttStatusEl.innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
-            mqttStatusEl.style.background = '#e8f5e9';
-            mqttStatusEl.style.color = '#27ae60';
-            
-            // Suscribirse a TODOS los sensores
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>CONECTADO';
+            mqttStatusEl.className = 'mqtt-pill connected';
             client.subscribe('mi_clave_privada_siena/sensor/#');
-            addEntry('SISTEMA', 'Conectado al broker EMQX', 'msg-success');
-            addEntry('SISTEMA', 'Suscrito a: mi_clave_privada_siena/sensor/#', 'msg-info');
+            client.subscribe('mi_clave_privada_siena/binary_sensor/#');
+            addSystemLine('Conectado al broker EMQX · Suscrito a sensor/# y binary_sensor/#');
         });
 
         client.on('error', (err) => {
-            console.error('❌ Error MQTT:', err);
-            mqttStatusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ERROR';
-            mqttStatusEl.style.background = '#ffebee';
-            mqttStatusEl.style.color = '#e74c3c';
-            addEntry('ERROR', 'Fallo en conexión MQTT', 'msg-error');
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>ERROR';
+            addSystemLine('Error MQTT: ' + err.message, 'error');
         });
 
-        client.on('message', (topic, message) => {
+        client.on('offline', () => {
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>DESCONECTADO';
+            mqttStatusEl.className = 'mqtt-pill';
+            addSystemLine('Desconectado del broker', 'warn');
+        });
+
+        client.on('reconnect', () => {
+            addSystemLine('Reconectando...', 'warn');
+        });
+
+        client.on('message', (topic, msg) => {
             if (isPaused) return;
-            
-            const payload = message.toString();
-            const timestamp = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            
-            // Actualizar contadores
-            messageCount++;
-            msgCountEl.innerText = messageCount;
-            lastUpdateEl.innerText = timestamp;
-            
-            // Extraer información del tópico
+
+            const payload = msg.toString();
             const parts = topic.split('/');
-            if (parts.length >= 4) {
-                const sensorName = parts[2];
-                const deviceType = getDeviceType(sensorName);
-                
-                // Crear entrada de log
-                const logEntry = {
-                    timestamp: timestamp,
-                    topic: topic,
-                    sensorName: sensorName,
-                    deviceType: deviceType,
-                    payload: payload,
-                    fullTopic: topic
-                };
-                
-                // Guardar en historial
-                logHistory.push(logEntry);
-                if (logHistory.length > MAX_LOGS) {
-                    logHistory.shift();
-                }
-                
-                // Mostrar si pasa el filtro
-                if (currentFilter === 'all' || currentFilter === deviceType) {
-                    displayLogEntry(logEntry);
-                }
-            } else {
-                // Formato de tópico no esperado
-                addEntry('DESCONOCIDO', `${topic}: ${payload}`, 'msg-warn');
+            const sensorName = parts[2] || '';
+            const deviceType = getDeviceType(sensorName);
+            const ts = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+            document.getElementById('lastUpdate').innerText = ts;
+            msgCount++;
+            document.getElementById('msgCount').innerText = msgCount;
+
+            const entry = { ts, sensorName, deviceType, payload, topic };
+            logHistory.push(entry);
+            if (logHistory.length > MAX_LOGS) logHistory.shift();
+
+            if (currentFilter === 'all' || currentFilter === deviceType) {
+                renderLine(entry);
             }
         });
 
-        // Determinar tipo de dispositivo por el nombre del sensor
-        function getDeviceType(sensorName) {
-            if (sensorName.includes('bms')) return 'bms';
-            if (sensorName.includes('mppt')) return 'mppt';
-            if (sensorName.includes('shunt')) return 'shunt';
-            if (sensorName.includes('inversor')) return 'inversor';
-            if (sensorName.includes('orion')) return 'orion';
-            if (sensorName.includes('sense')) return 'sense';
-            return 'otros';
+        function getDeviceType(name) {
+            if (name.includes('bms')) return 'bms';
+            if (name.includes('mppt')) return 'mppt';
+            if (name.includes('shunt')) return 'shunt';
+            if (name.includes('inversor')) return 'inversor';
+            if (name.includes('orion')) return 'orion';
+            if (name.includes('sense')) return 'sense';
+            return 'system';
         }
 
-        // Mostrar entrada en la consola
-        function displayLogEntry(entry) {
-            const div = document.createElement('div');
-            div.className = 'log-entry';
-            div.setAttribute('data-device', entry.deviceType);
-            
-            // Determinar clase del mensaje según el valor
-            let msgClass = 'msg-value';
-            if (entry.sensorName.includes('error') || entry.payload.includes('nan')) {
-                msgClass = 'msg-error';
-            } else if (entry.sensorName.includes('temperatura') && parseFloat(entry.payload) > 40) {
-                msgClass = 'msg-warn';
-            } else if (entry.sensorName.includes('soc')) {
-                msgClass = 'msg-success';
+        function getTagClass(type) {
+            const map = { bms:'tag-bms', mppt:'tag-mppt', shunt:'tag-shunt', inversor:'tag-inversor', orion:'tag-orion', sense:'tag-sense', system:'tag-system' };
+            return map[type] || 'tag-system';
+        }
+
+        function getValueClass(sensorName, payload) {
+            if (payload === 'nan' || sensorName.includes('error') || sensorName.includes('fallo')) return 'val-error';
+            if (sensorName.includes('soc') || sensorName.includes('temperatura')) {
+                const v = parseFloat(payload);
+                if (sensorName.includes('soc') && v < 20) return 'val-warn';
+                if (sensorName.includes('temperatura') && v > 40) return 'val-warn';
             }
-            
-            div.innerHTML = `
-                <span class="timestamp">[${entry.timestamp}]</span>
-                <span class="topic">${entry.sensorName}:</span>
-                <span class="${msgClass}">${entry.payload}</span>
-            `;
-            
-            consoleEl.appendChild(div);
-            consoleEl.scrollTop = consoleEl.scrollHeight;
+            return '';
         }
 
-        // Añadir entrada manual del sistema
-        function addEntry(sensor, msg, className = 'msg-info') {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            
+        function renderLine(entry) {
             const div = document.createElement('div');
-            div.className = 'log-entry';
+            div.className = 'log-line';
+            div.setAttribute('data-device', entry.deviceType);
+
+            const tagLabel = entry.deviceType.toUpperCase();
+            const valClass = getValueClass(entry.sensorName, entry.payload);
+
             div.innerHTML = `
-                <span class="timestamp">[${timeStr}]</span>
-                <span class="topic">${sensor}:</span>
-                <span class="${className}">${msg}</span>
+                <span class="log-ts">${entry.ts}</span>
+                <span class="log-tag ${getTagClass(entry.deviceType)}">${tagLabel}</span>
+                <span class="log-sensor">${entry.sensorName}</span>
+                <span class="log-value ${valClass}">${entry.payload}</span>
             `;
-            
+
+            consoleEl.appendChild(div);
+
+            // Limitar DOM a 300 líneas visibles
+            while (consoleEl.children.length > 300) {
+                consoleEl.removeChild(consoleEl.firstChild);
+            }
+
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function addSystemLine(msg, type = 'info') {
+            const ts = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.setAttribute('data-device', 'system');
+            const cls = type === 'error' ? 'val-error' : type === 'warn' ? 'val-warn' : 'val-ok';
+            div.innerHTML = `
+                <span class="log-ts">${ts}</span>
+                <span class="log-tag tag-system">SYS</span>
+                <span class="log-value ${cls}">${msg}</span>
+            `;
             consoleEl.appendChild(div);
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
-        // Limpiar logs
+        // FILTROS
+        document.getElementById('filterBar').addEventListener('click', (e) => {
+            const btn = e.target.closest('.filter-btn');
+            if (!btn) return;
+
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.getAttribute('data-filter');
+            document.getElementById('activeFilter').innerText = btn.innerText;
+
+            // Redibujar con el filtro
+            consoleEl.innerHTML = '';
+            logHistory.forEach(entry => {
+                if (currentFilter === 'all' || currentFilter === entry.deviceType) {
+                    renderLine(entry);
+                }
+            });
+
+            addSystemLine('Filtro: ' + btn.innerText);
+        });
+
         function clearLogs() {
             consoleEl.innerHTML = '';
-            addEntry('SISTEMA', 'Consola limpia', 'msg-info');
-            messageCount = 0;
-            msgCountEl.innerText = messageCount;
             logHistory = [];
+            msgCount = 0;
+            document.getElementById('msgCount').innerText = 0;
+            addSystemLine('Consola limpiada');
         }
 
-        // Pausar/Reanudar
         function togglePause() {
             isPaused = !isPaused;
             const btn = document.getElementById('pauseBtn');
-            btn.innerHTML = isPaused ? '<i class="fas fa-play"></i> REANUDAR' : '<i class="fas fa-pause"></i> PAUSAR';
-            btn.style.background = isPaused ? 'var(--success)' : '#333';
-            
-            if (!isPaused) {
-                addEntry('SISTEMA', 'Reanudado - Mostrando mensajes', 'msg-info');
+            if (isPaused) {
+                btn.innerHTML = '<i class="fas fa-play"></i> REANUDAR';
+                btn.classList.add('paused');
+                addSystemLine('Consola pausada', 'warn');
+            } else {
+                btn.innerHTML = '<i class="fas fa-pause"></i> PAUSAR';
+                btn.classList.remove('paused');
+                addSystemLine('Consola reanudada');
             }
         }
 
-        // Exportar logs
         function exportLogs() {
-            let logText = '';
-            const entries = consoleEl.querySelectorAll('.log-entry');
-            
-            entries.forEach(entry => {
-                logText += entry.innerText + '\n';
+            let text = 'SIENA 395 - EXPORT MQTT LOGS\n';
+            text += new Date().toISOString() + '\n';
+            text += '='.repeat(60) + '\n\n';
+            logHistory.forEach(e => {
+                text += `[${e.ts}] [${e.deviceType.toUpperCase()}] ${e.sensorName}: ${e.payload}\n`;
             });
-            
-            const blob = new Blob([logText], { type: 'text/plain' });
+            const blob = new Blob([text], {type:'text/plain'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `siena-logs-${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.txt`;
+            a.download = `siena-logs-${new Date().toISOString().slice(0,16).replace(/[T:]/g,'-')}.txt`;
             a.click();
             URL.revokeObjectURL(url);
-            
-            addEntry('SISTEMA', 'Logs exportados correctamente', 'msg-success');
+            addSystemLine('Exportado ' + logHistory.length + ' líneas');
         }
 
-        // Scroll al final
-        function scrollToBottom() {
+        function scrollBottom() {
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
-
-        // Filtros
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                currentFilter = this.getAttribute('data-filter');
-                activeFilterEl.innerText = this.innerText;
-                
-                consoleEl.innerHTML = '';
-                
-                logHistory.forEach(entry => {
-                    if (currentFilter === 'all' || currentFilter === entry.deviceType) {
-                        displayLogEntry(entry);
-                    }
-                });
-                
-                addEntry('SISTEMA', `Filtro aplicado: ${this.innerText}`, 'msg-info');
-            });
-        });
-
-        // Modo oscuro
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = themeToggle.querySelector('i');
-        
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeIcon.classList.remove('fa-moon');
-            themeIcon.classList.add('fa-sun');
-        }
-        
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            
-            if (document.body.classList.contains('dark-mode')) {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-                localStorage.setItem('theme', 'light');
-            }
-        });
-
-        console.log('📋 Página de Logs Siena 395 iniciada');
-        console.log('📡 Esperando datos de: mi_clave_privada_siena/sensor/#');
     </script>
 </body>
 </html>
