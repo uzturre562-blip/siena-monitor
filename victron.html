@@ -3,573 +3,560 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena 395 - Victron Energy</title>
+    <title>SIENA 395 · Victron</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-    
     <style>
         :root {
-            --bg-primary: #f8f5f0;
-            --bg-secondary: #fefcf8;
-            --text-main: #2c2925;
-            --accent-primary: #8b7355;
-            --victron-blue: #1a5c96;
-            --victron-blue-light: #2c7ab1;
-            --solar-orange: #f39c12;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #e67e22;
-            --card-radius: 24px;
-            --border-light: #e2ddd5;
+            --bg: #0a0c0f;
+            --surface: #111318;
+            --surface2: #181c23;
+            --border: #1e2330;
+            --text: #c8d0e0;
+            --text-dim: #5a6480;
+            --text-bright: #eef2ff;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0,212,170,0.12);
+            --solar: #ffb020;
+            --solar-dim: rgba(255,176,32,0.15);
+            --orion: #a855f7;
+            --orion-dim: rgba(168,85,247,0.15);
+            --inverter: #f43f5e;
+            --inverter-dim: rgba(244,63,94,0.15);
+            --shunt: #3b82f6;
+            --shunt-dim: rgba(59,130,246,0.15);
+            --sense: #10b981;
+            --sense-dim: rgba(16,185,129,0.15);
+            --ok: #10b981;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --radius: 12px;
+            --mono: 'Space Mono', monospace;
+            --display: 'Barlow Condensed', sans-serif;
         }
 
-        body.dark-mode {
-            --bg-primary: #121417;
-            --bg-secondary: #1a1d23;
-            --text-main: #e0e0e0;
-            --border-light: #2d343f;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-main);
-            margin: 0;
-            transition: background-color 0.3s, color 0.3s;
+            font-family: var(--display);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(ellipse at 50% 0%, rgba(255,176,32,0.04) 0%, transparent 60%);
         }
 
-        .nav-master {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 15px;
-            background: var(--bg-secondary);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border-light);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        nav { display: flex; align-items: center; gap: 4px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-logo { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 2px; margin-right: auto; padding-right: 16px; border-right: 1px solid var(--border); }
+        .nav-link { font-family: var(--display); font-weight: 700; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); text-decoration: none; padding: 7px 12px; border-radius: 6px; border: 1px solid transparent; transition: all 0.15s; }
+        .nav-link:hover { color: var(--text); background: var(--surface2); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); border-color: rgba(0,212,170,0.25); }
+
+        .page { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+        .page-title { font-family: var(--display); font-size: 2.4rem; font-weight: 900; letter-spacing: 2px; color: var(--text-bright); line-height: 1; }
+        .page-subtitle { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); letter-spacing: 2px; margin-top: 4px; }
+
+        .mqtt-pill { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 1px; padding: 6px 12px; border-radius: 20px; background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); display: flex; align-items: center; gap: 6px; }
+        .mqtt-pill.connected { background: rgba(16,185,129,0.1); color: var(--ok); border-color: rgba(16,185,129,0.2); }
+        .mqtt-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .section-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* DEVICE CARDS */
+        .device-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            overflow: hidden;
         }
 
-        .nav-btn {
-            background: var(--bg-primary);
-            border: 2px solid var(--border-light);
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-weight: 700;
-            color: #888;
-            text-decoration: none;
-            font-size: 0.8rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .nav-btn.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
-
-        .dashboard { max-width: 800px; margin: 0 auto; padding: 15px; }
-        
-        .card {
-            background: var(--bg-secondary);
-            border-radius: var(--card-radius);
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-            border: 1px solid var(--border-light);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        
-        .card-title {
-            font-weight: 800;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
+        .device-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: var(--accent-primary);
+            gap: 14px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .victron-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-
-        .victron-item {
-            background: var(--bg-primary);
-            border-radius: 20px;
-            padding: 18px;
-            border: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .victron-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 15px;
-            background: var(--victron-blue);
-            color: white;
+        .device-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
+            font-size: 1.3rem;
+            flex-shrink: 0;
         }
 
-        .victron-info {
-            flex: 1;
-        }
-
-        .victron-name {
-            font-weight: 700;
-            font-size: 1rem;
-            margin-bottom: 5px;
-        }
-
-        .victron-stats {
-            display: flex;
-            gap: 20px;
-            font-size: 0.9rem;
-            flex-wrap: wrap;
-        }
-
-        .victron-stat {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .victron-stat-label {
-            font-size: 0.65rem;
-            color: #888;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .victron-stat-value {
-            font-weight: 800;
+        .device-name {
+            font-family: var(--display);
             font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--text-bright);
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+        .device-model {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            margin-top: 2px;
         }
 
-        .stat-box {
-            background: var(--bg-primary);
-            padding: 20px;
+        .device-state {
+            margin-left: auto;
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+            padding: 4px 10px;
             border-radius: 20px;
-            text-align: center;
-            border: 1px solid var(--border-light);
         }
 
-        .stat-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .device-body {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
         }
 
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 900;
-            line-height: 1.2;
+        .device-stat {
+            padding: 14px 16px;
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
         }
 
-        .stat-unit {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #888;
-            margin-left: 2px;
-        }
+        .device-stat:nth-child(3n) { border-right: none; }
+        .device-stat:nth-last-child(-n+3) { border-bottom: none; }
 
-        .badge {
-            background: var(--bg-primary);
-            padding: 8px 15px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
+        .device-stat-label { font-family: var(--mono); font-size: 0.55rem; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+        .device-stat-value { font-family: var(--display); font-size: 1.3rem; font-weight: 800; color: var(--text-bright); }
+        .device-stat-unit { font-size: 0.7rem; font-weight: 400; color: var(--text-dim); }
+
+        /* Colors per device */
+        .mppt .device-header { background: var(--solar-dim); }
+        .mppt .device-icon { background: rgba(255,176,32,0.2); color: var(--solar); }
+
+        .orion .device-header { background: var(--orion-dim); }
+        .orion .device-icon { background: rgba(168,85,247,0.2); color: var(--orion); }
+
+        .inverter .device-header { background: var(--inverter-dim); }
+        .inverter .device-icon { background: rgba(244,63,94,0.2); color: var(--inverter); }
+
+        .shunt .device-header { background: var(--shunt-dim); }
+        .shunt .device-icon { background: rgba(59,130,246,0.2); color: var(--shunt); }
+
+        .sense .device-header { background: var(--sense-dim); }
+        .sense .device-icon { background: rgba(16,185,129,0.2); color: var(--sense); }
+
+        /* Estado chips */
+        .state-ok { background: rgba(16,185,129,0.15); color: var(--ok); border: 1px solid rgba(16,185,129,0.3); }
+        .state-warn { background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
+        .state-off { background: rgba(90,100,128,0.15); color: var(--text-dim); border: 1px solid var(--border); }
+
+        /* FASE MPPT */
+        .mppt-phases {
+            display: flex;
             gap: 8px;
-            border: 1px solid var(--border-light);
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--surface2);
         }
 
-        .theme-switch {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 2000;
-            border: none;
-            font-size: 1.5rem;
+        .phase-pill {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
         }
+
+        .phase-pill.active {
+            background: rgba(255,176,32,0.15);
+            color: var(--solar);
+            border-color: rgba(255,176,32,0.3);
+        }
+
+        /* GRÁFICA SOLAR */
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+
+        .chart-wrap { height: 180px; position: relative; }
+
+        .footer { text-align: center; font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); padding: 20px 0 10px; border-top: 1px solid var(--border); letter-spacing: 1px; margin-top: 8px; }
+        .last-update { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); text-align: center; padding: 10px; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-
-    <nav class="nav-master">
-        <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> INICIO</a>
-        <a href="victron.html" class="nav-btn active"><i class="fas fa-solar-panel"></i> VICTRON</a>
-        <a href="bateria.html" class="nav-btn"><i class="fas fa-car-battery"></i> BATERÍA</a>
-        <a href="logs.html" class="nav-btn"><i class="fas fa-history"></i> LOGS</a>
+    <nav>
+        <span class="nav-logo">SIENA·395</span>
+        <a href="index.html" class="nav-link">INICIO</a>
+        <a href="victron.html" class="nav-link active">VICTRON</a>
+        <a href="bateria.html" class="nav-link">BATERÍA</a>
+        <a href="logs.html" class="nav-link">LOGS</a>
     </nav>
 
-    <div class="dashboard">
-        
-        <div class="card" style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-solar-panel" style="color: var(--accent-primary);"></i> 
-                EQUIPOS VICTRON
+    <div class="page">
+        <div class="page-header">
+            <div>
+                <div class="page-title">VICTRON</div>
+                <div class="page-subtitle">5 DISPOSITIVOS · MPPT · ORION · INVERSOR · SHUNT · SENSE</div>
             </div>
-            <div id="mqtt-status" class="badge" style="background: #ffebee; color: #e74c3c;">
-                <i class="fas fa-circle"></i> DESCONECTADO
+            <div class="mqtt-pill" id="mqttStatus">
+                <div class="mqtt-dot"></div>DESCONECTADO
             </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-box">
-                <div class="stat-label"><i class="fas fa-sun"></i> PRODUCCIÓN SOLAR</div>
+        <!-- MPPT 75/15 -->
+        <div class="device-card mppt">
+            <div class="device-header">
+                <div class="device-icon"><i class="fas fa-sun"></i></div>
                 <div>
-                    <span class="stat-value" id="totalSolar">--</span>
-                    <span class="stat-unit">W</span>
+                    <div class="device-name">SMARTSOLAR MPPT</div>
+                    <div class="device-model">75/15 · PANEL 140W</div>
+                </div>
+                <div class="device-state state-off" id="mpptState">--</div>
+            </div>
+            <div class="device-body">
+                <div class="device-stat">
+                    <div class="device-stat-label">Potencia solar</div>
+                    <div class="device-stat-value" id="mpptPower">--<span class="device-stat-unit">W</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Voltaje</div>
+                    <div class="device-stat-value" id="mpptVoltage">--<span class="device-stat-unit">V</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Corriente</div>
+                    <div class="device-stat-value" id="mpptCurrent">--<span class="device-stat-unit">A</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Pot. batería</div>
+                    <div class="device-stat-value" id="mpptBatPower">--<span class="device-stat-unit">W</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Hoy</div>
+                    <div class="device-stat-value" id="mpptToday">--<span class="device-stat-unit">kWh</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Carga output</div>
+                    <div class="device-stat-value" id="mpptLoad">--<span class="device-stat-unit">W</span></div>
                 </div>
             </div>
-            <div class="stat-box">
-                <div class="stat-label"><i class="fas fa-battery-three-quarters"></i> ESTADO BATERÍA</div>
+            <div class="mppt-phases">
+                <span class="phase-pill" id="phaseBulk">BULK</span>
+                <span class="phase-pill" id="phaseAbsorption">ABSORCIÓN</span>
+                <span class="phase-pill" id="phaseFloat">FLOTACIÓN</span>
+            </div>
+        </div>
+
+        <!-- ORION -->
+        <div class="device-card orion">
+            <div class="device-header">
+                <div class="device-icon"><i class="fas fa-exchange-alt"></i></div>
                 <div>
-                    <span class="stat-value" id="totalSoc">--</span>
-                    <span class="stat-unit">%</span>
+                    <div class="device-name">ORION-TR SMART</div>
+                    <div class="device-model">DC-DC 30A · ALTERNADOR</div>
+                </div>
+                <div class="device-state state-off" id="orionState">--</div>
+            </div>
+            <div class="device-body">
+                <div class="device-stat">
+                    <div class="device-stat-label">V. Entrada</div>
+                    <div class="device-stat-value" id="orionVin">--<span class="device-stat-unit">V</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">V. Salida</div>
+                    <div class="device-stat-value" id="orionVout">--<span class="device-stat-unit">V</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Corriente</div>
+                    <div class="device-stat-value" id="orionCurrent">--<span class="device-stat-unit">A</span></div>
+                </div>
+                <div class="device-stat" style="grid-column: span 3;">
+                    <div class="device-stat-label">Razón apagado</div>
+                    <div class="device-stat-value" style="font-size:1rem;" id="orionOffReason">--</div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-title">
-                <i class="fas fa-microchip"></i> DISPOSITIVOS CONECTADOS (5)
+        <!-- INVERSOR PHOENIX -->
+        <div class="device-card inverter">
+            <div class="device-header">
+                <div class="device-icon"><i class="fas fa-bolt"></i></div>
+                <div>
+                    <div class="device-name">PHOENIX INVERSOR</div>
+                    <div class="device-model">12V / 2000VA</div>
+                </div>
+                <div class="device-state state-off" id="inverterState">--</div>
             </div>
-            
-            <div class="victron-grid">
-                <!-- MPPT 75/15 -->
-                <div class="victron-item">
-                    <div class="victron-icon"><i class="fas fa-sun"></i></div>
-                    <div class="victron-info">
-                        <div class="victron-name">MPPT 75/15</div>
-                        <div class="victron-stats">
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">POTENCIA</span>
-                                <span class="victron-stat-value" id="mpptPower">-- W</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">PANEL</span>
-                                <span class="victron-stat-value" id="mpptVoltage">-- V</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">CORRIENTE</span>
-                                <span class="victron-stat-value" id="mpptCurrent">-- A</span>
-                            </div>
-                        </div>
-                    </div>
+            <div class="device-body">
+                <div class="device-stat">
+                    <div class="device-stat-label">V. salida AC</div>
+                    <div class="device-stat-value" id="inverterVac">--<span class="device-stat-unit">V</span></div>
                 </div>
-
-                <!-- SmartShunt 300A -->
-                <div class="victron-item">
-                    <div class="victron-icon"><i class="fas fa-chart-line"></i></div>
-                    <div class="victron-info">
-                        <div class="victron-name">SmartShunt 300A</div>
-                        <div class="victron-stats">
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">VOLTAJE</span>
-                                <span class="victron-stat-value" id="shuntVoltage">-- V</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">CORRIENTE</span>
-                                <span class="victron-stat-value" id="shuntCurrent">-- A</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">SOC</span>
-                                <span class="victron-stat-value" id="shuntSoc">--%</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Corriente AC</div>
+                    <div class="device-stat-value" id="inverterCurrent">--<span class="device-stat-unit">A</span></div>
                 </div>
-
-                <!-- Orion DC-DC 30A -->
-                <div class="victron-item">
-                    <div class="victron-icon"><i class="fas fa-exchange-alt"></i></div>
-                    <div class="victron-info">
-                        <div class="victron-name">Orion DC-DC 30A</div>
-                        <div class="victron-stats">
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">ENTRADA</span>
-                                <span class="victron-stat-value" id="orionInput">-- V</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">SALIDA</span>
-                                <span class="victron-stat-value" id="orionOutput">-- V</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">CORRIENTE</span>
-                                <span class="victron-stat-value" id="orionCurrent">-- A</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Inversor Phoenix 12V 200VA -->
-                <div class="victron-item">
-                    <div class="victron-icon"><i class="fas fa-bolt"></i></div>
-                    <div class="victron-info">
-                        <div class="victron-name">Inversor Phoenix 12V 200VA</div>
-                        <div class="victron-stats">
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">ENTRADA</span>
-                                <span class="victron-stat-value" id="inverterInput">-- V</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">SALIDA</span>
-                                <span class="victron-stat-value" id="inverterOutput">-- V</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">POTENCIA</span>
-                                <span class="victron-stat-value" id="inverterPower">-- W</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Battery Sense -->
-                <div class="victron-item">
-                    <div class="victron-icon"><i class="fas fa-thermometer-half"></i></div>
-                    <div class="victron-info">
-                        <div class="victron-name">Battery Sense</div>
-                        <div class="victron-stats">
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">TEMPERATURA</span>
-                                <span class="victron-stat-value" id="senseTemp">-- °C</span>
-                            </div>
-                            <div class="victron-stat">
-                                <span class="victron-stat-label">VOLTAJE</span>
-                                <span class="victron-stat-value" id="senseVoltage">-- V</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Potencia</div>
+                    <div class="device-stat-value" id="inverterPower">--<span class="device-stat-unit">VA</span></div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-title">
-                <i class="fas fa-chart-area"></i> PRODUCCIÓN SOLAR (HOY)
+        <!-- SMARTSHUNT -->
+        <div class="device-card shunt">
+            <div class="device-header">
+                <div class="device-icon"><i class="fas fa-chart-line"></i></div>
+                <div>
+                    <div class="device-name">SMARTSHUNT</div>
+                    <div class="device-model">300A · MONITOR BATERÍA</div>
+                </div>
+                <div class="device-state state-off" id="shuntAlarm" style="display:none;">⚠ ALARMA</div>
             </div>
-            <div style="height: 200px; display: flex; align-items: center; justify-content: center; background: var(--bg-primary); border-radius: 20px; border: 1px solid var(--border-light);">
-                <canvas id="solarChart" style="width: 100%; height: 100%;"></canvas>
+            <div class="device-body">
+                <div class="device-stat">
+                    <div class="device-stat-label">Voltaje</div>
+                    <div class="device-stat-value" id="shuntVoltage">--<span class="device-stat-unit">V</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Corriente</div>
+                    <div class="device-stat-value" id="shuntCurrent">--<span class="device-stat-unit">A</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">SOC</div>
+                    <div class="device-stat-value" id="shuntSoc">--<span class="device-stat-unit">%</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Potencia</div>
+                    <div class="device-stat-value" id="shuntPower">--<span class="device-stat-unit">W</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">Ah consumidos</div>
+                    <div class="device-stat-value" id="shuntAh">--<span class="device-stat-unit">Ah</span></div>
+                </div>
+                <div class="device-stat">
+                    <div class="device-stat-label">T. restante</div>
+                    <div class="device-stat-value" id="shuntTime">--<span class="device-stat-unit">min</span></div>
+                </div>
             </div>
         </div>
 
-               <!-- Última actualización -->
-        <div style="text-align: center; font-size: 0.7rem; color: #888; margin-top: 20px; padding: 10px;">
-            <i class="far fa-clock"></i> Última actualización: <span id="lastUpdate">--:--:--</span>
+        <!-- BATTERY SENSE -->
+        <div class="device-card sense">
+            <div class="device-header">
+                <div class="device-icon"><i class="fas fa-thermometer-half"></i></div>
+                <div>
+                    <div class="device-name">BATTERY SENSE</div>
+                    <div class="device-model">TEMPERATURA AMBIENTE</div>
+                </div>
+            </div>
+            <div class="device-body">
+                <div class="device-stat" style="grid-column: span 3;">
+                    <div class="device-stat-label">Temperatura</div>
+                    <div class="device-stat-value" style="font-size:2rem;" id="senseTemp">--<span class="device-stat-unit">°C</span></div>
+                </div>
+            </div>
         </div>
 
-        <!-- CopyLeft visible -->
-        <div style="text-align: center; font-size: 0.6rem; color: #aaa; margin-top: 5px; padding: 8px; border-top: 1px dashed var(--border-light);">
-            &#169; CopyLeft 2026 - UZTURRE · El conocimiento no se posee, se comparte · Código 100% libre
+        <!-- GRÁFICA SOLAR -->
+        <div class="chart-card">
+            <div class="section-label">Producción solar · hoy</div>
+            <div class="chart-wrap">
+                <canvas id="solarChart"></canvas>
+            </div>
         </div>
-    </div>
 
-    <div class="theme-switch" id="themeToggle">
-        <i class="fas fa-moon"></i>
+        <div class="last-update">ÚLTIMA ACTUALIZACIÓN · <span id="lastUpdate">--:--:--</span></div>
+        <div class="footer">© COPYLEFT 2026 · UZTURRE · EL CONOCIMIENTO NO SE POSEE, SE COMPARTE</div>
     </div>
 
     <script>
         const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-        
-        const mqttStatusEl = document.getElementById('mqtt-status');
-        const lastUpdateEl = document.getElementById('lastUpdate');
-        
-        const elements = {
-            totalSolar: document.getElementById('totalSolar'),
-            totalSoc: document.getElementById('totalSoc'),
-            mpptPower: document.getElementById('mpptPower'),
-            mpptVoltage: document.getElementById('mpptVoltage'),
-            mpptCurrent: document.getElementById('mpptCurrent'),
-            shuntVoltage: document.getElementById('shuntVoltage'),
-            shuntCurrent: document.getElementById('shuntCurrent'),
-            shuntSoc: document.getElementById('shuntSoc'),
-            orionInput: document.getElementById('orionInput'),
-            orionOutput: document.getElementById('orionOutput'),
-            orionCurrent: document.getElementById('orionCurrent'),
-            inverterInput: document.getElementById('inverterInput'),
-            inverterOutput: document.getElementById('inverterOutput'),
-            inverterPower: document.getElementById('inverterPower'),
-            senseTemp: document.getElementById('senseTemp'),
-            senseVoltage: document.getElementById('senseVoltage')
-        };
+        const mqttStatusEl = document.getElementById('mqttStatus');
 
-        const client = mqtt.connect(BROKER);
-
-        client.on('connect', () => {
-            console.log('✅ Conectado al broker MQTT');
-            mqttStatusEl.innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
-            mqttStatusEl.style.background = '#e8f5e9';
-            mqttStatusEl.style.color = '#27ae60';
-            
-            client.subscribe('mi_clave_privada_siena/sensor/#');
-            console.log('📡 Suscrito a: mi_clave_privada_siena/sensor/#');
-        });
-
-        client.on('error', (err) => {
-            console.error('❌ Error MQTT:', err);
-            mqttStatusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ERROR';
-            mqttStatusEl.style.background = '#ffebee';
-            mqttStatusEl.style.color = '#e74c3c';
-        });
-
-        client.on('message', (topic, message) => {
-            const payload = message.toString();
-            const timestamp = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            lastUpdateEl.innerText = timestamp;
-            
-            console.log(`📨 ${topic} = ${payload}`);
-            
-            const parts = topic.split('/');
-            if (parts.length >= 4) {
-                const sensorName = parts[2];
-                
-                switch(sensorName) {
-                    // MPPT
-                    case 'siena_mppt_potencia_solar':
-                        elements.totalSolar.innerText = parseFloat(payload).toFixed(0);
-                        elements.mpptPower.innerText = parseFloat(payload).toFixed(0) + ' W';
-                        break;
-                    case 'siena_mppt_voltaje':
-                        elements.mpptVoltage.innerText = parseFloat(payload).toFixed(2) + ' V';
-                        break;
-                    case 'siena_mppt_corriente':
-                        elements.mpptCurrent.innerText = parseFloat(payload).toFixed(2) + ' A';
-                        break;
-                    
-                    // Shunt
-                    case 'siena_shunt_voltaje':
-                        elements.shuntVoltage.innerText = parseFloat(payload).toFixed(2) + ' V';
-                        break;
-                    case 'siena_shunt_corriente':
-                        elements.shuntCurrent.innerText = parseFloat(payload).toFixed(2) + ' A';
-                        break;
-                    case 'siena_shunt_soc':
-                        elements.totalSoc.innerText = parseFloat(payload).toFixed(1);
-                        elements.shuntSoc.innerText = parseFloat(payload).toFixed(1) + '%';
-                        break;
-                    
-                    // Orion DC-DC
-                    case 'siena_orion_voltaje_entrada':
-                        elements.orionInput.innerText = parseFloat(payload).toFixed(2) + ' V';
-                        break;
-                    case 'siena_orion_voltaje_salida':
-                        elements.orionOutput.innerText = parseFloat(payload).toFixed(2) + ' V';
-                        break;
-                    case 'siena_orion_corriente':
-                        elements.orionCurrent.innerText = parseFloat(payload).toFixed(2) + ' A';
-                        break;
-                    
-                    // Inversor
-                    case 'siena_inversor_voltaje_entrada':
-                        elements.inverterInput.innerText = parseFloat(payload).toFixed(2) + ' V';
-                        break;
-                    case 'siena_inversor_voltaje_salida':
-                        elements.inverterOutput.innerText = parseFloat(payload).toFixed(2) + ' V';
-                        break;
-                    case 'siena_inversor_potencia':
-                        if (payload !== 'nan') {
-                            elements.inverterPower.innerText = parseFloat(payload).toFixed(0) + ' W';
-                        }
-                        break;
-                    
-                    // Battery Sense
-                    case 'siena_sense_temperatura':
-                        elements.senseTemp.innerText = parseFloat(payload).toFixed(1) + ' °C';
-                        break;
-                    case 'siena_sense_voltaje':
-                        elements.senseVoltage.innerText = parseFloat(payload).toFixed(2) + ' V';
-                        break;
-                    
-                    // BMS SOC (para el total)
-                    case 'siena_bms_soc':
-                        if (!elements.totalSoc.innerText || elements.totalSoc.innerText === '--') {
-                            elements.totalSoc.innerText = parseFloat(payload).toFixed(1);
-                        }
-                        break;
-                }
-            }
-        });
-
-        // Gráfica
+        // Gráfica solar
         const ctx = document.getElementById('solarChart').getContext('2d');
+        const solarData = { labels: [], data: [] };
+
         const solarChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                labels: solarData.labels,
                 datasets: [{
-                    label: 'Producción Solar (W)',
-                    data: [0, 0, 0, 0, 0, 0],
-                    borderColor: '#f39c12',
-                    backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                    data: solarData.data,
+                    borderColor: '#ffb020',
+                    backgroundColor: 'rgba(255,176,32,0.08)',
                     tension: 0.4,
-                    fill: true
+                    fill: true,
+                    pointRadius: 0,
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                    x: { grid: { display: false } }
+                    y: { beginAtZero: true, grid: { color: '#1e2330' }, ticks: { color: '#5a6480', font: { family: 'Space Mono', size: 10 } } },
+                    x: { grid: { display: false }, ticks: { color: '#5a6480', font: { family: 'Space Mono', size: 9 }, maxTicksLimit: 8 } }
                 }
             }
         });
 
-        // Modo oscuro
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = themeToggle.querySelector('i');
-        
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeIcon.classList.remove('fa-moon');
-            themeIcon.classList.add('fa-sun');
-        }
-        
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            themeIcon.classList.toggle('fa-moon');
-            themeIcon.classList.toggle('fa-sun');
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        let lastChartUpdate = 0;
+
+        const client = mqtt.connect(BROKER, { clientId: 'siena_vic_' + Math.random().toString(16).substr(2,8) });
+
+        client.on('connect', () => {
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>CONECTADO';
+            mqttStatusEl.className = 'mqtt-pill connected';
+            client.subscribe('mi_clave_privada_siena/sensor/#');
+            client.subscribe('mi_clave_privada_siena/binary_sensor/#');
         });
 
-        console.log('⚡ Página Victron Siena 395 iniciada');
+        client.on('offline', () => {
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>DESCONECTADO';
+            mqttStatusEl.className = 'mqtt-pill';
+        });
+
+        client.on('message', (topic, msg) => {
+            const v = msg.toString();
+            const sensor = topic.split('/')[2];
+            const now = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            document.getElementById('lastUpdate').innerText = now;
+
+            if (v === 'nan') return;
+
+            const val = parseFloat(v);
+
+            switch(sensor) {
+                // MPPT
+                case 'siena_mppt_potencia_solar':
+                    document.getElementById('mpptPower').innerHTML = val.toFixed(0) + '<span class="device-stat-unit">W</span>';
+                    // Actualizar gráfica cada 60s
+                    const nowMs = Date.now();
+                    if (nowMs - lastChartUpdate > 60000) {
+                        lastChartUpdate = nowMs;
+                        solarData.labels.push(now.substr(0,5));
+                        solarData.data.push(val);
+                        if (solarData.labels.length > 60) { solarData.labels.shift(); solarData.data.shift(); }
+                        solarChart.update();
+                    }
+                    break;
+                case 'siena_mppt_voltaje':
+                    document.getElementById('mpptVoltage').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">V</span>';
+                    break;
+                case 'siena_mppt_corriente':
+                    document.getElementById('mpptCurrent').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">A</span>';
+                    break;
+                case 'siena_mppt_potencia_bateria':
+                    document.getElementById('mpptBatPower').innerHTML = val.toFixed(0) + '<span class="device-stat-unit">W</span>';
+                    break;
+                case 'siena_mppt_hoy':
+                    document.getElementById('mpptToday').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">kWh</span>';
+                    break;
+                case 'siena_mppt_potencia_carga':
+                    document.getElementById('mpptLoad').innerHTML = val.toFixed(0) + '<span class="device-stat-unit">W</span>';
+                    break;
+                case 'siena_mppt_estado':
+                    const ms = document.getElementById('mpptState');
+                    ms.innerText = v;
+                    ms.className = 'device-state ' + (v.includes('Fault') || v.includes('Error') ? 'state-warn' : 'state-ok');
+                    break;
+
+                // ORION
+                case 'siena_orion_voltaje_entrada':
+                    document.getElementById('orionVin').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">V</span>';
+                    break;
+                case 'siena_orion_voltaje_salida':
+                    document.getElementById('orionVout').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">V</span>';
+                    break;
+                case 'siena_orion_corriente_salida':
+                    document.getElementById('orionCurrent').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">A</span>';
+                    break;
+                case 'siena_orion_estado':
+                    const os = document.getElementById('orionState');
+                    os.innerText = v;
+                    os.className = 'device-state ' + (v === 'On' ? 'state-ok' : 'state-off');
+                    break;
+                case 'siena_orion_razon_apagado':
+                    document.getElementById('orionOffReason').innerText = v || '--';
+                    break;
+
+                // INVERSOR
+                case 'siena_inversor_voltaje_salida':
+                    document.getElementById('inverterVac').innerHTML = val.toFixed(1) + '<span class="device-stat-unit">V</span>';
+                    break;
+                case 'siena_inversor_corriente':
+                    document.getElementById('inverterCurrent').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">A</span>';
+                    break;
+                case 'siena_inversor_potencia':
+                    document.getElementById('inverterPower').innerHTML = val.toFixed(0) + '<span class="device-stat-unit">VA</span>';
+                    break;
+                case 'siena_inversor_estado':
+                    const ivs = document.getElementById('inverterState');
+                    ivs.innerText = v;
+                    ivs.className = 'device-state ' + (v === 'On' ? 'state-ok' : v.includes('Fault') ? 'state-warn' : 'state-off');
+                    break;
+
+                // SHUNT
+                case 'siena_shunt_voltaje':
+                    document.getElementById('shuntVoltage').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">V</span>';
+                    break;
+                case 'siena_shunt_corriente':
+                    document.getElementById('shuntCurrent').innerHTML = val.toFixed(2) + '<span class="device-stat-unit">A</span>';
+                    break;
+                case 'siena_shunt_soc':
+                    document.getElementById('shuntSoc').innerHTML = val.toFixed(1) + '<span class="device-stat-unit">%</span>';
+                    break;
+                case 'siena_shunt_potencia':
+                    document.getElementById('shuntPower').innerHTML = val.toFixed(0) + '<span class="device-stat-unit">W</span>';
+                    break;
+                case 'siena_shunt_ah_consumidos':
+                    document.getElementById('shuntAh').innerHTML = val.toFixed(1) + '<span class="device-stat-unit">Ah</span>';
+                    break;
+                case 'siena_shunt_tiempo_restante':
+                    document.getElementById('shuntTime').innerHTML = val.toFixed(0) + '<span class="device-stat-unit">min</span>';
+                    break;
+                case 'siena_shunt_alarma':
+                    document.getElementById('shuntAlarm').style.display = v === 'ON' ? 'block' : 'none';
+                    break;
+
+                // SENSE
+                case 'siena_sense_temperatura':
+                    document.getElementById('senseTemp').innerHTML = val.toFixed(1) + '<span class="device-stat-unit">°C</span>';
+                    break;
+
+                // BINARY SENSORS - FASES MPPT
+                case 'siena_mppt_fase_bulk':
+                    document.getElementById('phaseBulk').className = 'phase-pill' + (v === 'ON' ? ' active' : '');
+                    break;
+                case 'siena_mppt_fase_absorcion':
+                    document.getElementById('phaseAbsorption').className = 'phase-pill' + (v === 'ON' ? ' active' : '');
+                    break;
+                case 'siena_mppt_fase_flotacion':
+                    document.getElementById('phaseFloat').className = 'phase-pill' + (v === 'ON' ? ' active' : '');
+                    break;
+            }
+        });
     </script>
 </body>
 </html>
