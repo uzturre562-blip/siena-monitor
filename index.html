@@ -3,487 +3,537 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Siena 395 - Dashboard Principal</title>
+    <title>SIENA 395 · Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-    
     <style>
         :root {
-            --bg-primary: #f8f5f0;
-            --bg-secondary: #fefcf8;
-            --text-main: #2c2925;
-            --accent-primary: #8b7355;
-            --victron-blue: #1a5c96;
-            --victron-blue-light: #2c7ab1;
-            --solar-orange: #f39c12;
-            --grid-blue: #3498db;
-            --consumer-red: #e67e22;
-            --battery-green: #27ae60;
-            --success: #27ae60;
-            --warning: #e67e22;
-            --danger: #e74c3c;
-            --card-radius: 24px;
-            --border-light: #e2ddd5;
+            --bg: #0a0c0f;
+            --surface: #111318;
+            --surface2: #181c23;
+            --border: #1e2330;
+            --border-bright: #2a3042;
+            --text: #c8d0e0;
+            --text-dim: #5a6480;
+            --text-bright: #eef2ff;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0,212,170,0.12);
+            --accent-glow: rgba(0,212,170,0.3);
+            --solar: #ffb020;
+            --solar-dim: rgba(255,176,32,0.12);
+            --battery: #3b82f6;
+            --battery-dim: rgba(59,130,246,0.12);
+            --grid: #a855f7;
+            --grid-dim: rgba(168,85,247,0.12);
+            --load: #f43f5e;
+            --load-dim: rgba(244,63,94,0.12);
+            --ok: #10b981;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --radius: 12px;
+            --mono: 'Space Mono', monospace;
+            --display: 'Barlow Condensed', sans-serif;
         }
 
-        /* Modo oscuro */
-        body.dark-mode {
-            --bg-primary: #121417;
-            --bg-secondary: #1a1d23;
-            --text-main: #e0e0e0;
-            --border-light: #2d343f;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-main);
-            margin: 0;
-            transition: background-color 0.3s, color 0.3s;
+            font-family: var(--display);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at 20% 0%, rgba(0,212,170,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(59,130,246,0.04) 0%, transparent 60%);
         }
 
-        /* --- MENÚ DE NAVEGACIÓN --- */
-        .nav-master {
+        /* NAV */
+        nav {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 15px;
-            background: var(--bg-secondary);
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border-light);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            z-index: 100;
         }
 
-        .nav-btn {
-            background: var(--bg-primary);
-            border: 2px solid var(--border-light);
-            padding: 8px 12px;
-            border-radius: 12px;
+        .nav-logo {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            margin-right: auto;
+            padding-right: 16px;
+            border-right: 1px solid var(--border);
+        }
+
+        .nav-link {
+            font-family: var(--display);
             font-weight: 700;
-            color: #888;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-dim);
             text-decoration: none;
-            font-size: 0.8rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: all 0.15s;
         }
 
-        .nav-btn.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
+        .nav-link:hover { color: var(--text); background: var(--surface2); }
+        .nav-link.active { color: var(--accent); background: var(--accent-dim); border-color: rgba(0,212,170,0.25); }
 
-        /* Estilos del Dashboard */
-        .dashboard { max-width: 800px; margin: 0 auto; padding: 15px; }
-        
-        .card {
-            background: var(--bg-secondary);
-            border-radius: var(--card-radius);
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-            border: 1px solid var(--border-light);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        
-        .header {
+        /* LAYOUT */
+        .page { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
+
+        /* HEADER ROW */
+        .page-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 0 10px;
+            align-items: flex-end;
+            margin-bottom: 24px;
         }
-        
-        .header h1 {
-            font-size: 1.4rem;
+
+        .page-title {
+            font-family: var(--display);
+            font-size: 2.4rem;
             font-weight: 900;
-            margin: 0;
-            color: var(--accent-primary);
+            letter-spacing: 2px;
+            color: var(--text-bright);
+            line-height: 1;
         }
 
-        /* Indicadores de flujo */
-        .flow-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 15px;
+        .page-subtitle {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            margin-top: 4px;
         }
 
-        .flow-row {
+        .mqtt-pill {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(239,68,68,0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239,68,68,0.2);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border-light);
+            gap: 6px;
         }
 
-        .flow-label {
-            font-weight: 600;
-            color: #888;
-            font-size: 0.9rem;
+        .mqtt-pill.connected {
+            background: rgba(16,185,129,0.1);
+            color: var(--ok);
+            border-color: rgba(16,185,129,0.2);
         }
 
-        .flow-label i {
-            width: 24px;
-            color: var(--accent-primary);
+        .mqtt-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* FLUJO PRINCIPAL */
+        .flow-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 16px;
         }
 
-        .flow-value {
-            font-weight: 800;
-            font-size: 1.2rem;
+        .section-label {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .value-green { color: var(--battery-green); }
-        .value-orange { color: var(--solar-orange); }
-        .value-blue { color: var(--grid-blue); }
-        .value-red { color: var(--consumer-red); }
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
 
-        /* Mini tarjetas de resumen */
-        .stats-grid {
+        .flow-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 12px;
         }
 
-        .stat-card {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 15px;
-            text-align: center;
-            border: 1px solid var(--border-light);
+        .flow-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.2s;
+            position: relative;
+            overflow: hidden;
         }
 
-        .stat-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #888;
+        .flow-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+
+        .flow-item.solar::before { background: var(--solar); }
+        .flow-item.battery::before { background: var(--battery); }
+        .flow-item.grid::before { background: var(--grid); }
+        .flow-item.load::before { background: var(--load); }
+
+        .flow-item-label {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .stat-value {
-            font-size: 1.8rem;
+        .flow-item-value {
+            font-family: var(--display);
+            font-size: 2rem;
             font-weight: 900;
-            line-height: 1.2;
+            line-height: 1;
+            color: var(--text-bright);
         }
 
-        .stat-unit {
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #888;
+        .flow-item-value .unit {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-dim);
             margin-left: 2px;
         }
 
-        .button-large {
-            padding: 15px;
-            font-size: 1rem;
-            justify-content: space-between;
-            width: 100%;
+        .flow-item-sub {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
         }
 
-        /* Botón modo oscuro */
-        .theme-switch {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            color: white;
+        .flow-item.solar .flow-item-value { color: var(--solar); }
+        .flow-item.battery .flow-item-value { color: var(--battery); }
+        .flow-item.grid .flow-item-value { color: var(--grid); }
+        .flow-item.load .flow-item-value { color: var(--load); }
+
+        /* STATS ROW */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: var(--display);
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--text-bright);
+            line-height: 1;
+        }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-dim);
+        }
+
+        .stat-sub {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        /* SOC BAR */
+        .soc-bar-wrap {
+            background: var(--surface2);
+            border-radius: 4px;
+            height: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .soc-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: var(--battery);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* NAV BUTTONS */
+        .nav-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .nav-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-decoration: none;
+            color: var(--text);
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            transition: all 0.2s;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 2000;
-            border: none;
-            font-size: 1.5rem;
         }
 
-        .badge {
-            background: var(--bg-primary);
-            padding: 3px 8px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 600;
+        .nav-card:hover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .nav-card-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-card-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .nav-card-title {
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            color: var(--text-bright);
+        }
+
+        .nav-card-sub {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            padding: 20px 0 10px;
+            border-top: 1px solid var(--border);
+            letter-spacing: 1px;
+        }
+
+        .last-update {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            text-align: center;
+            padding: 10px;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
-     <!--
-        CopyLeft 2026 - UZTURRE
-        Este código es completamente libre.
-        Puedes copiarlo, modificarlo y compartirlo sin pedir permiso.
-        Si te sirve, úsalo; si lo mejoras, compártelo.
-        Esto es CopyLeft: el conocimiento no se posee, se comparte.
-    -->
-
-    <!-- Menú de navegación -->
-    <nav class="nav-master">
-        <a href="index.html" class="nav-btn active"><i class="fas fa-home"></i> INICIO</a>
-        <a href="victron.html" class="nav-btn"><i class="fas fa-solar-panel"></i> VICTRON</a>
-        <a href="bateria.html" class="nav-btn"><i class="fas fa-battery-full"></i> BATERÍA</a>
-        <a href="logs.html" class="nav-btn"><i class="fas fa-history"></i> LOGS</a>
+    <nav>
+        <span class="nav-logo">SIENA·395</span>
+        <a href="index.html" class="nav-link active">INICIO</a>
+        <a href="victron.html" class="nav-link">VICTRON</a>
+        <a href="bateria.html" class="nav-link">BATERÍA</a>
+        <a href="logs.html" class="nav-link">LOGS</a>
     </nav>
 
-    <div class="dashboard">
-        
-        <!-- Cabecera con título y estado MQTT -->
-        <header class="header">
+    <div class="page">
+        <div class="page-header">
             <div>
-                <h1>SIENA 395 <span style="font-weight: 300; font-size: 1rem;">S3</span></h1>
-                <div style="font-size: 0.75rem; color: #888; font-weight: 600;">
-                    <i class="far fa-calendar-alt"></i> MONITORIZACIÓN MIKEL 2026
-                </div>
+                <div class="page-title">FLUJO</div>
+                <div class="page-subtitle">MONITORIZACIÓN EN TIEMPO REAL · 2026</div>
             </div>
-            <div id="mqtt-status" class="badge" style="background: #ffebee; color: #e74c3c; border: 1px solid #ffcdd2;">
-                <i class="fas fa-circle"></i> DESCONECTADO
+            <div class="mqtt-pill" id="mqttStatus">
+                <div class="mqtt-dot"></div>
+                DESCONECTADO
             </div>
-        </header>
+        </div>
 
-        <!-- Tarjeta de Flujo de Energía -->
-        <div class="card">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--accent-primary); font-weight: 700;">
-                <i class="fas fa-bolt"></i> FLUJO DE ENERGÍA (ACTUAL)
-            </div>
-            
+        <!-- FLUJO DE ENERGÍA -->
+        <div class="flow-card">
+            <div class="section-label">Flujo de energía</div>
             <div class="flow-grid">
-                <!-- Fila: Producción Solar -->
-                <div class="flow-row">
-                    <span class="flow-label"><i class="fas fa-sun"></i> Producción solar</span>
-                    <span class="flow-value value-orange" id="flowSolar">-- W</span>
+                <div class="flow-item solar">
+                    <div class="flow-item-label">☀ Producción solar</div>
+                    <div class="flow-item-value" id="flowSolar">0<span class="unit">W</span></div>
+                    <div class="flow-item-sub" id="solarToday">Hoy: -- kWh</div>
                 </div>
-                
-                <!-- Fila: Batería (Carga/Descarga) -->
-                <div class="flow-row">
-                    <span class="flow-label"><i class="fas fa-battery-half"></i> Batería</span>
-                    <span class="flow-value" id="flowBattery">-- W</span>
+                <div class="flow-item battery">
+                    <div class="flow-item-label">⚡ Batería</div>
+                    <div class="flow-item-value" id="flowBattery">0<span class="unit">W</span></div>
+                    <div class="flow-item-sub" id="batteryStatus">--</div>
                 </div>
-                
-                <!-- Fila: Consumo Red (si lo tienes) -->
-                <div class="flow-row">
-                    <span class="flow-label"><i class="fas fa-city"></i> Consumo red</span>
-                    <span class="flow-value value-blue" id="flowGrid">-- W</span>
+                <div class="flow-item grid">
+                    <div class="flow-item-label">🚗 Alternador (Orion)</div>
+                    <div class="flow-item-value" id="flowGrid">0<span class="unit">W</span></div>
+                    <div class="flow-item-sub" id="orionStatus">--</div>
                 </div>
-                
-                <!-- Fila: Consumo Total -->
-                <div class="flow-row" style="border-bottom: none; margin-top: 5px;">
-                    <span class="flow-label" style="font-weight: 800;"><i class="fas fa-home"></i> Consumo total</span>
-                    <span class="flow-value" style="font-size: 1.5rem; color: var(--consumer-red);" id="flowLoad">-- W</span>
+                <div class="flow-item load">
+                    <div class="flow-item-label">🏕 Consumo total</div>
+                    <div class="flow-item-value" id="flowLoad">0<span class="unit">W</span></div>
+                    <div class="flow-item-sub">BMS · Potencia total</div>
                 </div>
             </div>
         </div>
 
-        <!-- Mini tarjetas de resumen (SOC y Potencia Solar) -->
-        <div class="stats-grid">
+        <!-- STATS -->
+        <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-battery-three-quarters"></i> BATERÍA</div>
-                <div>
-                    <span class="stat-value" id="mainSoc" style="color: var(--victron-blue);">--</span>
-                    <span class="stat-unit">%</span>
-                </div>
-                <div style="font-size: 0.8rem; color: #888; margin-top: 5px;" id="batteryPower">-- W</div>
+                <div class="stat-label">Estado carga</div>
+                <div class="stat-value" id="mainSoc">--<span class="stat-unit">%</span></div>
+                <div class="soc-bar-wrap"><div class="soc-bar-fill" id="socBar"></div></div>
+                <div class="stat-sub" id="socSource">Shunt 300A</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label"><i class="fas fa-solar-panel"></i> SOLAR</div>
-                <div>
-                    <span class="stat-value" id="mainSolar" style="color: var(--solar-orange);">--</span>
-                    <span class="stat-unit">W</span>
-                </div>
-                <div style="font-size: 0.8rem; color: #888; margin-top: 5px;" id="solarToday">Hoy: -- kWh</div>
+                <div class="stat-label">Solar hoy</div>
+                <div class="stat-value" id="mainSolarKwh">--<span class="stat-unit">kWh</span></div>
+                <div class="stat-sub">MPPT 75/15</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Temperatura</div>
+                <div class="stat-value" id="mainTemp">--<span class="stat-unit">°C</span></div>
+                <div class="stat-sub">Battery Sense</div>
             </div>
         </div>
 
-        <!-- Botones de acceso rápido a otras vistas -->
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-            <button class="nav-btn button-large" onclick="window.location.href='victron.html'">
-                <span><i class="fas fa-chart-line"></i> Ver equipos Victron</span> 
-                <i class="fas fa-chevron-right"></i>
-            </button>
-            <button class="nav-btn button-large" onclick="window.location.href='bateria.html'">
-                <span><i class="fas fa-microchip"></i> Ver Celdas Ultimatron</span> 
-                <i class="fas fa-chevron-right"></i>
-            </button>
+        <!-- ACCESO RÁPIDO -->
+        <div class="nav-cards">
+            <a href="victron.html" class="nav-card">
+                <div class="nav-card-left">
+                    <div class="nav-card-icon">⚡</div>
+                    <div class="nav-card-title">VICTRON</div>
+                    <div class="nav-card-sub">MPPT · ORION · INVERSOR · SHUNT</div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: var(--text-dim);"></i>
+            </a>
+            <a href="bateria.html" class="nav-card">
+                <div class="nav-card-left">
+                    <div class="nav-card-icon">🔋</div>
+                    <div class="nav-card-title">BATERÍA</div>
+                    <div class="nav-card-sub">JBD BMS · ULTIMATRON 100Ah</div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: var(--text-dim);"></i>
+            </a>
         </div>
 
-                <!-- Última actualización -->
-        <div style="text-align: center; font-size: 0.7rem; color: #888; margin-top: 20px; padding: 10px;">
-            <i class="far fa-clock"></i> Última actualización: <span id="lastUpdate">--:--:--</span>
-        </div>
+        <div class="last-update">ÚLTIMA ACTUALIZACIÓN · <span id="lastUpdate">--:--:--</span></div>
 
-        <!-- CopyLeft visible -->
-        <div style="text-align: center; font-size: 0.6rem; color: #aaa; margin-top: 5px; padding: 8px; border-top: 1px dashed var(--border-light);">
-            &#169; CopyLeft 2026 - UZTURRE · El conocimiento no se posee, se comparte · Código 100% libre
+        <div class="footer">
+            © COPYLEFT 2026 · UZTURRE · EL CONOCIMIENTO NO SE POSEE, SE COMPARTE
         </div>
-    </div>
-
-    <!-- Botón flotante para modo oscuro/claro -->
-    <div class="theme-switch" id="themeToggle">
-        <i class="fas fa-moon"></i>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN MQTT (IGUAL QUE EN BATERIA Y VICTRON) ---
         const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-        
-        // Estado de conexión
-        const mqttStatusEl = document.getElementById('mqtt-status');
-        const lastUpdateEl = document.getElementById('lastUpdate');
-        
-        // Elementos a actualizar
-        const elements = {
-            mainSoc: document.getElementById('mainSoc'),
-            mainSolar: document.getElementById('mainSolar'),
-            flowSolar: document.getElementById('flowSolar'),
-            flowBattery: document.getElementById('flowBattery'),
-            flowGrid: document.getElementById('flowGrid'),
-            flowLoad: document.getElementById('flowLoad'),
-            batteryPower: document.getElementById('batteryPower'),
-            solarToday: document.getElementById('solarToday')
-        };
+        const mqttStatusEl = document.getElementById('mqttStatus');
 
-        // Almacenar valores para cálculos
-        let values = {
-            solarPower: 0,
-            batteryPower: 0,
-            gridPower: 0,
-            loadPower: 0,
-            soc: 0,
-            solarTodayKWh: 0
-        };
+        let orionV = 0, orionI = 0;
 
-        // Conectar al broker MQTT
-        const client = mqtt.connect(BROKER);
+        const client = mqtt.connect(BROKER, { clientId: 'siena_index_' + Math.random().toString(16).substr(2,8) });
 
         client.on('connect', () => {
-            console.log('✅ Conectado al broker MQTT');
-            mqttStatusEl.innerHTML = '<i class="fas fa-circle"></i> CONECTADO';
-            mqttStatusEl.style.background = '#e8f5e9';
-            mqttStatusEl.style.color = '#27ae60';
-            mqttStatusEl.style.borderColor = '#c8e6c9';
-            
-            // Suscribirse a TODOS los sensores (como en bateria.html y victron.html)
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div> CONECTADO';
+            mqttStatusEl.className = 'mqtt-pill connected';
             client.subscribe('mi_clave_privada_siena/sensor/#');
-            console.log('📡 Suscrito a: mi_clave_privada_siena/sensor/#');
         });
 
-        client.on('error', (err) => {
-            console.error('❌ Error MQTT:', err);
-            mqttStatusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ERROR';
-            mqttStatusEl.style.background = '#ffebee';
-            mqttStatusEl.style.color = '#e74c3c';
+        client.on('error', () => {
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div> ERROR';
         });
 
-        client.on('message', (topic, message) => {
-            const payload = message.toString();
-            const timestamp = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            lastUpdateEl.innerText = timestamp;
-            
-            console.log(`📨 ${topic} = ${payload}`);
-            
-            // Extraer el nombre del sensor (parte después de /sensor/)
-            const parts = topic.split('/');
-            if (parts.length >= 4) {
-                const sensorName = parts[2]; // "siena_bms_voltaje", "siena_mppt_potencia_solar", etc.
-                
-                switch(sensorName) {
-                    // SOC - Prioridad al shunt, luego al BMS
-                    case 'siena_shunt_soc':
-                        values.soc = parseFloat(payload);
-                        elements.mainSoc.innerText = values.soc.toFixed(1);
-                        break;
-                    case 'siena_bms_soc':
-                        if (!values.soc) {
-                            values.soc = parseFloat(payload);
-                            elements.mainSoc.innerText = values.soc.toFixed(1);
-                        }
-                        break;
-                    
-                    // Potencia solar
-                    case 'siena_mppt_potencia_solar':
-                        values.solarPower = parseFloat(payload) || 0;
-                        elements.mainSolar.innerText = values.solarPower.toFixed(0);
-                        elements.flowSolar.innerText = values.solarPower.toFixed(0) + ' W';
-                        break;
-                    
-                    // Energía solar hoy
-                    case 'siena_mppt_hoy':
-                        values.solarTodayKWh = parseFloat(payload) || 0;
-                        elements.solarToday.innerText = `Hoy: ${values.solarTodayKWh.toFixed(2)} kWh`;
-                        break;
-                    
-                    // Potencia de batería (carga/descarga)
-                    case 'siena_bms_potencia':
-                        values.batteryPower = parseFloat(payload) || 0;
-                        const batteryText = values.batteryPower > 0 ? '⚡ Cargando' : (values.batteryPower < 0 ? '🔋 Descargando' : '⏸️ Reposo');
-                        elements.flowBattery.innerText = values.batteryPower.toFixed(0) + ' W';
-                        elements.batteryPower.innerText = batteryText + ` (${values.batteryPower.toFixed(0)} W)`;
-                        break;
-                    
-                    // Consumo total (puede venir de varios lados)
-                    case 'siena_inversor_potencia':
-                        if (payload !== 'nan') {
-                            values.loadPower = parseFloat(payload) || 0;
-                            elements.flowLoad.innerText = values.loadPower.toFixed(0) + ' W';
-                        }
-                        break;
-                    
-                    // Orion DC-DC (alternador)
-                    case 'siena_orion_corriente':
-                        // Puedes usar esto para calcular consumo del alternador si lo necesitas
-                        break;
-                }
-            }
-            
-            // También mantener compatibilidad con tópicos antiguos si es necesario
-            if (topic.includes('bateria_porcentaje')) {
-                values.soc = parseFloat(payload) || 0;
-                elements.mainSoc.innerText = values.soc.toFixed(1);
-            }
-            if (topic.includes('potencia_solar_actual')) {
-                values.solarPower = parseFloat(payload) || 0;
-                elements.mainSolar.innerText = values.solarPower.toFixed(0);
-                elements.flowSolar.innerText = values.solarPower.toFixed(0) + ' W';
+        client.on('offline', () => {
+            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div> DESCONECTADO';
+            mqttStatusEl.className = 'mqtt-pill';
+        });
+
+        client.on('message', (topic, msg) => {
+            const v = msg.toString();
+            if (v === 'nan' || v === '') return;
+
+            const sensor = topic.split('/')[2];
+            const val = parseFloat(v);
+            const now = new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            document.getElementById('lastUpdate').innerText = now;
+
+            switch(sensor) {
+                case 'siena_shunt_soc':
+                    document.getElementById('mainSoc').innerHTML = val.toFixed(1) + '<span class="stat-unit">%</span>';
+                    document.getElementById('socBar').style.width = val + '%';
+                    document.getElementById('socBar').style.background = val > 50 ? 'var(--ok)' : val > 20 ? 'var(--warn)' : 'var(--danger)';
+                    break;
+                case 'siena_mppt_potencia_solar':
+                    document.getElementById('flowSolar').innerHTML = val.toFixed(0) + '<span class="unit">W</span>';
+                    break;
+                case 'siena_mppt_hoy':
+                    document.getElementById('solarToday').innerText = 'Hoy: ' + val.toFixed(2) + ' kWh';
+                    document.getElementById('mainSolarKwh').innerHTML = val.toFixed(2) + '<span class="stat-unit">kWh</span>';
+                    break;
+                case 'siena_bms_potencia':
+                    document.getElementById('flowLoad').innerHTML = Math.abs(val).toFixed(0) + '<span class="unit">W</span>';
+                    document.getElementById('flowBattery').innerHTML = val.toFixed(0) + '<span class="unit">W</span>';
+                    document.getElementById('batteryStatus').innerText = val > 5 ? '▲ Cargando' : val < -5 ? '▼ Descargando' : '● Reposo';
+                    break;
+                case 'siena_orion_voltaje_salida':
+                    orionV = val;
+                    updateOrion();
+                    break;
+                case 'siena_orion_corriente_salida':
+                    orionI = val;
+                    updateOrion();
+                    break;
+                case 'siena_sense_temperatura':
+                    document.getElementById('mainTemp').innerHTML = val.toFixed(1) + '<span class="stat-unit">°C</span>';
+                    break;
+                case 'siena_orion_estado':
+                    document.getElementById('orionStatus').innerText = v;
+                    break;
             }
         });
 
-        // --- MODO OSCURO / CLARO ---
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = themeToggle.querySelector('i');
-        
-        // Comprobar preferencia guardada
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeIcon.classList.remove('fa-moon');
-            themeIcon.classList.add('fa-sun');
+        function updateOrion() {
+            const p = (orionV * orionI).toFixed(0);
+            document.getElementById('flowGrid').innerHTML = p + '<span class="unit">W</span>';
         }
-        
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            
-            if (document.body.classList.contains('dark-mode')) {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-                localStorage.setItem('theme', 'light');
-            }
-        });
-
-        console.log('🚀 Dashboard Siena 395 iniciado');
-        console.log('📡 Esperando datos de: mi_clave_privada_siena/sensor/#');
     </script>
 </body>
 </html>
