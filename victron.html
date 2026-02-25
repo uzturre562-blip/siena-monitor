@@ -213,18 +213,21 @@
         // TEMA
         const html=document.documentElement;
         const themeIcon=document.getElementById('themeIcon');
+        let solarChart=null; // declarar aquí para que applyTheme lo encuentre
+
         function applyTheme(t){
-            html.setAttribute('data-theme',t);
-            localStorage.setItem('siena_theme',t);
-            themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon';
-            // Actualizar colores de la gráfica
-            const isDark=t==='dark';
-            if(solarChart){
-                solarChart.options.scales.y.grid.color=isDark?'#1e2330':'#e2e6ed';
-                solarChart.options.scales.y.ticks.color=isDark?'#8090b0':'#7a849a';
-                solarChart.options.scales.x.ticks.color=isDark?'#8090b0':'#7a849a';
-                solarChart.update();
-            }
+            try {
+                html.setAttribute('data-theme',t);
+                localStorage.setItem('siena_theme',t);
+                themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon';
+                const isDark=t==='dark';
+                if(solarChart){
+                    solarChart.options.scales.y.grid.color=isDark?'#1e2330':'#e2e6ed';
+                    solarChart.options.scales.y.ticks.color=isDark?'#8090b0':'#7a849a';
+                    solarChart.options.scales.x.ticks.color=isDark?'#8090b0':'#7a849a';
+                    solarChart.update();
+                }
+            } catch(e) { console.warn('applyTheme error:', e); }
         }
         applyTheme(localStorage.getItem('siena_theme')||'dark');
         document.getElementById('themeBtn').addEventListener('click',()=>applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
@@ -235,7 +238,7 @@
         const solarLabels=[];
         const solarValues=[];
 
-        const solarChart=new Chart(ctx,{
+        solarChart=new Chart(ctx,{
             type:'line',
             data:{
                 labels:solarLabels,
