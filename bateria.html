@@ -4,212 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SIENA 395 · Batería</title>
+    <script>(function(){const s=localStorage.getItem('siena_theme')||'dark';document.documentElement.setAttribute('data-theme',s);})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #0a0c0f;
-            --surface: #111318;
-            --surface2: #181c23;
-            --border: #1e2330;
-            --border-bright: #2a3042;
-            --text: #c8d0e0;
-            --text-dim: #8090b0;
-            --text-bright: #eef2ff;
-            --accent: #00d4aa;
-            --accent-dim: rgba(0,212,170,0.12);
-            --battery: #3b82f6;
-            --ok: #10b981;
-            --warn: #f59e0b;
-            --danger: #ef4444;
-            --radius: 12px;
-            --mono: 'Space Mono', monospace;
-            --display: 'Barlow Condensed', sans-serif;
+            --bg:#0a0c0f; --surface:#111318; --surface2:#181c23; --border:#1e2330;
+            --text:#c8d0e0; --text-dim:#8090b0; --text-bright:#eef2ff;
+            --accent:#00d4aa; --accent-dim:rgba(0,212,170,0.12);
+            --battery:#3b82f6; --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
+            --shadow:rgba(0,0,0,0.3);
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: var(--display);
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            background-image: radial-gradient(ellipse at 80% 0%, rgba(59,130,246,0.05) 0%, transparent 60%);
+        [data-theme="light"] {
+            --bg:#f0f2f5; --surface:#ffffff; --surface2:#f7f8fa; --border:#e2e6ed;
+            --text:#3a4256; --text-dim:#7a849a; --text-bright:#1a2035;
+            --accent:#00a882; --accent-dim:rgba(0,168,130,0.10);
+            --battery:#2563eb; --ok:#059669; --warn:#d97706; --danger:#dc2626;
+            --shadow:rgba(0,0,0,0.08);
         }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Barlow Condensed',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.3s,color 0.3s;}
+        nav{display:flex;align-items:center;gap:4px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px var(--shadow);}
+        .nav-logo{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);letter-spacing:2px;margin-right:auto;padding-right:16px;border-right:1px solid var(--border);}
+        .nav-link{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.75rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);text-decoration:none;padding:7px 12px;border-radius:6px;border:1px solid transparent;transition:all 0.15s;}
+        .nav-link:hover{color:var(--text-bright);background:var(--surface2);}
+        .nav-link.active{color:var(--accent);background:var(--accent-dim);border-color:rgba(0,212,170,0.25);}
+        .theme-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all 0.15s;margin-left:8px;}
+        .theme-btn:hover{color:var(--accent);border-color:var(--accent);}
+        .page{max-width:860px;margin:0 auto;padding:20px 16px;}
+        .page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;}
+        .page-title{font-size:2.4rem;font-weight:900;letter-spacing:2px;color:var(--text-bright);line-height:1;}
+        .page-subtitle{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;margin-top:4px;}
+        .mqtt-pill{font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:1px;padding:6px 12px;border-radius:20px;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);display:flex;align-items:center;gap:6px;}
+        .mqtt-pill.connected{background:rgba(16,185,129,0.1);color:var(--ok);border-color:rgba(16,185,129,0.2);}
+        .mqtt-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite;}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px var(--shadow);transition:background 0.3s,border-color 0.3s;}
+        .section-label{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+        .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
 
-        nav {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 12px 16px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        /* SOC HERO */
+        .soc-hero{display:flex;align-items:center;gap:24px;margin-bottom:20px;}
+        .soc-circle{position:relative;width:110px;height:110px;flex-shrink:0;}
+        .soc-circle svg{transform:rotate(-90deg);}
+        .soc-circle-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+        .soc-pct{font-size:1.8rem;font-weight:900;color:var(--text-bright);line-height:1;}
+        .soc-lbl{font-family:'Space Mono',monospace;font-size:0.5rem;color:var(--text-dim);letter-spacing:1px;}
+        .soc-stats{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+        .soc-stat{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;transition:background 0.3s;}
+        .soc-stat-label{font-family:'Space Mono',monospace;font-size:0.55rem;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;}
+        .soc-stat-value{font-size:1.4rem;font-weight:800;color:var(--text-bright);line-height:1.2;}
+        .soc-stat-unit{font-size:0.75rem;font-weight:400;color:var(--text-dim);}
 
-        .nav-logo { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 2px; margin-right: auto; padding-right: 16px; border-right: 1px solid var(--border); }
-        .nav-link { font-family: var(--display); font-weight: 700; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); text-decoration: none; padding: 7px 12px; border-radius: 6px; border: 1px solid transparent; transition: all 0.15s; }
-        .nav-link:hover { color: var(--text); background: var(--surface2); }
-        .nav-link.active { color: var(--accent); background: var(--accent-dim); border-color: rgba(0,212,170,0.25); }
-
-        .page { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
-
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
-        .page-title { font-family: var(--display); font-size: 2.4rem; font-weight: 900; letter-spacing: 2px; color: var(--text-bright); line-height: 1; }
-        .page-subtitle { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); letter-spacing: 2px; margin-top: 4px; }
-
-        .mqtt-pill { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 1px; padding: 6px 12px; border-radius: 20px; background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); display: flex; align-items: center; gap: 6px; }
-        .mqtt-pill.connected { background: rgba(16,185,129,0.1); color: var(--ok); border-color: rgba(16,185,129,0.2); }
-        .mqtt-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-
-        .section-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-        /* SOC GRANDE */
-        .soc-hero {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            margin-bottom: 20px;
-        }
-
-        .soc-circle {
-            position: relative;
-            width: 110px;
-            height: 110px;
-            flex-shrink: 0;
-        }
-
-        .soc-circle svg { transform: rotate(-90deg); }
-
-        .soc-circle-text {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .soc-pct {
-            font-family: var(--display);
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: var(--text-bright);
-            line-height: 1;
-        }
-
-        .soc-label {
-            font-family: var(--mono);
-            font-size: 0.5rem;
-            color: var(--text-dim);
-            letter-spacing: 1px;
-        }
-
-        .soc-stats {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .soc-stat {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-        }
-
-        .soc-stat-label { font-family: var(--mono); font-size: 0.55rem; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; }
-        .soc-stat-value { font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: var(--text-bright); line-height: 1.2; }
-        .soc-stat-unit { font-size: 0.75rem; font-weight: 400; color: var(--text-dim); }
-
-        /* STATUS BMS */
-        .bms-status {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .status-chip {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            letter-spacing: 1px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-        }
-
-        .status-chip.on { background: rgba(16,185,129,0.15); color: var(--ok); border-color: rgba(16,185,129,0.3); }
-        .status-chip.warn { background: rgba(245,158,11,0.15); color: var(--warn); border-color: rgba(245,158,11,0.3); }
-        .status-chip.off { background: rgba(239,68,68,0.1); color: var(--danger); border-color: rgba(239,68,68,0.2); }
+        /* STATUS CHIPS */
+        .bms-status{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+        .status-chip{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:1px;padding:5px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);}
+        .status-chip.on{background:rgba(16,185,129,0.15);color:var(--ok);border-color:rgba(16,185,129,0.3);}
+        .status-chip.warn{background:rgba(245,158,11,0.15);color:var(--warn);border-color:rgba(245,158,11,0.3);}
+        .status-chip.off{background:rgba(239,68,68,0.1);color:var(--danger);border-color:rgba(239,68,68,0.2);}
 
         /* CELDAS */
-        .cells-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-        .cell-item {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 14px;
-            transition: border-color 0.3s;
-        }
-
-        .cell-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .cell-name { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); letter-spacing: 2px; }
-        .cell-voltage { font-family: var(--display); font-size: 1.5rem; font-weight: 800; color: var(--text-bright); }
-        .cell-voltage .unit { font-size: 0.8rem; font-weight: 400; color: var(--text-dim); }
-
-        .cell-bar-bg { background: var(--border); height: 6px; border-radius: 3px; overflow: hidden; }
-        .cell-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease, background 0.3s; width: 0%; }
+        .cells-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+        .cell-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color 0.3s,background 0.3s;}
+        .cell-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+        .cell-name{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:2px;}
+        .cell-voltage{font-size:1.5rem;font-weight:800;color:var(--text-bright);}
+        .cell-voltage .unit{font-size:0.8rem;font-weight:400;color:var(--text-dim);}
+        .cell-bar-bg{background:var(--border);height:6px;border-radius:3px;overflow:hidden;}
+        .cell-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease,background 0.3s;width:0%;}
 
         /* DELTA ALERT */
-        .delta-alert {
-            border-radius: 10px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-            border: 1px solid;
-            font-family: var(--mono);
-            font-size: 0.7rem;
-            display: none;
-        }
-
-        .delta-alert.warn { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--warn); }
-        .delta-alert.danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--danger); }
+        .delta-alert{border-radius:10px;padding:14px 16px;margin-bottom:16px;border:1px solid;font-family:'Space Mono',monospace;font-size:0.7rem;display:none;}
+        .delta-alert.warn{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:var(--warn);}
+        .delta-alert.danger{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:var(--danger);}
 
         /* TEMPS */
-        .temp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .temp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+        .temp-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;transition:background 0.3s;}
+        .temp-label{font-family:'Space Mono',monospace;font-size:0.55rem;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;}
+        .temp-value{font-size:1.8rem;font-weight:800;color:var(--text-bright);}
+        .temp-unit{font-size:0.9rem;font-weight:400;color:var(--text-dim);}
 
-        .temp-item {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .temp-label { font-family: var(--mono); font-size: 0.55rem; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
-        .temp-value { font-family: var(--display); font-size: 1.8rem; font-weight: 800; color: var(--text-bright); }
-        .temp-unit { font-size: 0.9rem; font-weight: 400; color: var(--text-dim); }
-
-        .footer { text-align: center; font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); padding: 20px 0 10px; border-top: 1px solid var(--border); letter-spacing: 1px; margin-top: 8px; }
-        .last-update { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); text-align: center; padding: 10px; letter-spacing: 1px; }
+        .last-update{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);text-align:center;padding:10px;letter-spacing:1px;}
+        .footer{text-align:center;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);padding:16px 0 10px;border-top:1px solid var(--border);letter-spacing:1px;margin-top:8px;}
     </style>
 </head>
 <body>
@@ -219,6 +98,7 @@
         <a href="victron.html" class="nav-link">VICTRON</a>
         <a href="bateria.html" class="nav-link active">BATERÍA</a>
         <a href="logs.html" class="nav-link">LOGS</a>
+        <button class="theme-btn" id="themeBtn"><i class="fas fa-sun" id="themeIcon"></i></button>
     </nav>
 
     <div class="page">
@@ -227,25 +107,22 @@
                 <div class="page-title">BATERÍA</div>
                 <div class="page-subtitle">JBD BMS · ULTIMATRON LIFEPO4 100Ah 4S</div>
             </div>
-            <div class="mqtt-pill" id="mqttStatus">
-                <div class="mqtt-dot"></div>DESCONECTADO
-            </div>
+            <div class="mqtt-pill" id="mqttStatus"><div class="mqtt-dot"></div>DESCONECTADO</div>
         </div>
 
-        <!-- SOC + DATOS PRINCIPALES -->
         <div class="card">
             <div class="section-label">Estado de carga</div>
             <div class="soc-hero">
                 <div class="soc-circle">
                     <svg width="110" height="110" viewBox="0 0 110 110">
-                        <circle cx="55" cy="55" r="46" fill="none" stroke="#1e2330" stroke-width="8"/>
+                        <circle cx="55" cy="55" r="46" fill="none" stroke="var(--border)" stroke-width="8"/>
                         <circle cx="55" cy="55" r="46" fill="none" stroke="#3b82f6" stroke-width="8"
                             stroke-dasharray="289" stroke-dashoffset="289" id="socCircle"
-                            stroke-linecap="round" style="transition: stroke-dashoffset 0.8s ease, stroke 0.3s;"/>
+                            stroke-linecap="round" style="transition:stroke-dashoffset 0.8s ease,stroke 0.3s;"/>
                     </svg>
                     <div class="soc-circle-text">
                         <div class="soc-pct" id="socPct">--</div>
-                        <div class="soc-label">%SOC</div>
+                        <div class="soc-lbl">%SOC</div>
                     </div>
                 </div>
                 <div class="soc-stats">
@@ -267,7 +144,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="bms-status">
                 <div class="status-chip" id="chipEstado">ESTADO: --</div>
                 <div class="status-chip" id="chipCargando">CARGANDO: --</div>
@@ -276,81 +152,30 @@
             </div>
         </div>
 
-        <!-- ALERTA DELTA -->
-        <div class="delta-alert" id="deltaAlert">
-            <span id="deltaAlertText"></span>
-        </div>
+        <div class="delta-alert" id="deltaAlert"></div>
 
-        <!-- CELDAS -->
         <div class="card">
             <div class="section-label">Tensión de celdas LiFePO4</div>
             <div class="cells-grid">
-                <div class="cell-item" id="cellWrap1">
-                    <div class="cell-header">
-                        <span class="cell-name">CELDA 01</span>
-                        <span class="cell-voltage" id="vCell1">-.---<span class="unit">V</span></span>
-                    </div>
-                    <div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell1"></div></div>
-                </div>
-                <div class="cell-item" id="cellWrap2">
-                    <div class="cell-header">
-                        <span class="cell-name">CELDA 02</span>
-                        <span class="cell-voltage" id="vCell2">-.---<span class="unit">V</span></span>
-                    </div>
-                    <div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell2"></div></div>
-                </div>
-                <div class="cell-item" id="cellWrap3">
-                    <div class="cell-header">
-                        <span class="cell-name">CELDA 03</span>
-                        <span class="cell-voltage" id="vCell3">-.---<span class="unit">V</span></span>
-                    </div>
-                    <div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell3"></div></div>
-                </div>
-                <div class="cell-item" id="cellWrap4">
-                    <div class="cell-header">
-                        <span class="cell-name">CELDA 04</span>
-                        <span class="cell-voltage" id="vCell4">-.---<span class="unit">V</span></span>
-                    </div>
-                    <div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell4"></div></div>
-                </div>
+                <div class="cell-item" id="cellWrap1"><div class="cell-header"><span class="cell-name">CELDA 01</span><span class="cell-voltage" id="vCell1">-.---<span class="unit">V</span></span></div><div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell1"></div></div></div>
+                <div class="cell-item" id="cellWrap2"><div class="cell-header"><span class="cell-name">CELDA 02</span><span class="cell-voltage" id="vCell2">-.---<span class="unit">V</span></span></div><div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell2"></div></div></div>
+                <div class="cell-item" id="cellWrap3"><div class="cell-header"><span class="cell-name">CELDA 03</span><span class="cell-voltage" id="vCell3">-.---<span class="unit">V</span></span></div><div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell3"></div></div></div>
+                <div class="cell-item" id="cellWrap4"><div class="cell-header"><span class="cell-name">CELDA 04</span><span class="cell-voltage" id="vCell4">-.---<span class="unit">V</span></span></div><div class="cell-bar-bg"><div class="cell-bar-fill" id="bCell4"></div></div></div>
             </div>
-
-            <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
-                <div class="soc-stat" style="flex:1; min-width:100px;">
-                    <div class="soc-stat-label">Delta celdas</div>
-                    <div class="soc-stat-value" id="cellDelta">--<span class="soc-stat-unit">mV</span></div>
-                </div>
-                <div class="soc-stat" style="flex:1; min-width:100px;">
-                    <div class="soc-stat-label">Promedio</div>
-                    <div class="soc-stat-value" id="cellAvg">--<span class="soc-stat-unit">V</span></div>
-                </div>
-                <div class="soc-stat" style="flex:1; min-width:100px;">
-                    <div class="soc-stat-label">Mínima</div>
-                    <div class="soc-stat-value" id="cellMin">--<span class="soc-stat-unit">V</span></div>
-                </div>
-                <div class="soc-stat" style="flex:1; min-width:100px;">
-                    <div class="soc-stat-label">Máxima</div>
-                    <div class="soc-stat-value" id="cellMax">--<span class="soc-stat-unit">V</span></div>
-                </div>
+            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+                <div class="soc-stat" style="flex:1;min-width:80px;"><div class="soc-stat-label">Delta</div><div class="soc-stat-value" id="cellDelta">--<span class="soc-stat-unit">mV</span></div></div>
+                <div class="soc-stat" style="flex:1;min-width:80px;"><div class="soc-stat-label">Promedio</div><div class="soc-stat-value" id="cellAvg">--<span class="soc-stat-unit">V</span></div></div>
+                <div class="soc-stat" style="flex:1;min-width:80px;"><div class="soc-stat-label">Mínima</div><div class="soc-stat-value" id="cellMin">--<span class="soc-stat-unit">V</span></div></div>
+                <div class="soc-stat" style="flex:1;min-width:80px;"><div class="soc-stat-label">Máxima</div><div class="soc-stat-value" id="cellMax">--<span class="soc-stat-unit">V</span></div></div>
             </div>
         </div>
 
-        <!-- TEMPERATURAS -->
         <div class="card">
             <div class="section-label">Temperaturas</div>
             <div class="temp-grid">
-                <div class="temp-item">
-                    <div class="temp-label">BMS Sensor 1</div>
-                    <div class="temp-value" id="bmsTemp1">--<span class="temp-unit">°C</span></div>
-                </div>
-                <div class="temp-item">
-                    <div class="temp-label">BMS Sensor 2</div>
-                    <div class="temp-value" id="bmsTemp2">--<span class="temp-unit">°C</span></div>
-                </div>
-                <div class="temp-item">
-                    <div class="temp-label">Ambiente</div>
-                    <div class="temp-value" id="senseTemp">--<span class="temp-unit">°C</span></div>
-                </div>
+                <div class="temp-item"><div class="temp-label">BMS Sensor 1</div><div class="temp-value" id="bmsTemp1">--<span class="temp-unit">°C</span></div></div>
+                <div class="temp-item"><div class="temp-label">BMS Sensor 2</div><div class="temp-value" id="bmsTemp2">--<span class="temp-unit">°C</span></div></div>
+                <div class="temp-item"><div class="temp-label">Ambiente</div><div class="temp-value" id="senseTemp">--<span class="temp-unit">°C</span></div></div>
             </div>
         </div>
 
@@ -359,137 +184,85 @@
     </div>
 
     <script>
-        const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-        const mqttStatusEl = document.getElementById('mqttStatus');
-        let cellValues = [0,0,0,0];
+        const html=document.documentElement;
+        const themeIcon=document.getElementById('themeIcon');
+        function applyTheme(t){html.setAttribute('data-theme',t);localStorage.setItem('siena_theme',t);themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon';}
+        applyTheme(localStorage.getItem('siena_theme')||'dark');
+        document.getElementById('themeBtn').addEventListener('click',()=>applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
 
-        const client = mqtt.connect(BROKER, { clientId: 'siena_bat_' + Math.random().toString(16).substr(2,8) });
+        const BROKER='wss://broker.emqx.io:8084/mqtt';
+        const mqttStatusEl=document.getElementById('mqttStatus');
+        const client=mqtt.connect(BROKER,{clientId:'siena_bat_'+Math.random().toString(16).substr(2,8)});
+        client.on('connect',()=>{mqttStatusEl.innerHTML='<div class="mqtt-dot"></div>CONECTADO';mqttStatusEl.className='mqtt-pill connected';client.subscribe('mi_clave_privada_siena/sensor/#');client.subscribe('mi_clave_privada_siena/binary_sensor/#');});
+        client.on('offline',()=>{mqttStatusEl.innerHTML='<div class="mqtt-dot"></div>DESCONECTADO';mqttStatusEl.className='mqtt-pill';});
 
-        client.on('connect', () => {
-            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>CONECTADO';
-            mqttStatusEl.className = 'mqtt-pill connected';
-            client.subscribe('mi_clave_privada_siena/sensor/#');
-            client.subscribe('mi_clave_privada_siena/binary_sensor/#');
-        });
-
-        client.on('offline', () => {
-            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div>DESCONECTADO';
-            mqttStatusEl.className = 'mqtt-pill';
-        });
-
-        client.on('message', (topic, msg) => {
-            const v = msg.toString();
-            const sensor = topic.split('/')[2];
-            const now = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-            document.getElementById('lastUpdate').innerText = now;
-
-            if (v === 'nan') return;
-            const val = parseFloat(v);
-
-            switch(sensor) {
+        client.on('message',(topic,msg)=>{
+            const v=msg.toString(); const sensor=topic.split('/')[2];
+            const now=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            document.getElementById('lastUpdate').innerText=now;
+            if(v==='nan')return;
+            const val=parseFloat(v);
+            switch(sensor){
                 case 'siena_bms_soc':
-                    document.getElementById('socPct').innerText = val.toFixed(1);
-                    const circumference = 289;
-                    const offset = circumference - (val / 100) * circumference;
-                    const circle = document.getElementById('socCircle');
-                    circle.style.strokeDashoffset = offset;
-                    circle.style.stroke = val > 50 ? '#10b981' : val > 20 ? '#f59e0b' : '#ef4444';
+                    document.getElementById('socPct').innerText=val.toFixed(1);
+                    const offset=289-(val/100)*289;
+                    const c=document.getElementById('socCircle');
+                    c.style.strokeDashoffset=offset;
+                    c.style.stroke=val>50?'#10b981':val>20?'#f59e0b':'#ef4444';
                     break;
-                case 'siena_bms_voltaje':
-                    document.getElementById('bmsVoltage').innerHTML = val.toFixed(2) + '<span class="soc-stat-unit">V</span>';
-                    break;
-                case 'siena_bms_corriente':
-                    document.getElementById('bmsCurrent').innerHTML = val.toFixed(2) + '<span class="soc-stat-unit">A</span>';
-                    break;
-                case 'siena_bms_capacidad_restante':
-                    document.getElementById('bmsRemaining').innerHTML = val.toFixed(1) + '<span class="soc-stat-unit">Ah</span>';
-                    break;
-                case 'siena_bms_ciclos':
-                    document.getElementById('bmsCycles').innerText = val.toFixed(0);
-                    break;
-                case 'siena_bms_estado_operacion':
-                    document.getElementById('chipEstado').innerText = 'ESTADO: ' + v;
-                    break;
+                case 'siena_bms_voltaje': document.getElementById('bmsVoltage').innerHTML=val.toFixed(2)+'<span class="soc-stat-unit">V</span>'; break;
+                case 'siena_bms_corriente': document.getElementById('bmsCurrent').innerHTML=val.toFixed(2)+'<span class="soc-stat-unit">A</span>'; break;
+                case 'siena_bms_capacidad_restante': document.getElementById('bmsRemaining').innerHTML=val.toFixed(1)+'<span class="soc-stat-unit">Ah</span>'; break;
+                case 'siena_bms_ciclos': document.getElementById('bmsCycles').innerText=val.toFixed(0); break;
+                case 'siena_bms_estado_operacion': document.getElementById('chipEstado').innerText='ESTADO: '+v; break;
                 case 'siena_bms_errores':
-                    const chip = document.getElementById('chipErrores');
-                    if(v && v.trim()) { chip.innerText = 'ERROR: ' + v; chip.className = 'status-chip warn'; }
-                    else { chip.innerText = 'ERRORES: NINGUNO'; chip.className = 'status-chip on'; }
+                    const ce=document.getElementById('chipErrores');
+                    if(v&&v.trim()){ce.innerText='ERROR: '+v;ce.className='status-chip warn';}
+                    else{ce.innerText='ERRORES: NINGUNO';ce.className='status-chip on';}
                     break;
-                case 'siena_bms_celda_1': updateCell(0, val); break;
-                case 'siena_bms_celda_2': updateCell(1, val); break;
-                case 'siena_bms_celda_3': updateCell(2, val); break;
-                case 'siena_bms_celda_4': updateCell(3, val); break;
-                case 'siena_bms_celda_min':
-                    document.getElementById('cellMin').innerHTML = val.toFixed(3) + '<span class="soc-stat-unit">V</span>';
-                    break;
-                case 'siena_bms_celda_max':
-                    document.getElementById('cellMax').innerHTML = val.toFixed(3) + '<span class="soc-stat-unit">V</span>';
-                    break;
-                case 'siena_bms_voltaje_promedio_celda':
-                    document.getElementById('cellAvg').innerHTML = val.toFixed(3) + '<span class="soc-stat-unit">V</span>';
-                    break;
+                case 'siena_bms_celda_1': updateCell(0,val); break;
+                case 'siena_bms_celda_2': updateCell(1,val); break;
+                case 'siena_bms_celda_3': updateCell(2,val); break;
+                case 'siena_bms_celda_4': updateCell(3,val); break;
+                case 'siena_bms_celda_min': document.getElementById('cellMin').innerHTML=val.toFixed(3)+'<span class="soc-stat-unit">V</span>'; break;
+                case 'siena_bms_celda_max': document.getElementById('cellMax').innerHTML=val.toFixed(3)+'<span class="soc-stat-unit">V</span>'; break;
+                case 'siena_bms_voltaje_promedio_celda': document.getElementById('cellAvg').innerHTML=val.toFixed(3)+'<span class="soc-stat-unit">V</span>'; break;
                 case 'siena_bms_delta_celdas':
-                    const mv = (val * 1000).toFixed(1);
-                    document.getElementById('cellDelta').innerHTML = mv + '<span class="soc-stat-unit">mV</span>';
-                    updateDeltaAlert(parseFloat(mv));
+                    const mv=(val*1000).toFixed(1);
+                    document.getElementById('cellDelta').innerHTML=mv+'<span class="soc-stat-unit">mV</span>';
+                    updateDelta(parseFloat(mv));
                     break;
-                case 'siena_bms_temperatura_1':
-                    document.getElementById('bmsTemp1').innerHTML = val.toFixed(1) + '<span class="temp-unit">°C</span>';
-                    break;
-                case 'siena_bms_temperatura_2':
-                    document.getElementById('bmsTemp2').innerHTML = val.toFixed(1) + '<span class="temp-unit">°C</span>';
-                    break;
-                case 'siena_sense_temperatura':
-                    document.getElementById('senseTemp').innerHTML = val.toFixed(1) + '<span class="temp-unit">°C</span>';
-                    break;
+                case 'siena_bms_temperatura_1': document.getElementById('bmsTemp1').innerHTML=val.toFixed(1)+'<span class="temp-unit">°C</span>'; break;
+                case 'siena_bms_temperatura_2': document.getElementById('bmsTemp2').innerHTML=val.toFixed(1)+'<span class="temp-unit">°C</span>'; break;
+                case 'siena_sense_temperatura': document.getElementById('senseTemp').innerHTML=val.toFixed(1)+'<span class="temp-unit">°C</span>'; break;
                 case 'siena_bms_cargando':
-                    const cc = document.getElementById('chipCargando');
-                    cc.innerText = 'CARGANDO: ' + v;
-                    cc.className = 'status-chip ' + (v === 'ON' ? 'on' : 'off');
-                    break;
+                    const cc=document.getElementById('chipCargando');
+                    cc.innerText='CARGANDO: '+v; cc.className='status-chip '+(v==='ON'?'on':'off'); break;
                 case 'siena_bms_descargando':
-                    const cd = document.getElementById('chipDescargando');
-                    cd.innerText = 'DESCARGANDO: ' + v;
-                    cd.className = 'status-chip ' + (v === 'ON' ? 'on' : 'off');
-                    break;
+                    const cd=document.getElementById('chipDescargando');
+                    cd.innerText='DESCARGANDO: '+v; cd.className='status-chip '+(v==='ON'?'on':'off'); break;
             }
         });
 
-        function updateCell(idx, voltage) {
-            cellValues[idx] = voltage;
-            const el = ['vCell1','vCell2','vCell3','vCell4'][idx];
-            const bar = ['bCell1','bCell2','bCell3','bCell4'][idx];
-            const wrap = ['cellWrap1','cellWrap2','cellWrap3','cellWrap4'][idx];
-
-            document.getElementById(el).innerHTML = voltage.toFixed(3) + '<span class="unit">V</span>';
-
-            // Rango LiFePO4 real: 3.0V - 3.65V
-            const pct = Math.min(Math.max(((voltage - 3.0) / 0.65) * 100, 0), 100);
-            const barEl = document.getElementById(bar);
-            barEl.style.width = pct + '%';
-
-            let color, borderColor;
-            if (voltage >= 3.45) { color = '#10b981'; borderColor = 'rgba(16,185,129,0.3)'; }
-            else if (voltage >= 3.2) { color = '#f59e0b'; borderColor = 'rgba(245,158,11,0.3)'; }
-            else { color = '#ef4444'; borderColor = 'rgba(239,68,68,0.3)'; }
-
-            barEl.style.background = color;
-            document.getElementById(wrap).style.borderColor = borderColor;
+        function updateCell(idx,voltage){
+            const ids=[['vCell1','bCell1','cellWrap1'],['vCell2','bCell2','cellWrap2'],['vCell3','bCell3','cellWrap3'],['vCell4','bCell4','cellWrap4']];
+            document.getElementById(ids[idx][0]).innerHTML=voltage.toFixed(3)+'<span class="unit">V</span>';
+            const pct=Math.min(Math.max(((voltage-3.0)/0.65)*100,0),100);
+            const bar=document.getElementById(ids[idx][1]);
+            bar.style.width=pct+'%';
+            let color,border;
+            if(voltage>=3.45){color='#10b981';border='rgba(16,185,129,0.3)';}
+            else if(voltage>=3.2){color='#f59e0b';border='rgba(245,158,11,0.3)';}
+            else{color='#ef4444';border='rgba(239,68,68,0.3)';}
+            bar.style.background=color;
+            document.getElementById(ids[idx][2]).style.borderColor=border;
         }
 
-        function updateDeltaAlert(mv) {
-            const alert = document.getElementById('deltaAlert');
-            if (mv > 50) {
-                alert.className = 'delta-alert danger';
-                alert.style.display = 'block';
-                alert.innerHTML = '⚠ REVISAR BALANCEO — Delta ' + mv + ' mV (>50mV)';
-            } else if (mv > 30) {
-                alert.className = 'delta-alert warn';
-                alert.style.display = 'block';
-                alert.innerHTML = '△ ATENCIÓN — Delta ' + mv + ' mV (30-50mV), vigilar balanceo';
-            } else {
-                alert.style.display = 'none';
-            }
+        function updateDelta(mv){
+            const a=document.getElementById('deltaAlert');
+            if(mv>50){a.className='delta-alert danger';a.style.display='block';a.innerHTML='⚠ REVISAR BALANCEO — Delta '+mv+' mV (>50mV)';}
+            else if(mv>30){a.className='delta-alert warn';a.style.display='block';a.innerHTML='△ ATENCIÓN — Delta '+mv+' mV, vigilar balanceo';}
+            else{a.style.display='none';}
         }
     </script>
 </body>
