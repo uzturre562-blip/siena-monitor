@@ -4,435 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SIENA 395 · Monitor</title>
+    <script>(function(){const s=localStorage.getItem('siena_theme')||'dark';document.documentElement.setAttribute('data-theme',s);})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
         :root {
-            /* Modo oscuro (por defecto) */
-            --bg: #0a0c0f;
-            --surface: #111318;
-            --surface2: #181c23;
-            --border: #1e2330;
-            --border-bright: #2a3042;
-            --text: #c8d0e0;
-            --text-dim: #8090b0;
-            --text-bright: #eef2ff;
-            --accent: #00d4aa;
-            --accent-dim: rgba(0,212,170,0.12);
-            --accent-glow: rgba(0,212,170,0.3);
-            --solar: #ffb020;
-            --solar-dim: rgba(255,176,32,0.12);
-            --battery: #3b82f6;
-            --battery-dim: rgba(59,130,246,0.12);
-            --grid: #a855f7;
-            --grid-dim: rgba(168,85,247,0.12);
-            --load: #f43f5e;
-            --load-dim: rgba(244,63,94,0.12);
-            --ok: #10b981;
-            --warn: #f59e0b;
-            --danger: #ef4444;
-            --radius: 12px;
-            --mono: 'Space Mono', monospace;
-            --display: 'Barlow Condensed', sans-serif;
+            --bg:#0a0c0f; --surface:#111318; --surface2:#181c23; --border:#1e2330;
+            --text:#c8d0e0; --text-dim:#8090b0; --text-bright:#eef2ff;
+            --accent:#00d4aa; --accent-dim:rgba(0,212,170,0.12);
+            --solar:#ffb020; --battery:#3b82f6; --grid-c:#a855f7; --load:#f43f5e;
+            --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
+            --shadow:rgba(0,0,0,0.3);
         }
-
         [data-theme="light"] {
-            --bg: #f0f3f8;
-            --surface: #ffffff;
-            --surface2: #f5f8ff;
-            --border: #d0d8e8;
-            --border-bright: #b0c0d8;
-            --text: #1a1e2a;
-            --text-dim: #4a5568;
-            --text-bright: #0a0c14;
-            --accent: #00a37a;
-            --accent-dim: rgba(0,163,122,0.08);
-            --accent-glow: rgba(0,163,122,0.2);
-            --solar: #c90;
-            --solar-dim: rgba(204,153,0,0.08);
-            --battery: #2563eb;
-            --battery-dim: rgba(37,99,235,0.08);
-            --grid: #7c3aed;
-            --grid-dim: rgba(124,58,237,0.08);
-            --load: #dc2626;
-            --load-dim: rgba(220,38,38,0.08);
+            --bg:#f0f2f5; --surface:#ffffff; --surface2:#f7f8fa; --border:#e2e6ed;
+            --text:#3a4256; --text-dim:#7a849a; --text-bright:#1a2035;
+            --accent:#00a882; --accent-dim:rgba(0,168,130,0.10);
+            --solar:#d97706; --battery:#2563eb; --grid-c:#7c3aed; --load:#dc2626;
+            --ok:#059669; --warn:#d97706; --danger:#dc2626;
+            --shadow:rgba(0,0,0,0.08);
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: var(--display);
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            transition: background-color 0.2s, color 0.2s;
-            background-image: 
-                radial-gradient(ellipse at 20% 0%, rgba(0,212,170,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 100%, rgba(59,130,246,0.04) 0%, transparent 60%);
-        }
-
-        /* NAV */
-        nav {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 12px 16px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-logo {
-            font-family: var(--mono);
-            font-size: 0.7rem;
-            color: var(--accent);
-            letter-spacing: 2px;
-            margin-right: auto;
-            padding-right: 16px;
-            border-right: 1px solid var(--border);
-        }
-
-        .nav-link {
-            font-family: var(--display);
-            font-weight: 700;
-            font-size: 0.75rem;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            text-decoration: none;
-            padding: 7px 12px;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            transition: all 0.15s;
-        }
-
-        .nav-link:hover { color: var(--text); background: var(--surface2); }
-        .nav-link.active { color: var(--accent); background: var(--accent-dim); border-color: rgba(0,212,170,0.25); }
-
-        /* THEME TOGGLE */
-        .theme-toggle {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            padding: 4px;
-            margin-left: 8px;
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .theme-toggle i {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            color: var(--text-dim);
-            transition: all 0.2s;
-        }
-
-        .theme-toggle i.active {
-            background: var(--accent);
-            color: var(--bg);
-        }
-
-        /* LAYOUT */
-        .page { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
-
-        /* HEADER ROW */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 24px;
-        }
-
-        .page-title {
-            font-family: var(--display);
-            font-size: 2.4rem;
-            font-weight: 900;
-            letter-spacing: 2px;
-            color: var(--text-bright);
-            line-height: 1;
-        }
-
-        .page-subtitle {
-            font-family: var(--mono);
-            font-size: 0.65rem;
-            color: var(--text-dim);
-            letter-spacing: 2px;
-            margin-top: 4px;
-        }
-
-        .mqtt-pill {
-            font-family: var(--mono);
-            font-size: 0.65rem;
-            letter-spacing: 1px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            background: rgba(239,68,68,0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239,68,68,0.2);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .mqtt-pill.connected {
-            background: rgba(16,185,129,0.1);
-            color: var(--ok);
-            border-color: rgba(16,185,129,0.2);
-        }
-
-        .mqtt-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        /* FLUJO PRINCIPAL */
-        .flow-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 16px;
-        }
-
-        .section-label {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            letter-spacing: 3px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-label::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
-
-        .flow-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .flow-item {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            transition: border-color 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .flow-item::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-        }
-
-        .flow-item.solar::before { background: var(--solar); }
-        .flow-item.battery::before { background: var(--battery); }
-        .flow-item.grid::before { background: var(--grid); }
-        .flow-item.load::before { background: var(--load); }
-
-        .flow-item-label {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            letter-spacing: 2px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-        }
-
-        .flow-item-value {
-            font-family: var(--display);
-            font-size: 2rem;
-            font-weight: 900;
-            line-height: 1;
-            color: var(--text-bright);
-        }
-
-        .flow-item-value .unit {
-            font-size: 1rem;
-            font-weight: 400;
-            color: var(--text-dim);
-            margin-left: 2px;
-        }
-
-        .flow-item-sub {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            color: var(--text-dim);
-        }
-
-        .flow-item.solar .flow-item-value { color: var(--solar); }
-        .flow-item.battery .flow-item-value { color: var(--battery); }
-        .flow-item.grid .flow-item-value { color: var(--grid); }
-        .flow-item.load .flow-item-value { color: var(--load); }
-
-        /* STATS ROW */
-        .stats-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-family: var(--mono);
-            font-size: 0.55rem;
-            letter-spacing: 2px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-family: var(--display);
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: var(--text-bright);
-            line-height: 1;
-        }
-
-        .stat-unit {
-            font-size: 0.9rem;
-            font-weight: 400;
-            color: var(--text-dim);
-        }
-
-        .stat-sub {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            color: var(--text-dim);
-            margin-top: 6px;
-        }
-
-        /* SOC BAR */
-        .soc-bar-wrap {
-            background: var(--surface2);
-            border-radius: 4px;
-            height: 4px;
-            margin-top: 8px;
-            overflow: hidden;
-        }
-
-        .soc-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            background: var(--battery);
-            transition: width 0.5s ease;
-            width: 0%;
-        }
-
-        /* NAV BUTTONS */
-        .nav-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .nav-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            text-decoration: none;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .nav-card:hover {
-            border-color: var(--accent);
-            background: var(--accent-dim);
-        }
-
-        .nav-card-left {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .nav-card-icon {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-        }
-
-        .nav-card-title {
-            font-weight: 800;
-            font-size: 1rem;
-            letter-spacing: 1px;
-            color: var(--text-bright);
-        }
-
-        .nav-card-sub {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            color: var(--text-dim);
-        }
-
-        /* FOOTER */
-        .footer {
-            text-align: center;
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            color: var(--text-dim);
-            padding: 20px 0 10px;
-            border-top: 1px solid var(--border);
-            letter-spacing: 1px;
-        }
-
-        .last-update {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            color: var(--text-dim);
-            text-align: center;
-            padding: 10px;
-            letter-spacing: 1px;
-        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Barlow Condensed',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.3s,color 0.3s;}
+        nav{display:flex;align-items:center;gap:4px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px var(--shadow);}
+        .nav-logo{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent);letter-spacing:2px;margin-right:auto;padding-right:16px;border-right:1px solid var(--border);}
+        .nav-link{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.75rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);text-decoration:none;padding:7px 12px;border-radius:6px;border:1px solid transparent;transition:all 0.15s;}
+        .nav-link:hover{color:var(--text-bright);background:var(--surface2);}
+        .nav-link.active{color:var(--accent);background:var(--accent-dim);border-color:rgba(0,212,170,0.25);}
+        .theme-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all 0.15s;margin-left:8px;}
+        .theme-btn:hover{color:var(--accent);border-color:var(--accent);}
+        .page{max-width:860px;margin:0 auto;padding:20px 16px;}
+        .page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;}
+        .page-title{font-size:2.4rem;font-weight:900;letter-spacing:2px;color:var(--text-bright);line-height:1;}
+        .page-subtitle{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--text-dim);letter-spacing:2px;margin-top:4px;}
+        .mqtt-pill{font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:1px;padding:6px 12px;border-radius:20px;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);display:flex;align-items:center;gap:6px;}
+        .mqtt-pill.connected{background:rgba(16,185,129,0.1);color:var(--ok);border-color:rgba(16,185,129,0.2);}
+        .mqtt-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite;}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px var(--shadow);transition:background 0.3s,border-color 0.3s;}
+        .section-label{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+        .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+        .flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        .flow-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;transition:background 0.3s,border-color 0.3s;}
+        .flow-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+        .flow-item.solar::before{background:var(--solar);}
+        .flow-item.battery::before{background:var(--battery);}
+        .flow-item.grid::before{background:var(--grid-c);}
+        .flow-item.load::before{background:var(--load);}
+        .flow-label{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+        .flow-value{font-size:2rem;font-weight:900;line-height:1;color:var(--text-bright);}
+        .flow-value .unit{font-size:1rem;font-weight:400;color:var(--text-dim);margin-left:2px;}
+        .flow-sub{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);margin-top:6px;}
+        .flow-item.solar .flow-value{color:var(--solar);}
+        .flow-item.battery .flow-value{color:var(--battery);}
+        .flow-item.grid .flow-value{color:var(--grid-c);}
+        .flow-item.load .flow-value{color:var(--load);}
+        .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;}
+        .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;box-shadow:0 2px 8px var(--shadow);transition:background 0.3s;}
+        .stat-label{font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+        .stat-value{font-size:2rem;font-weight:900;color:var(--text-bright);line-height:1;}
+        .stat-unit{font-size:0.9rem;font-weight:400;color:var(--text-dim);}
+        .stat-sub{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);margin-top:6px;}
+        .soc-bar-wrap{background:var(--surface2);border-radius:4px;height:4px;margin-top:8px;overflow:hidden;}
+        .soc-bar-fill{height:100%;border-radius:4px;background:var(--battery);transition:width 0.5s ease;width:0%;}
+        .nav-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+        .nav-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-decoration:none;color:var(--text);display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;box-shadow:0 2px 8px var(--shadow);}
+        .nav-card:hover{border-color:var(--accent);background:var(--accent-dim);}
+        .nav-card-icon{font-size:1.5rem;margin-bottom:8px;}
+        .nav-card-title{font-weight:800;font-size:1rem;letter-spacing:1px;color:var(--text-bright);}
+        .nav-card-sub{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);margin-top:4px;}
+        .last-update{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);text-align:center;padding:10px;letter-spacing:1px;}
+        .footer{text-align:center;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);padding:16px 0 10px;border-top:1px solid var(--border);letter-spacing:1px;}
     </style>
 </head>
-<body data-theme="dark">
+<body>
     <nav>
         <span class="nav-logo">SIENA·395</span>
         <a href="index.html" class="nav-link active">INICIO</a>
         <a href="victron.html" class="nav-link">VICTRON</a>
         <a href="bateria.html" class="nav-link">BATERÍA</a>
         <a href="logs.html" class="nav-link">LOGS</a>
-        
-        <!-- Theme Toggle -->
-        <div class="theme-toggle" id="themeToggle">
-            <i class="fas fa-sun" data-theme="light"></i>
-            <i class="fas fa-moon active" data-theme="dark"></i>
-        </div>
+        <button class="theme-btn" id="themeBtn"><i class="fas fa-sun" id="themeIcon"></i></button>
     </nav>
 
     <div class="page">
@@ -441,46 +95,41 @@
                 <div class="page-title">FLUJO</div>
                 <div class="page-subtitle">MONITORIZACIÓN EN TIEMPO REAL · 2026</div>
             </div>
-            <div class="mqtt-pill" id="mqttStatus">
-                <div class="mqtt-dot"></div>
-                DESCONECTADO
-            </div>
+            <div class="mqtt-pill" id="mqttStatus"><div class="mqtt-dot"></div>DESCONECTADO</div>
         </div>
 
-        <!-- FLUJO DE ENERGÍA -->
-        <div class="flow-card">
+        <div class="card">
             <div class="section-label">Flujo de energía</div>
             <div class="flow-grid">
                 <div class="flow-item solar">
-                    <div class="flow-item-label">☀ Producción solar</div>
-                    <div class="flow-item-value" id="flowSolar">0<span class="unit">W</span></div>
-                    <div class="flow-item-sub" id="solarToday">Hoy: -- kWh</div>
+                    <div class="flow-label">☀ Producción solar</div>
+                    <div class="flow-value" id="flowSolar">0<span class="unit">W</span></div>
+                    <div class="flow-sub" id="solarToday">Hoy: -- kWh</div>
                 </div>
                 <div class="flow-item battery">
-                    <div class="flow-item-label">⚡ Batería</div>
-                    <div class="flow-item-value" id="flowBattery">0<span class="unit">W</span></div>
-                    <div class="flow-item-sub" id="batteryStatus">--</div>
+                    <div class="flow-label">⚡ Batería</div>
+                    <div class="flow-value" id="flowBattery">0<span class="unit">W</span></div>
+                    <div class="flow-sub" id="batteryStatus">--</div>
                 </div>
                 <div class="flow-item grid">
-                    <div class="flow-item-label">🚗 Alternador (Orion)</div>
-                    <div class="flow-item-value" id="flowGrid">0<span class="unit">W</span></div>
-                    <div class="flow-item-sub" id="orionStatus">--</div>
+                    <div class="flow-label">🚗 Alternador (Orion)</div>
+                    <div class="flow-value" id="flowGrid">0<span class="unit">W</span></div>
+                    <div class="flow-sub" id="orionStatus">--</div>
                 </div>
                 <div class="flow-item load">
-                    <div class="flow-item-label">🏕 Consumo total</div>
-                    <div class="flow-item-value" id="flowLoad">0<span class="unit">W</span></div>
-                    <div class="flow-item-sub">BMS · Potencia total</div>
+                    <div class="flow-label">🏕 Consumo total</div>
+                    <div class="flow-value" id="flowLoad">0<span class="unit">W</span></div>
+                    <div class="flow-sub">BMS · Potencia total</div>
                 </div>
             </div>
         </div>
 
-        <!-- STATS -->
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-label">Estado carga</div>
                 <div class="stat-value" id="mainSoc">--<span class="stat-unit">%</span></div>
                 <div class="soc-bar-wrap"><div class="soc-bar-fill" id="socBar"></div></div>
-                <div class="stat-sub" id="socSource">Shunt 300A</div>
+                <div class="stat-sub">Shunt 300A</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Solar hoy</div>
@@ -494,126 +143,73 @@
             </div>
         </div>
 
-        <!-- ACCESO RÁPIDO -->
         <div class="nav-cards">
             <a href="victron.html" class="nav-card">
-                <div class="nav-card-left">
+                <div>
                     <div class="nav-card-icon">⚡</div>
                     <div class="nav-card-title">VICTRON</div>
                     <div class="nav-card-sub">MPPT · ORION · INVERSOR · SHUNT</div>
                 </div>
-                <i class="fas fa-chevron-right" style="color: var(--text-dim);"></i>
+                <i class="fas fa-chevron-right" style="color:var(--text-dim);"></i>
             </a>
             <a href="bateria.html" class="nav-card">
-                <div class="nav-card-left">
+                <div>
                     <div class="nav-card-icon">🔋</div>
                     <div class="nav-card-title">BATERÍA</div>
                     <div class="nav-card-sub">JBD BMS · ULTIMATRON 100Ah</div>
                 </div>
-                <i class="fas fa-chevron-right" style="color: var(--text-dim);"></i>
+                <i class="fas fa-chevron-right" style="color:var(--text-dim);"></i>
             </a>
         </div>
 
         <div class="last-update">ÚLTIMA ACTUALIZACIÓN · <span id="lastUpdate">--:--:--</span></div>
-
-        <div class="footer">
-            © COPYLEFT 2026 · UZTURRE · EL CONOCIMIENTO NO SE POSEE, SE COMPARTE
-        </div>
+        <div class="footer">© COPYLEFT 2026 · UZTURRE · EL CONOCIMIENTO NO SE POSEE, SE COMPARTE</div>
     </div>
 
     <script>
-        // Theme management
-        function setTheme(theme) {
-            document.body.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            
-            // Update toggle icons
-            document.querySelectorAll('.theme-toggle i').forEach(icon => {
-                icon.classList.toggle('active', icon.dataset.theme === theme);
-            });
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('themeIcon');
+        function applyTheme(t) {
+            html.setAttribute('data-theme',t);
+            localStorage.setItem('siena_theme',t);
+            themeIcon.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
+        applyTheme(localStorage.getItem('siena_theme')||'dark');
+        document.getElementById('themeBtn').addEventListener('click',()=>applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
 
-        // Initialize theme
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        setTheme(savedTheme);
-
-        // Theme toggle click handler
-        document.getElementById('themeToggle').addEventListener('click', (e) => {
-            const newTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-        });
-
-        // MQTT
-        const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-        const mqttStatusEl = document.getElementById('mqttStatus');
-
-        let orionV = 0, orionI = 0;
-
-        const client = mqtt.connect(BROKER, { clientId: 'siena_index_' + Math.random().toString(16).substr(2,8) });
-
-        client.on('connect', () => {
-            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div> CONECTADO';
-            mqttStatusEl.className = 'mqtt-pill connected';
-            client.subscribe('mi_clave_privada_siena/sensor/#');
-        });
-
-        client.on('error', () => {
-            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div> ERROR';
-        });
-
-        client.on('offline', () => {
-            mqttStatusEl.innerHTML = '<div class="mqtt-dot"></div> DESCONECTADO';
-            mqttStatusEl.className = 'mqtt-pill';
-        });
-
-        client.on('message', (topic, msg) => {
-            const v = msg.toString();
-            if (v === 'nan' || v === '') return;
-
-            const sensor = topic.split('/')[2];
-            const val = parseFloat(v);
-            const now = new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-            document.getElementById('lastUpdate').innerText = now;
-
-            switch(sensor) {
+        const BROKER='wss://broker.emqx.io:8084/mqtt';
+        const mqttStatusEl=document.getElementById('mqttStatus');
+        let orionV=0,orionI=0;
+        const client=mqtt.connect(BROKER,{clientId:'siena_idx_'+Math.random().toString(16).substr(2,8)});
+        client.on('connect',()=>{mqttStatusEl.innerHTML='<div class="mqtt-dot"></div>CONECTADO';mqttStatusEl.className='mqtt-pill connected';client.subscribe('mi_clave_privada_siena/sensor/#');});
+        client.on('offline',()=>{mqttStatusEl.innerHTML='<div class="mqtt-dot"></div>DESCONECTADO';mqttStatusEl.className='mqtt-pill';});
+        client.on('message',(topic,msg)=>{
+            const v=msg.toString(); if(v==='nan'||v==='')return;
+            const sensor=topic.split('/')[2]; const val=parseFloat(v);
+            const now=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            document.getElementById('lastUpdate').innerText=now;
+            switch(sensor){
                 case 'siena_shunt_soc':
-                    document.getElementById('mainSoc').innerHTML = val.toFixed(1) + '<span class="stat-unit">%</span>';
-                    document.getElementById('socBar').style.width = val + '%';
-                    document.getElementById('socBar').style.background = val > 50 ? 'var(--ok)' : val > 20 ? 'var(--warn)' : 'var(--danger)';
+                    document.getElementById('mainSoc').innerHTML=val.toFixed(1)+'<span class="stat-unit">%</span>';
+                    document.getElementById('socBar').style.width=val+'%';
+                    document.getElementById('socBar').style.background=val>50?'var(--ok)':val>20?'var(--warn)':'var(--danger)';
                     break;
-                case 'siena_mppt_potencia_solar':
-                    document.getElementById('flowSolar').innerHTML = val.toFixed(0) + '<span class="unit">W</span>';
-                    break;
+                case 'siena_mppt_potencia_solar': document.getElementById('flowSolar').innerHTML=val.toFixed(0)+'<span class="unit">W</span>'; break;
                 case 'siena_mppt_hoy':
-                    document.getElementById('solarToday').innerText = 'Hoy: ' + val.toFixed(2) + ' kWh';
-                    document.getElementById('mainSolarKwh').innerHTML = val.toFixed(2) + '<span class="stat-unit">kWh</span>';
+                    document.getElementById('solarToday').innerText='Hoy: '+val.toFixed(2)+' kWh';
+                    document.getElementById('mainSolarKwh').innerHTML=val.toFixed(2)+'<span class="stat-unit">kWh</span>';
                     break;
                 case 'siena_bms_potencia':
-                    document.getElementById('flowLoad').innerHTML = Math.abs(val).toFixed(0) + '<span class="unit">W</span>';
-                    document.getElementById('flowBattery').innerHTML = val.toFixed(0) + '<span class="unit">W</span>';
-                    document.getElementById('batteryStatus').innerText = val > 5 ? '▲ Cargando' : val < -5 ? '▼ Descargando' : '● Reposo';
+                    document.getElementById('flowLoad').innerHTML=Math.abs(val).toFixed(0)+'<span class="unit">W</span>';
+                    document.getElementById('flowBattery').innerHTML=val.toFixed(0)+'<span class="unit">W</span>';
+                    document.getElementById('batteryStatus').innerText=val>5?'▲ Cargando':val<-5?'▼ Descargando':'● Reposo';
                     break;
-                case 'siena_orion_voltaje_salida':
-                    orionV = val;
-                    updateOrion();
-                    break;
-                case 'siena_orion_corriente_salida':
-                    orionI = val;
-                    updateOrion();
-                    break;
-                case 'siena_sense_temperatura':
-                    document.getElementById('mainTemp').innerHTML = val.toFixed(1) + '<span class="stat-unit">°C</span>';
-                    break;
-                case 'siena_orion_estado':
-                    document.getElementById('orionStatus').innerText = v;
-                    break;
+                case 'siena_orion_voltaje_salida': orionV=val; document.getElementById('flowGrid').innerHTML=(orionV*orionI).toFixed(0)+'<span class="unit">W</span>'; break;
+                case 'siena_orion_corriente_salida': orionI=val; document.getElementById('flowGrid').innerHTML=(orionV*orionI).toFixed(0)+'<span class="unit">W</span>'; break;
+                case 'siena_sense_temperatura': document.getElementById('mainTemp').innerHTML=val.toFixed(1)+'<span class="stat-unit">°C</span>'; break;
+                case 'siena_orion_estado': document.getElementById('orionStatus').innerText=v; break;
             }
         });
-
-        function updateOrion() {
-            const p = (orionV * orionI).toFixed(0);
-            document.getElementById('flowGrid').innerHTML = p + '<span class="unit">W</span>';
-        }
     </script>
 </body>
 </html>
