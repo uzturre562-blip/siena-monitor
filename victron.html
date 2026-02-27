@@ -155,7 +155,6 @@
             <div class="device-body">
                 <div class="device-stat"><div class="device-stat-label">V. Entrada</div><div class="device-stat-value" id="orionVin">--<span class="device-stat-unit">V</span></div></div>
                 <div class="device-stat"><div class="device-stat-label">V. Salida</div><div class="device-stat-value" id="orionVout">--<span class="device-stat-unit">V</span></div></div>
-                <div class="device-stat"><div class="device-stat-label">Corriente</div><div class="device-stat-value" id="orionCurrent">--<span class="device-stat-unit">A</span></div></div>
                 <div class="device-stat" style="grid-column:span 3;"><div class="device-stat-label">Razón apagado</div><div class="device-stat-value" style="font-size:1rem;" id="orionOffReason">--</div></div>
             </div>
         </div>
@@ -168,8 +167,8 @@
                 <div class="device-state state-off" id="inverterState">--</div>
             </div>
             <div class="device-body">
-                <div class="device-stat"><div class="device-stat-label">V. entrada DC</div><div class="device-stat-value" id="inverterVdc">--<span class="device-stat-unit">V</span></div></div>
                 <div class="device-stat"><div class="device-stat-label">V. salida AC</div><div class="device-stat-value" id="inverterVac">--<span class="device-stat-unit">V</span></div></div>
+                <div class="device-stat"><div class="device-stat-label">Corriente AC</div><div class="device-stat-value" id="inverterCurrent">--<span class="device-stat-unit">A</span></div></div>
                 <div class="device-stat"><div class="device-stat-label">Potencia</div><div class="device-stat-value" id="inverterPower">--<span class="device-stat-unit">VA</span></div></div>
             </div>
         </div>
@@ -344,14 +343,13 @@
                     break;
                 case 'siena_orion_voltaje_entrada': document.getElementById('orionVin').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">V</span>'; break;
                 case 'siena_orion_voltaje_salida': document.getElementById('orionVout').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">V</span>'; break;
-                case 'siena_orion_corriente_salida': document.getElementById('orionCurrent').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">A</span>'; break;
                 case 'siena_orion_estado':
                     const os=document.getElementById('orionState');
                     os.innerText=v; os.className='device-state '+(v==='On'?'state-ok':'state-off');
                     break;
                 case 'siena_orion_razon_apagado': document.getElementById('orionOffReason').innerText=v||'--'; break;
-                case 'siena_inversor_voltaje_entrada': document.getElementById('inverterVdc').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">V</span>'; break;
                 case 'siena_inversor_voltaje_salida': document.getElementById('inverterVac').innerHTML=val.toFixed(1)+'<span class="device-stat-unit">V</span>'; break;
+                case 'siena_inversor_corriente': document.getElementById('inverterCurrent').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">A</span>'; break;
                 case 'siena_inversor_potencia': document.getElementById('inverterPower').innerHTML=val.toFixed(0)+'<span class="device-stat-unit">VA</span>'; break;
                 case 'siena_inversor_estado':
                     const ivs=document.getElementById('inverterState');
