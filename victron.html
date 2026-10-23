@@ -118,16 +118,37 @@
         <div class="page-header">
             <div>
                 <div class="page-title">VICTRON</div>
-                <div class="page-subtitle">5 DISPOSITIVOS · MPPT · ORION · INVERSOR · SHUNT · SENSE</div>
+                <div class="page-subtitle">6 DISPOSITIVOS · MPPT×2 · ORION · INVERSOR · SHUNT · SENSE</div>
             </div>
             <div class="mqtt-pill" id="mqttStatus"><div class="mqtt-dot"></div>DESCONECTADO</div>
         </div>
 
-        <!-- MPPT -->
+        <!-- MPPT 100/30 (principal) -->
         <div class="device-card mppt">
             <div class="device-header">
                 <div class="device-icon"><i class="fas fa-sun"></i></div>
-                <div><div class="device-name">SMARTSOLAR MPPT</div><div class="device-model">75/15 · PANEL 140W</div></div>
+                <div><div class="device-name">SMARTSOLAR MPPT</div><div class="device-model">100/30 · PRINCIPAL · PANEL 450W</div></div>
+                <div class="device-state state-off" id="mppt2State">--</div>
+            </div>
+            <div class="device-body">
+                <div class="device-stat"><div class="device-stat-label">Potencia solar</div><div class="device-stat-value" id="mppt2Power">--<span class="device-stat-unit">W</span></div></div>
+                <div class="device-stat"><div class="device-stat-label">V. batería</div><div class="device-stat-value" id="mppt2Voltage">--<span class="device-stat-unit">V</span></div></div>
+                <div class="device-stat" style="border-bottom:1px solid var(--border);"><div class="device-stat-label">Corriente</div><div class="device-stat-value" id="mppt2Current">--<span class="device-stat-unit">A</span></div></div>
+                <div class="device-stat"><div class="device-stat-label">Pot. batería</div><div class="device-stat-value" id="mppt2BatPower">--<span class="device-stat-unit">W</span></div></div>
+                <div class="device-stat" style="grid-column:span 2;border-right:none;"><div class="device-stat-label">Hoy</div><div class="device-stat-value" id="mppt2Today">--<span class="device-stat-unit">kWh</span></div></div>
+            </div>
+            <div class="mppt-phases">
+                <span class="phase-pill" id="phase2Bulk">BULK</span>
+                <span class="phase-pill" id="phase2Absorption">ABSORCIÓN</span>
+                <span class="phase-pill" id="phase2Float">FLOTACIÓN</span>
+            </div>
+        </div>
+
+        <!-- MPPT 75/15 (secundario) -->
+        <div class="device-card mppt">
+            <div class="device-header">
+                <div class="device-icon"><i class="fas fa-sun"></i></div>
+                <div><div class="device-name">SMARTSOLAR MPPT</div><div class="device-model">75/15 · SECUNDARIO</div></div>
                 <div class="device-state state-off" id="mpptState">--</div>
             </div>
             <div class="device-body">
@@ -203,7 +224,7 @@
 
         <!-- GRÁFICA SOLAR -->
         <div class="chart-card">
-            <div class="section-label">Producción solar · sesión actual</div>
+            <div class="section-label">Producción solar total · sesión actual</div>
             <div class="chart-wrap">
                 <canvas id="solarChart"></canvas>
                 <div class="chart-empty" id="chartEmpty">Esperando datos solares...</div>
@@ -292,6 +313,15 @@
         });
 
         let lastChartUpdate=0;
+        let solarP1=0, solarP2=0; // potencia de MPPT 75/15 y MPPT 100/30
+
+        function pushSolarTotal(now){
+            const nowMs=Date.now();
+            if(nowMs-lastChartUpdate>60000){
+                lastChartUpdate=nowMs;
+                addChartPoint(now.substr(0,5),solarP1+solarP2);
+            }
+        }
 
         function addChartPoint(timeStr,value){
             solarLabels.push(timeStr);
@@ -324,13 +354,24 @@
             switch(sensor){
                 case 'siena_mppt_potencia_solar':
                     document.getElementById('mpptPower').innerHTML=val.toFixed(0)+'<span class="device-stat-unit">W</span>';
-                    // Añadir punto a la gráfica cada 60s
-                    const nowMs=Date.now();
-                    if(nowMs-lastChartUpdate>60000){
-                        lastChartUpdate=nowMs;
-                        addChartPoint(now.substr(0,5),val);
-                    }
+                    solarP1=val; pushSolarTotal(now);
                     break;
+                case 'siena_mppt2_potencia_solar':
+                    document.getElementById('mppt2Power').innerHTML=val.toFixed(0)+'<span class="device-stat-unit">W</span>';
+                    solarP2=val; pushSolarTotal(now);
+                    break;
+                case 'siena_mppt2_voltaje': document.getElementById('mppt2Voltage').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">V</span>'; break;
+                case 'siena_mppt2_corriente': document.getElementById('mppt2Current').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">A</span>'; break;
+                case 'siena_mppt2_potencia_bateria': document.getElementById('mppt2BatPower').innerHTML=val.toFixed(0)+'<span class="device-stat-unit">W</span>'; break;
+                case 'siena_mppt2_hoy': document.getElementById('mppt2Today').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">kWh</span>'; break;
+                case 'siena_mppt2_estado':
+                    const ms2=document.getElementById('mppt2State');
+                    ms2.innerText=v;
+                    ms2.className='device-state '+(v.includes('Fault')||v.includes('Error')?'state-warn':'state-ok');
+                    break;
+                case 'siena_mppt2_fase_bulk': document.getElementById('phase2Bulk').className='phase-pill'+(v==='ON'?' active':''); break;
+                case 'siena_mppt2_fase_absorcion': document.getElementById('phase2Absorption').className='phase-pill'+(v==='ON'?' active':''); break;
+                case 'siena_mppt2_fase_flotacion': document.getElementById('phase2Float').className='phase-pill'+(v==='ON'?' active':''); break;
                 case 'siena_mppt_voltaje': document.getElementById('mpptVoltage').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">V</span>'; break;
                 case 'siena_mppt_corriente': document.getElementById('mpptCurrent').innerHTML=val.toFixed(2)+'<span class="device-stat-unit">A</span>'; break;
                 case 'siena_mppt_potencia_bateria': document.getElementById('mpptBatPower').innerHTML=val.toFixed(0)+'<span class="device-stat-unit">W</span>'; break;
