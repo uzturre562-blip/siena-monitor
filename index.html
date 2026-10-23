@@ -140,7 +140,7 @@
             <div class="stat-card">
                 <div class="stat-label">Solar hoy</div>
                 <div class="stat-value" id="mainSolarKwh">--<span class="stat-unit">kWh</span></div>
-                <div class="stat-sub">MPPT 75/15</div>
+                <div class="stat-sub">MPPT 100/30 + 75/15</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Temperatura</div>
@@ -162,7 +162,7 @@
                 <div>
                     <div class="nav-card-icon">🔋</div>
                     <div class="nav-card-title">BATERÍA</div>
-                    <div class="nav-card-sub">JBD BMS · ULTIMATRON 100Ah</div>
+                    <div class="nav-card-sub">JBD BMS · SMARTCELL 280Ah</div>
                 </div>
                 <i class="fas fa-chevron-right" style="color:var(--text-dim);"></i>
             </a>
@@ -186,9 +186,18 @@
         const BROKER='wss://broker.emqx.io:8084/mqtt';
         const mqttStatusEl=document.getElementById('mqttStatus');
         let orionV=0,orionI=0;
+        let solarW1=0,solarW2=0,solarK1=0,solarK2=0; // MPPT 75/15 (1) y MPPT 100/30 (2)
         const client=mqtt.connect(BROKER,{clientId:'siena_idx_'+Math.random().toString(16).substr(2,8)});
         client.on('connect',()=>{mqttStatusEl.innerHTML='<div class="mqtt-dot"></div>CONECTADO';mqttStatusEl.className='mqtt-pill connected';client.subscribe('mi_clave_privada_siena/sensor/#');});
         client.on('offline',()=>{mqttStatusEl.innerHTML='<div class="mqtt-dot"></div>DESCONECTADO';mqttStatusEl.className='mqtt-pill';});
+        function showSolar(){
+            document.getElementById('flowSolar').innerHTML=(solarW1+solarW2).toFixed(0)+'<span class="unit">W</span>';
+        }
+        function showSolarToday(){
+            const k=solarK1+solarK2;
+            document.getElementById('solarToday').innerText='Hoy: '+k.toFixed(2)+' kWh';
+            document.getElementById('mainSolarKwh').innerHTML=k.toFixed(2)+'<span class="stat-unit">kWh</span>';
+        }
         client.on('message',(topic,msg)=>{
             const v=msg.toString(); if(v==='nan'||v==='')return;
             const sensor=topic.split('/')[2]; const val=parseFloat(v);
@@ -200,11 +209,10 @@
                     document.getElementById('socBar').style.width=val+'%';
                     document.getElementById('socBar').style.background=val>50?'var(--ok)':val>20?'var(--warn)':'var(--danger)';
                     break;
-                case 'siena_mppt_potencia_solar': document.getElementById('flowSolar').innerHTML=val.toFixed(0)+'<span class="unit">W</span>'; break;
-                case 'siena_mppt_hoy':
-                    document.getElementById('solarToday').innerText='Hoy: '+val.toFixed(2)+' kWh';
-                    document.getElementById('mainSolarKwh').innerHTML=val.toFixed(2)+'<span class="stat-unit">kWh</span>';
-                    break;
+                case 'siena_mppt_potencia_solar': solarW1=val; showSolar(); break;
+                case 'siena_mppt2_potencia_solar': solarW2=val; showSolar(); break;
+                case 'siena_mppt_hoy': solarK1=val; showSolarToday(); break;
+                case 'siena_mppt2_hoy': solarK2=val; showSolarToday(); break;
                 case 'siena_bms_potencia':
                     document.getElementById('flowLoad').innerHTML=Math.abs(val).toFixed(0)+'<span class="unit">W</span>';
                     document.getElementById('flowBattery').innerHTML=val.toFixed(0)+'<span class="unit">W</span>';
