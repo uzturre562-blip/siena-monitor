@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
         :root {
-            --bg:#0a0c0f; --surface:#111318; --surface2:#181c23; --border:#1e2330;
+            --bg:#0d1017; --surface:#1a1f2b; --surface2:#232a39; --border:#343d52;
             --text:#c8d0e0; --text-dim:#8090b0; --text-bright:#eef2ff;
             --accent:#00d4aa; --accent-dim:rgba(0,212,170,0.12);
             --solar:#ffb020; --solar-dim:rgba(255,176,32,0.15);
@@ -21,8 +21,8 @@
             --shunt:#3b82f6; --shunt-dim:rgba(59,130,246,0.15);
             --sense:#10b981; --sense-dim:rgba(16,185,129,0.15);
             --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
-            --chart-grid:#1e2330; --chart-tick:#8090b0;
-            --shadow:rgba(0,0,0,0.3);
+            --chart-grid:#2c3548; --chart-tick:#8090b0;
+            --shadow:rgba(0,0,0,0.45);
         }
         [data-theme="light"] {
             --bg:#f0f2f5; --surface:#ffffff; --surface2:#f7f8fa; --border:#e2e6ed;
@@ -127,7 +127,7 @@
         <div class="device-card mppt">
             <div class="device-header">
                 <div class="device-icon"><i class="fas fa-sun"></i></div>
-                <div><div class="device-name">SMARTSOLAR MPPT</div><div class="device-model">100/30 · PRINCIPAL · PANEL 450W</div></div>
+                <div><div class="device-name">SMARTSOLAR MPPT</div><div class="device-model">100/30 · PRINCIPAL · PLACA 450W</div></div>
                 <div class="device-state state-off" id="mppt2State">--</div>
             </div>
             <div class="device-body">
@@ -148,7 +148,7 @@
         <div class="device-card mppt">
             <div class="device-header">
                 <div class="device-icon"><i class="fas fa-sun"></i></div>
-                <div><div class="device-name">SMARTSOLAR MPPT</div><div class="device-model">75/15 · SECUNDARIO · PANEL 130W</div></div>
+                <div><div class="device-name">SMARTSOLAR MPPT</div><div class="device-model">75/15 · SECUNDARIO · PLACA 130W</div></div>
                 <div class="device-state state-off" id="mpptState">--</div>
             </div>
             <div class="device-body">
@@ -248,7 +248,7 @@
                 themeIcon.className=t==='dark'?'fas fa-sun':'fas fa-moon';
                 const isDark=t==='dark';
                 if(solarChart){
-                    solarChart.options.scales.y.grid.color=isDark?'#1e2330':'#e2e6ed';
+                    solarChart.options.scales.y.grid.color=isDark?'#2c3548':'#e2e6ed';
                     solarChart.options.scales.y.ticks.color=isDark?'#8090b0':'#7a849a';
                     solarChart.options.scales.x.ticks.color=isDark?'#8090b0':'#7a849a';
                     solarChart.update();
@@ -296,7 +296,7 @@
                 scales:{
                     y:{
                         beginAtZero:true,
-                        grid:{color:isDark()?'#1e2330':'#e2e6ed'},
+                        grid:{color:isDark()?'#2c3548':'#e2e6ed'},
                         ticks:{
                             color:isDark()?'#8090b0':'#7a849a',
                             font:{family:'Space Mono',size:10},
