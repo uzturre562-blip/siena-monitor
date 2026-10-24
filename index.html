@@ -11,12 +11,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
         :root {
-            --bg:#0a0c0f; --surface:#111318; --surface2:#181c23; --border:#1e2330;
+            --bg:#0d1017; --surface:#1a1f2b; --surface2:#232a39; --border:#343d52;
             --text:#c8d0e0; --text-dim:#8090b0; --text-bright:#eef2ff;
             --accent:#00d4aa; --accent-dim:rgba(0,212,170,0.12);
             --solar:#ffb020; --battery:#3b82f6; --grid-c:#a855f7; --load:#f43f5e;
             --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
-            --shadow:rgba(0,0,0,0.3);
+            --shadow:rgba(0,0,0,0.45);
         }
         [data-theme="light"] {
             --bg:#f0f2f5; --surface:#ffffff; --surface2:#f7f8fa; --border:#e2e6ed;
@@ -118,8 +118,8 @@
                     <div class="flow-sub" id="batteryStatus">--</div>
                 </div>
                 <div class="flow-item grid">
-                    <div class="flow-label">🚗 Alternador (Orion)</div>
-                    <div class="flow-value" id="flowGrid">0<span class="unit">W</span></div>
+                    <div class="flow-label">🚗 Orion (alternador)</div>
+                    <div class="flow-value" id="flowGrid">--<span class="unit">V</span></div>
                     <div class="flow-sub" id="orionStatus">--</div>
                 </div>
                 <div class="flow-item load">
@@ -185,7 +185,6 @@
 
         const BROKER='wss://broker.emqx.io:8084/mqtt';
         const mqttStatusEl=document.getElementById('mqttStatus');
-        let orionV=0,orionI=0;
         let solarW1=0,solarW2=0,solarK1=0,solarK2=0; // MPPT 75/15 (1) y MPPT 100/30 (2)
         const client=mqtt.connect(BROKER,{clientId:'siena_idx_'+Math.random().toString(16).substr(2,8)});
         client.on('connect',()=>{mqttStatusEl.innerHTML='<div class="mqtt-dot"></div>CONECTADO';mqttStatusEl.className='mqtt-pill connected';client.subscribe('mi_clave_privada_siena/sensor/#');});
@@ -218,8 +217,7 @@
                     document.getElementById('flowBattery').innerHTML=val.toFixed(0)+'<span class="unit">W</span>';
                     document.getElementById('batteryStatus').innerText=val>5?'▲ Cargando':val<-5?'▼ Descargando':'● Reposo';
                     break;
-                case 'siena_orion_voltaje_salida': orionV=val; document.getElementById('flowGrid').innerHTML=(orionV*orionI).toFixed(0)+'<span class="unit">W</span>'; break;
-                case 'siena_orion_corriente_salida': orionI=val; document.getElementById('flowGrid').innerHTML=(orionV*orionI).toFixed(0)+'<span class="unit">W</span>'; break;
+                case 'siena_orion_voltaje_salida': document.getElementById('flowGrid').innerHTML=val.toFixed(2)+'<span class="unit">V</span>'; break;
                 case 'siena_sense_temperatura': document.getElementById('mainTemp').innerHTML=val.toFixed(1)+'<span class="stat-unit">°C</span>'; break;
                 case 'siena_orion_estado': document.getElementById('orionStatus').innerText=v; break;
             }
